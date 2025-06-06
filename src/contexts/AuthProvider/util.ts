@@ -1,45 +1,48 @@
-import Cookies from "js-cookie";
-
-import { IPayLoad } from "./types";
-
 import { apiBarber } from "@/services/apiServer";
+import { SignInFormData } from "@/pages/createAccount";
 
-export function setUserLocalStorage(user: IPayLoad | null) {
-  Cookies.set("barberId", JSON.stringify(user), {
-    expires: (30 / 1440) * 24, //12horas
-  });
-  if (user && user.token) {
-    Cookies.set("barberToken", user.token, {
-      expires: (30 / 1440) * 24, //12horas
-    });
-  }
-}
-
-export function getUserLocalStorage() {
-  const json = Cookies.get("barberId");
-
-  if (!json) {
-    return null;
-  }
-
-  const user = JSON.parse(json);
-
-  return user ?? null;
-}
-
-export function getTokenLocalStorage() {
-  const token = Cookies.get("barberToken");
-
-  if (!token) {
-    return null;
-  }
-
-  return token;
-}
-
-export async function LoginRequest(cpf: string, password: string) {
+// CHAMADA DA API PARA CRIAÇÃO DE NOVO USUÁRIO
+export async function SendCreateUser(data: SignInFormData) {
   try {
-    const request = await apiBarber.post("/auth", { cpf, password });
+    const request = await apiBarber.post("/register-user", data);
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA DA API PARA REALIZAÇÃO DO LOGIN
+export async function LoginRequest(phone_number: string, password: string) {
+  try {
+    const request = await apiBarber.post("/auth", { phone_number, password });
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA PARA API DE ENVIO DE EMAIL PARA RECUPERAÇÃO DE SENHA
+export async function postCodeRecoverPassword(email: string) {
+  try {
+    const request = await apiBarber.post("/recover-password", {
+      email,
+    });
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA PARA API DE ENVIO DE EMAIL PARA RECUPERAÇÃO DE SENHA
+export async function sendNewPassword(token: string, new_password: string) {
+  try {
+    const request = await apiBarber.post("/reset-password", {
+      token,
+      new_password,
+    });
 
     return request.data;
   } catch (error) {

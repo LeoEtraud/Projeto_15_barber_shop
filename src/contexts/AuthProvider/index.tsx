@@ -1,30 +1,106 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import { addToast } from "@heroui/react";
 
 import { IAuthProvider, IContext, IPayLoad } from "./types";
-import { setUserLocalStorage } from "./util";
 
 export const AuthContext = createContext<IContext>({} as IContext);
+
 export const AuthProvider = ({ children }: IAuthProvider) => {
   const navigate = useNavigate();
+
   const [user, setUser] = useState<IPayLoad | null>(
     typeof window !== "undefined"
-      ? JSON.parse(Cookies.get("corujaId") || "null")
+      ? JSON.parse(Cookies.get("barberId") || "null")
       : null
   );
 
   const [token, setToken] = useState<string | null>(
-    typeof window !== "undefined" ? Cookies.get("corujaToken") || null : null
+    typeof window !== "undefined" ? Cookies.get("barberToken") || null : null
   );
 
-  async function authenticate(response: any) {
-    setUserLocalStorage(response);
-    setUser(response);
-    setToken(response.token);
+  function setUserCookies(user: IPayLoad | null) {
+    Cookies.set("barberId", JSON.stringify(user), {
+      expires: (30 / 1440) * 24, //12horas
+    });
+    if (user && user.token) {
+      Cookies.set("barberToken", user.token, {
+        expires: (30 / 1440) * 24, //12horas
+      });
+    }
+  }
+
+  function getUserCookies() {
+    const json = Cookies.get("barberId");
+
+    if (!json) {
+      return null;
+    }
+
+    const user = JSON.parse(json);
+
+    return user ?? null;
+  }
+
+  // function getTokenCookies() {
+  //   const token = Cookies.get("barberToken");
+
+  //   if (!token) {
+  //     return null;
+  //   }
+
+  //   return token;
+  // }
+
+  async function authenticate(data: IPayLoad) {
+    setUserCookies(data);
+    setUser(data);
+    setToken(data.token);
     setTimeout(() => {
       navigate("/dashboard");
     }, 750);
+  }
+
+  // Função memoizada com verificações condicionais
+  const checkAuth = useCallback(async () => {
+    const userFromCookie = getUserCookies();
+    const tokenFromCookie = Cookies.get("barberToken") || null;
+
+    setUser((prevUser) => {
+      if (JSON.stringify(prevUser) !== JSON.stringify(userFromCookie)) {
+        return userFromCookie;
+      }
+
+      return prevUser;
+    });
+
+    setToken((prevToken) => {
+      if (prevToken !== tokenFromCookie) {
+        return tokenFromCookie;
+      }
+
+      return prevToken;
+    });
+  }, []);
+
+  // FUNÇÃO PARA DESLOGAR DO SISTEMA
+  function logout() {
+    // substituir qualquer toast anterior
+    addToast({
+      title: "Logout",
+      description: "Sessão encerrada com sucesso!",
+      color: "danger",
+      timeout: 3000,
+    });
+
+    // limpar estado e cookies na raiz
+    setUser(null);
+    setToken(null);
+    Cookies.remove("barberId", { path: "/" });
+    Cookies.remove("barberToken", { path: "/" });
+
+    navigate("/");
   }
 
   return (
@@ -33,6 +109,8 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
         authenticate,
         user,
         token,
+        checkAuth,
+        logout,
       }}
     >
       {children}

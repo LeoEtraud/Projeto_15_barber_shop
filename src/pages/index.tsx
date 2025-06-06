@@ -2,72 +2,74 @@ import { Link } from "@heroui/link";
 import { button as buttonStyles } from "@heroui/theme";
 import { Helmet } from "react-helmet-async";
 import { Input } from "@heroui/input";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useRef } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { addToast, Divider, Image } from "@heroui/react";
 import { Button } from "@heroui/react";
 
 import eye_slash from "../assets/eye-slash.svg";
 import eye from "../assets/eye.svg";
 import barberImage from "../assets/barber.png";
-import { useAuth } from "../contexts/AuthProvider/useAuth";
 
-import { formatCpf } from "@/utils/format-Cpf-Phone";
+import { formatPhone } from "@/utils/format-Cpf-Phone";
+import { useAuth } from "@/contexts/AuthProvider/useAuth";
+import { SignInFormData } from "@/contexts/AuthProvider/types";
 import { LoginRequest } from "@/contexts/AuthProvider/util";
 
-type SignInFormData = {
-  cpf: string;
-  password: string;
-};
-
 export function Login() {
-  const auth = useAuth();
-  const [cpf, setCpf] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-
   const [isVisible, setIsVisible] = useState(false);
+  const isLoggingInRef = useRef(false);
 
-  const initialValues = { cpf: "", password: "" };
+  const initialValues = { phone_number: "", password: "" };
+  const { authenticate } = useAuth();
 
   const schema = yup.object().shape({
-    cpf: yup.string().required("O CPF é obrigatório"),
+    phone_number: yup.string().required("O nº de telefone é obrigatório"),
     password: yup.string().required("A senha é obrigatória"),
   });
 
+  // Habilita validação onChange para usar isValid
   const {
-    register,
     handleSubmit,
+    control,
+    reset,
     formState: { isSubmitting },
   } = useForm<SignInFormData>({
     resolver: yupResolver(schema),
     defaultValues: initialValues,
+    mode: "onChange", // valida a cada mudança
+    reValidateMode: "onChange", // revalida a cada mudança
   });
 
-  const data = {
-    description: "Balata Barbearia",
-    image: barberImage,
-  };
+  const toggleVisibility = () => setIsVisible((prev) => !prev);
 
-  function toggleVisibility() {
-    setIsVisible(!isVisible);
-  }
+  async function signIn(formData: SignInFormData) {
+    if (isLoggingInRef.current) return;
+    isLoggingInRef.current = true;
+    try {
+      const response = await LoginRequest(
+        formData.phone_number,
+        formData.password
+      );
 
-  async function SignIn(data: SignInFormData) {
-    const response = await LoginRequest(data.cpf, data.password);
-
-    auth;
-    if (response.ok) {
+      authenticate(response);
       addToast({
-        title: "Sucesso",
-        description: "Autenticação realizada com sucesso.",
+        title: "Login",
+        description: response.message,
+        color: "success",
+        timeout: 3000,
       });
-    } else {
+      reset(initialValues);
+    } catch {
       addToast({
         title: "Falha",
-        description: "CPF e/ou senha incorretos.",
+        description: "Erro ao logar usuário",
+        color: "danger",
       });
+    } finally {
+      isLoggingInRef.current = false;
     }
   }
 
@@ -78,70 +80,80 @@ export function Login() {
 
         <div className="max-w-lg text-center">
           <Image
-            alt="HeroUI hero Image"
+            alt="Logo da barbearia"
             height={200}
-            src={data.image}
+            src={barberImage}
             width={200}
           />
-          <h6 className="mt-2">{data.description}</h6>
+          <h6 className="mt-2">Balata Barbearia</h6>
         </div>
 
-        <form className="flex flex-col w-80" onSubmit={handleSubmit(SignIn)}>
-          <Input
-            isRequired
-            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="cpf"
-            label="CPF"
-            size="sm"
-            type="text"
-            {...register("cpf")}
-            maxLength={14}
-            validate={(value) => {
-              if (value.length < 14) {
-                return "O CPF deve conter no mínimo 11 números.";
-              }
-
-              return value === "admin" ? "Nice try!" : null;
+        <form className="flex flex-col w-80" onSubmit={handleSubmit(signIn)}>
+          <Controller
+            control={control}
+            name="phone_number"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className="w-auto p-3 rounded-lg text-black focus:outline-none"
+                id="phone_number"
+                label="Nº de telefone"
+                maxLength={15}
+                size="sm"
+                type="text"
+                {...field}
+                value={formatPhone(field.value)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  field.onChange(formatPhone(e.target.value))
+                }
+              />
+            )}
+            rules={{
+              required: "O nº de telefone é obrigatório",
+              validate: (value) =>
+                value.replace(/\D/g, "").length < 11
+                  ? "O nº de celular deve conter no mínimo 11 números."
+                  : true,
             }}
-            value={cpf}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setCpf(formatCpf(e.target.value))
-            }
           />
 
-          <Input
-            isRequired
-            className="w-full p-3 rounded-lg focus:outline-none"
-            endContent={
-              <button
-                aria-label="toggle password visibility"
-                className="focus:outline-none"
-                type="button"
-                onClick={toggleVisibility}
-              >
-                {isVisible ? (
-                  <Image alt="Ocultar senha" src={eye_slash} width={30} />
-                ) : (
-                  <Image alt="Mostrar senha" src={eye} width={30} />
-                )}
-              </button>
-            }
-            id="password"
-            label="Senha"
-            size="sm"
-            type={isVisible ? "text" : "password"}
-            validate={(value) => {
-              if (value.length < 8) {
-                return "A senha deve conter no mínimo 8 caracteres.";
-              }
-
-              return value === "admin" ? "Nice try!" : null;
+          <Controller
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className="w-full p-3 rounded-lg focus:outline-none"
+                endContent={
+                  field.value && (
+                    <button
+                      aria-label="toggle password visibility"
+                      className="focus:outline-none"
+                      type="button"
+                      onClick={toggleVisibility}
+                    >
+                      {isVisible ? (
+                        <Image alt="Ocultar senha" src={eye_slash} width={30} />
+                      ) : (
+                        <Image alt="Mostrar senha" src={eye} width={30} />
+                      )}
+                    </button>
+                  )
+                }
+                id="password"
+                label="Senha"
+                size="sm"
+                type={isVisible ? "text" : "password"}
+                {...field}
+              />
+            )}
+            rules={{
+              required: "A senha é obrigatória",
+              validate: (value) =>
+                value.length < 6
+                  ? "A senha deve conter no mínimo 6 caracteres."
+                  : true,
             }}
-            value={password}
-            {...register("password")}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
           />
 
           <div className="flex items-center mb-6">
@@ -149,22 +161,22 @@ export function Login() {
               Esqueceu sua senha?
             </Link>
           </div>
+
           <Button
-            className={`${buttonStyles({
-              color: "primary",
-              radius: "full",
-              variant: "shadow",
-            })} w-40 mx-auto mt-5 font-extrabold`}
+            className={`${buttonStyles({ color: "primary", radius: "full", variant: "shadow" })} w-40 mx-auto mt-5 font-extrabold`}
             disabled={isSubmitting}
+            isLoading={isSubmitting}
             type="submit"
           >
             ENTRAR
           </Button>
+
           <div className="flex items-center my-6">
             <Divider className="flex-1 bg-gray-800" />
             <span className="mx-4 text-gray-600">ou</span>
             <Divider className="flex-1 bg-gray-800" />
           </div>
+
           <div className="flex items-center justify-center">
             <Link className="text-gray-400" href="../register" size="sm">
               Criar uma conta

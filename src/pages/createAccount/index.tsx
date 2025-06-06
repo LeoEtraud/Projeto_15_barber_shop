@@ -5,28 +5,27 @@ import { ChangeEvent, useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useForm } from "react-hook-form";
-import { addToast, Divider, Image, Link } from "@heroui/react";
+import { addToast, Divider, ToastProvider, Image, Link } from "@heroui/react";
 import { Button } from "@heroui/react";
 
 import eye_slash from "../../assets/eye-slash.svg";
 import eye from "../../assets/eye.svg";
-import barberImage from "../../assets/barber.png";
 
-import { formatCpf, formatPhone } from "@/utils/format-Cpf-Phone";
-import { LoginRequest } from "@/contexts/AuthProvider/util";
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
+import { formatPhone } from "@/utils/format-Cpf-Phone";
+import { SendCreateUser } from "@/contexts/AuthProvider/util";
 
-type SignInFormData = {
-  contact_number: string;
-  cpf: string;
+export type SignInFormData = {
+  username: string;
+  email: string;
+  phone_number: string;
   password: string;
   confirm_password: string;
 };
 
 export function CreateAccount() {
-  const auth = useAuth();
-  const [contactNumber, setContactNumber] = useState<string>("");
-  const [cpf, setCpf] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
 
@@ -34,15 +33,20 @@ export function CreateAccount() {
   const [isVisibleConfirm, setIsVisibleConfirm] = useState(false);
 
   const initialValues = {
-    contact_number: "",
-    cpf: "",
+    username: "",
+    email: "",
+    phone_number: "",
     password: "",
     confirm_password: "",
   };
 
   const schema = yup.object().shape({
-    contact_number: yup.string().required("O número de contato é obrigatório"),
-    cpf: yup.string().required("O CPF é obrigatório"),
+    username: yup.string().min(3).required("O Nome é obrigatório"),
+    email: yup.string().email().required("O E-mail é obrigatório"),
+    phone_number: yup
+      .string()
+      .min(11)
+      .required("O número de contato é obrigatório"),
     password: yup.string().required("A senha é obrigatória"),
     confirm_password: yup
       .string()
@@ -53,15 +57,11 @@ export function CreateAccount() {
     register,
     handleSubmit,
     formState: { isSubmitting },
+    reset,
   } = useForm<SignInFormData>({
     resolver: yupResolver(schema),
     defaultValues: initialValues,
   });
-
-  const data = {
-    description: "Balata Barbearia",
-    image: barberImage,
-  };
 
   function toggleVisibility() {
     setIsVisible(!isVisible);
@@ -71,21 +71,32 @@ export function CreateAccount() {
     setIsVisibleConfirm(!isVisibleConfirm);
   }
 
-  toggleVisibilityConfirm;
-
-  async function SignIn(data: SignInFormData) {
-    const response = await LoginRequest(data.cpf, data.password);
-
-    auth;
-    if (response.ok) {
+  async function CreateUser(data: SignInFormData) {
+    try {
+      await SendCreateUser(data);
       addToast({
         title: "Sucesso",
-        description: "Autenticação realizada com sucesso.",
+        description: "Conta registrada com êxito.",
+        color: "success",
+        timeout: 5000,
       });
-    } else {
+      // Resetando os campos
+      reset();
+
+      // Resetando os estados dos campos
+      setUserName("");
+      setPhoneNumber("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (error) {
       addToast({
-        title: "Falha",
-        description: "CPF e/ou senha incorretos.",
+        title: "Falha no envio do formulário!",
+        description:
+          (error as any).response?.data?.error ||
+          "Erro ao criar conta de usuário",
+        color: "danger",
+        timeout: 5000,
       });
     }
   }
@@ -94,18 +105,51 @@ export function CreateAccount() {
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
       <section className="border border-gray-800 bg-zinc-950 rounded-lg px-28 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Cadastro" />
+        <ToastProvider placement={"top-right"} toastOffset={60} />
 
-        <div className="max-w-lg text-center">
-          <Image
-            alt="HeroUI hero Image"
-            height={200}
-            src={data.image}
-            width={200}
-          />
-          <h6 className="mt-2">{data.description}</h6>
+        <div className="max-h-8 text-center">
+          <h1 className="text-2xl">{"Cadastro de Usuário"}</h1>
         </div>
 
-        <form className="flex flex-col w-80" onSubmit={handleSubmit(SignIn)}>
+        <form
+          className="flex flex-col w-80"
+          onSubmit={handleSubmit(CreateUser)}
+        >
+          <Input
+            isRequired
+            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
+            id="name"
+            label="Nome"
+            maxLength={60}
+            size="sm"
+            type="text"
+            validate={(value) => {
+              if (value.length < 3) {
+                return "O nome deve conter no mínimo 3 caracteres.";
+              }
+            }}
+            {...register("username")}
+            value={userName}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setUserName(e.target.value)
+            }
+          />
+          <Input
+            isRequired
+            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
+            errorMessage="Insira um e-mail válido."
+            id="email"
+            label="E-mail"
+            maxLength={60}
+            size="sm"
+            type="email"
+            {...register("email")}
+            value={email}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setEmail(e.target.value)
+            }
+          />
+
           <Input
             isRequired
             className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
@@ -113,70 +157,47 @@ export function CreateAccount() {
             label="Nº de contato"
             size="sm"
             type="text"
-            {...register("contact_number")}
-            maxLength={14}
+            {...register("phone_number")}
+            maxLength={15}
             validate={(value) => {
               if (value.length < 14) {
                 return "O contato deve conter no mínimo 11 números.";
               }
-
-              return value === "admin" ? "Nice try!" : null;
             }}
-            value={contactNumber}
+            value={phoneNumber}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setContactNumber(formatPhone(e.target.value))
-            }
-          />
-
-          <Input
-            isRequired
-            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="cpf"
-            label="CPF"
-            size="sm"
-            type="text"
-            {...register("cpf")}
-            maxLength={14}
-            validate={(value) => {
-              if (value.length < 14) {
-                return "O CPF deve conter no mínimo 11 números.";
-              }
-
-              return value === "admin" ? "Nice try!" : null;
-            }}
-            value={cpf}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setCpf(formatCpf(e.target.value))
+              setPhoneNumber(formatPhone(e.target.value))
             }
           />
 
           <Input
             isRequired
             className="w-full p-3 rounded-lg focus:outline-none"
+            description="A senha deve conter no mínimo 6 caracteres."
             endContent={
-              <button
-                aria-label="toggle password visibility"
-                className="focus:outline-none"
-                type="button"
-                onClick={toggleVisibility}
-              >
-                {isVisible ? (
-                  <Image alt="Ocultar senha" src={eye_slash} width={30} />
-                ) : (
-                  <Image alt="Mostrar senha" src={eye} width={30} />
-                )}
-              </button>
+              password && (
+                <button
+                  aria-label="toggle password visibility"
+                  className="focus:outline-none"
+                  type="button"
+                  onClick={toggleVisibility}
+                >
+                  {isVisible ? (
+                    <Image alt="Ocultar senha" src={eye_slash} width={30} />
+                  ) : (
+                    <Image alt="Mostrar senha" src={eye} width={30} />
+                  )}
+                </button>
+              )
             }
             id="password"
             label="Senha"
             size="sm"
             type={isVisible ? "text" : "password"}
             validate={(value) => {
-              if (value.length < 8) {
-                return "A senha deve conter no mínimo 8 caracteres.";
+              if (value.length < 6) {
+                return "A senha deve conter no mínimo 6 caracteres.";
               }
-
-              return value === "admin" ? "Nice try!" : null;
             }}
             value={password}
             {...register("password")}
@@ -188,30 +209,34 @@ export function CreateAccount() {
           <Input
             isRequired
             className="w-full p-3 rounded-lg focus:outline-none"
+            description="A confirmação de senha deve ser igual a senha."
             endContent={
-              <button
-                aria-label="toggle password visibility"
-                className="focus:outline-none"
-                type="button"
-                onClick={toggleVisibilityConfirm}
-              >
-                {isVisibleConfirm ? (
-                  <Image alt="Ocultar senha" src={eye_slash} width={30} />
-                ) : (
-                  <Image alt="Mostrar senha" src={eye} width={30} />
-                )}
-              </button>
+              confirmPassword && (
+                <button
+                  aria-label="toggle password visibility"
+                  className="focus:outline-none"
+                  type="button"
+                  onClick={toggleVisibilityConfirm}
+                >
+                  {isVisibleConfirm ? (
+                    <Image alt="Ocultar senha" src={eye_slash} width={30} />
+                  ) : (
+                    <Image alt="Mostrar senha" src={eye} width={30} />
+                  )}
+                </button>
+              )
             }
             id="confirm_password"
             label="Confirmar senha"
             size="sm"
             type={isVisibleConfirm ? "text" : "password"}
             validate={(value) => {
-              if (value.length < 8) {
-                return "A confirmação de senha deve conter no mínimo 8 caracteres.";
+              if (value.length < 6) {
+                return "A confirmação de senha deve conter no mínimo 6 caracteres.";
               }
-
-              return value === "admin" ? "Nice try!" : null;
+              if (value !== password) {
+                return "A confirmação de senha deve ser igual a senha.";
+              }
             }}
             value={confirmPassword}
             {...register("confirm_password")}
@@ -225,8 +250,9 @@ export function CreateAccount() {
               color: "primary",
               radius: "full",
               variant: "shadow",
-            })} w-40 mx-auto mt-5 font-extrabold`}
+            })} w-52 mx-auto mt-5 font-extrabold`}
             disabled={isSubmitting}
+            isLoading={isSubmitting}
             type="submit"
           >
             CADASTRAR
@@ -239,7 +265,7 @@ export function CreateAccount() {
           </div>
           <div className="flex items-center justify-center">
             <Link className="text-gray-400" href="/" size="sm">
-              Página de login
+              Realizar login
             </Link>
           </div>
         </form>
