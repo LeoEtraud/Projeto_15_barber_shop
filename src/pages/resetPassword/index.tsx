@@ -14,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
+import checkAnimation from "../../assets/confirmed.gif";
 import eye_slash from "../../assets/eye-slash.svg";
 import eye from "../../assets/eye.svg";
 
@@ -163,8 +164,10 @@ export function ResetPassword() {
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
       <section className="border border-gray-800 bg-zinc-950 rounded-lg px-28 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Recovery" />
-        <div className="max-h-6 text-center">
-          <h1 className="text-2xl">Recuperação de acesso</h1>
+        <div className="w-80 md:w-full px-4 sm:px-6 md:px-4">
+          <h1 className="text-2xl md:text-3xl lg:text-2xl font-bold text-center">
+            Recuperação de acesso
+          </h1>
         </div>
 
         {/* Etapa 1: Formulário de e-mail */}
@@ -336,9 +339,15 @@ export function ResetPassword() {
 
         {/* Mensagem de sucesso */}
         {isSuccess && (
-          <div className="text-center">
-            <h2 className="text-2xl">Senha redefinida com sucesso!</h2>
-            <Link href="/" size="sm">
+          <div className="text-center flex flex-col items-center justify-center">
+            <h2 className="text-2xl py-10">Senha redefinida com sucesso!</h2>
+            <Image
+              alt="HeroUI hero Image"
+              className="mx-auto mb-10"
+              src={checkAnimation}
+              width={200}
+            />
+            <Link href="/" size="md">
               Realizar login
             </Link>
           </div>
