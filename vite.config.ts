@@ -14,7 +14,7 @@ export default defineConfig({
         short_name: "Balata Barbearia",
         start_url: ".",
         display: "standalone",
-        background_color: "#ffffff",
+        background_color: "#000000",
         description: "Descrição do seu aplicativo",
         icons: [
           {
