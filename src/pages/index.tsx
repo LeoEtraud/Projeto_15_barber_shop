@@ -97,10 +97,12 @@ export function Login() {
                 isRequired
                 className="w-auto p-3 rounded-lg text-black focus:outline-none"
                 id="phone_number"
+                inputMode="numeric"
                 label="Nº de telefone"
                 maxLength={15}
+                pattern="[0-9]*"
                 size="sm"
-                type="text"
+                type="tel"
                 {...field}
                 value={formatPhone(field.value)}
                 onChange={(e: ChangeEvent<HTMLInputElement>) =>
