@@ -76,7 +76,7 @@ export function CreateAccount() {
       await SendCreateUser(data);
       addToast({
         title: "Sucesso",
-        description: "Conta registrada com êxito.",
+        description: "Usuário registrado com sucesso.",
         color: "success",
         timeout: 5000,
       });

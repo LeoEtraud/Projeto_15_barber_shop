@@ -123,7 +123,7 @@ export function ResetPassword() {
     } catch {
       addToast({
         title: "Informação",
-        description: "Erro durante o envio do código para seu E-mail!",
+        description: "Erro ao enviar o código para seu E-mail!",
         color: "danger",
         timeout: 5000,
       });
