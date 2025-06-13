@@ -112,10 +112,18 @@ export function Login() {
             )}
             rules={{
               required: "O nº de telefone é obrigatório",
-              validate: (value) =>
-                value.replace(/\D/g, "").length < 11
-                  ? "O nº de celular deve conter no mínimo 11 números."
-                  : true,
+              validate: (value) => {
+                const phoneNumber = value.replace(/\D/g, "");
+
+                if (phoneNumber.length < 11) {
+                  return "O nº de celular deve conter no mínimo 11 números.";
+                }
+                if (phoneNumber.length > 11) {
+                  return "O nº de celular deve conter no máximo 11 números.";
+                }
+
+                return true;
+              },
             }}
           />
 
