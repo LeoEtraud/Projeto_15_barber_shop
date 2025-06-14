@@ -7,12 +7,12 @@
   "description": "Descrição do seu aplicativo",
   "icons": [
     {
-      "src": "barber2.png",
+      "src": "img-barber-icon.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "barber2.png",
+      "src": "img-barber-logo.png",
       "sizes": "512x512",
       "type": "image/png"
     }
