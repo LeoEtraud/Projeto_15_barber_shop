@@ -22,12 +22,12 @@ export function Login() {
   const [isVisible, setIsVisible] = useState(false);
   const isLoggingInRef = useRef(false);
 
-  const initialValues = { phone_number: "", password: "" };
+  const initialValues = { telefone: "", senha: "" };
   const { authenticate } = useAuth();
 
   const schema = yup.object().shape({
-    phone_number: yup.string().required("O nº de telefone é obrigatório"),
-    password: yup.string().required("A senha é obrigatória"),
+    telefone: yup.string().required("O nº de telefone é obrigatório"),
+    senha: yup.string().required("A senha é obrigatória"),
   });
 
   // Habilita validação onChange para usar isValid
@@ -49,10 +49,7 @@ export function Login() {
     if (isLoggingInRef.current) return;
     isLoggingInRef.current = true;
     try {
-      const response = await LoginRequest(
-        formData.phone_number,
-        formData.password
-      );
+      const response = await LoginRequest(formData.telefone, formData.senha);
 
       authenticate(response);
       addToast({
@@ -91,12 +88,12 @@ export function Login() {
         <form className="flex flex-col w-80" onSubmit={handleSubmit(signIn)}>
           <Controller
             control={control}
-            name="phone_number"
+            name="telefone"
             render={({ field }) => (
               <Input
                 isRequired
                 className="w-auto p-3 rounded-lg text-black focus:outline-none"
-                id="phone_number"
+                id="telefone"
                 inputMode="numeric"
                 label="Nº de telefone"
                 maxLength={15}
@@ -128,7 +125,7 @@ export function Login() {
 
           <Controller
             control={control}
-            name="password"
+            name="senha"
             render={({ field }) => (
               <Input
                 isRequired
@@ -149,7 +146,7 @@ export function Login() {
                     </button>
                   )
                 }
-                id="password"
+                id="senha"
                 label="Senha"
                 size="sm"
                 type={isVisible ? "text" : "password"}
@@ -172,7 +169,11 @@ export function Login() {
           </div>
 
           <Button
-            className={`${buttonStyles({ color: "primary", radius: "full", variant: "shadow" })} w-40 mx-auto mt-5 font-extrabold`}
+            className={`${buttonStyles({
+              color: "primary",
+              radius: "full",
+              variant: "shadow",
+            })} w-40 mx-auto mt-5 font-extrabold`}
             disabled={isSubmitting}
             isLoading={isSubmitting}
             type="submit"
@@ -182,7 +183,7 @@ export function Login() {
 
           <div className="flex items-center my-6">
             <Divider className="flex-1 bg-gray-800" />
-            <span className="mx-4 text-gray-600">ou</span>
+            <span className="mx-4 text-gray-600">Ou</span>
             <Divider className="flex-1 bg-gray-800" />
           </div>
 

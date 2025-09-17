@@ -6,14 +6,14 @@ export interface IPayLoad {
 
 export interface IUser {
   id: string;
-  username: string;
+  nome: string;
   email: string;
-  phone_number: string;
+  tefefone: string;
 }
 
 export type SignInFormData = {
-  phone_number: string;
-  password: string;
+  telefone: string;
+  senha: string;
 };
 
 export interface IContext {

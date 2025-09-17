@@ -15,42 +15,41 @@ import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { SendCreateUser } from "@/contexts/AuthProvider/util";
 
 export type SignInFormData = {
-  username: string;
+  nome: string;
+  data_nascimento: string;
   email: string;
-  phone_number: string;
-  password: string;
-  confirm_password: string;
+  telefone: string;
+  senha: string;
 };
 
 export function CreateAccount() {
-  const [userName, setUserName] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [nomeUser, setNomeUser] = useState<string>("");
+  const [dataNascimento, setDataNascimento] = useState<string>("");
+  const [telefoneUser, setTelefoneUser] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [senha, setSenha] = useState<string>("");
 
   const [isVisible, setIsVisible] = useState(false);
-  const [isVisibleConfirm, setIsVisibleConfirm] = useState(false);
 
   const initialValues = {
-    username: "",
+    nome: "",
+    data_nascimento: "",
     email: "",
-    phone_number: "",
-    password: "",
-    confirm_password: "",
+    telefone: "",
+    senha: "",
   };
 
   const schema = yup.object().shape({
-    username: yup.string().min(3).required("O Nome é obrigatório"),
+    nome: yup.string().min(3).required("O Nome é obrigatório"),
+    data_nascimento: yup
+      .string()
+      .required("A data de nascimento é obrigatória"),
     email: yup.string().email().required("O E-mail é obrigatório"),
-    phone_number: yup
+    telefone: yup
       .string()
       .min(11)
       .required("O número de contato é obrigatório"),
-    password: yup.string().required("A senha é obrigatória"),
-    confirm_password: yup
-      .string()
-      .required("A confirmação de senha é obrigatória"),
+    senha: yup.string().required("A senha é obrigatória"),
   });
 
   const {
@@ -67,10 +66,7 @@ export function CreateAccount() {
     setIsVisible(!isVisible);
   }
 
-  function toggleVisibilityConfirm() {
-    setIsVisibleConfirm(!isVisibleConfirm);
-  }
-
+  // FUNÇÃO DE CRIAÇÃO DE USUÁRIO DA BARBEARIA
   async function CreateUser(data: SignInFormData) {
     try {
       await SendCreateUser(data);
@@ -80,15 +76,13 @@ export function CreateAccount() {
         color: "success",
         timeout: 5000,
       });
-      // Resetando os campos
       reset();
 
-      // Resetando os estados dos campos
-      setUserName("");
-      setPhoneNumber("");
+      setNomeUser("");
+      setDataNascimento("");
+      setTelefoneUser("");
       setEmail("");
-      setPassword("");
-      setConfirmPassword("");
+      setSenha("");
     } catch (error) {
       addToast({
         title: "Falha no envio do formulário!",
@@ -115,10 +109,11 @@ export function CreateAccount() {
           className="flex flex-col w-80"
           onSubmit={handleSubmit(CreateUser)}
         >
+          {/* NOME */}
           <Input
             isRequired
             className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="name"
+            id="nome"
             label="Nome"
             maxLength={60}
             size="sm"
@@ -128,12 +123,29 @@ export function CreateAccount() {
                 return "O nome deve conter no mínimo 3 caracteres.";
               }
             }}
-            {...register("username")}
-            value={userName}
+            {...register("nome")}
+            value={nomeUser}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setUserName(e.target.value)
+              setNomeUser(e.target.value)
             }
           />
+
+          {/* DATA DE NASCIMENTO */}
+          <Input
+            isRequired
+            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
+            id="data_nascimento"
+            label="Data de Nascimento"
+            size="sm"
+            type="date"
+            {...register("data_nascimento")}
+            value={dataNascimento}
+            onChange={(e: ChangeEvent<HTMLInputElement>) =>
+              setDataNascimento(e.target.value)
+            }
+          />
+
+          {/* EMAIL */}
           <Input
             isRequired
             className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
@@ -150,32 +162,34 @@ export function CreateAccount() {
             }
           />
 
+          {/* TELEFONE */}
           <Input
             isRequired
             className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="contact_number"
+            id="telefone"
             label="Nº de contato"
             size="sm"
             type="text"
-            {...register("phone_number")}
+            {...register("telefone")}
             maxLength={15}
             validate={(value) => {
               if (value.length < 14) {
                 return "O contato deve conter no mínimo 11 números.";
               }
             }}
-            value={phoneNumber}
+            value={telefoneUser}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setPhoneNumber(formatPhone(e.target.value))
+              setTelefoneUser(formatPhone(e.target.value))
             }
           />
 
+          {/* SENHA */}
           <Input
             isRequired
             className="w-full p-3 rounded-lg focus:outline-none"
             description="A senha deve conter no mínimo 6 caracteres."
             endContent={
-              password && (
+              senha && (
                 <button
                   aria-label="toggle password visibility"
                   className="focus:outline-none"
@@ -190,7 +204,7 @@ export function CreateAccount() {
                 </button>
               )
             }
-            id="password"
+            id="senha"
             label="Senha"
             size="sm"
             type={isVisible ? "text" : "password"}
@@ -199,49 +213,10 @@ export function CreateAccount() {
                 return "A senha deve conter no mínimo 6 caracteres.";
               }
             }}
-            value={password}
-            {...register("password")}
+            value={senha}
+            {...register("senha")}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
-          />
-
-          <Input
-            isRequired
-            className="w-full p-3 rounded-lg focus:outline-none"
-            description="A confirmação de senha deve ser igual a senha."
-            endContent={
-              confirmPassword && (
-                <button
-                  aria-label="toggle password visibility"
-                  className="focus:outline-none"
-                  type="button"
-                  onClick={toggleVisibilityConfirm}
-                >
-                  {isVisibleConfirm ? (
-                    <Image alt="Ocultar senha" src={eye_slash} width={30} />
-                  ) : (
-                    <Image alt="Mostrar senha" src={eye} width={30} />
-                  )}
-                </button>
-              )
-            }
-            id="confirm_password"
-            label="Confirmar senha"
-            size="sm"
-            type={isVisibleConfirm ? "text" : "password"}
-            validate={(value) => {
-              if (value.length < 6) {
-                return "A confirmação de senha deve conter no mínimo 6 caracteres.";
-              }
-              if (value !== password) {
-                return "A confirmação de senha deve ser igual a senha.";
-              }
-            }}
-            value={confirmPassword}
-            {...register("confirm_password")}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setConfirmPassword(e.target.value)
+              setSenha(e.target.value)
             }
           />
 
@@ -257,10 +232,11 @@ export function CreateAccount() {
           >
             CADASTRAR
           </Button>
+
           {/* LINK DE PÁGINAS */}
           <div className="flex items-center my-6">
             <Divider className="flex-1 bg-gray-800" />
-            <span className="mx-4 text-gray-600">ou</span>
+            <span className="mx-4 text-gray-600">Ou</span>
             <Divider className="flex-1 bg-gray-800" />
           </div>
           <div className="flex items-center justify-center">

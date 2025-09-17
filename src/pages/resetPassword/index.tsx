@@ -29,9 +29,9 @@ type Step1FormData = {
 };
 
 type Step2FormData = {
-  code_number: string;
-  new_password: string;
-  confirm_new_password: string;
+  codigo_recupera_senha: string;
+  nova_senha: string;
+  confirme_nova_senha: string;
 };
 
 export function ResetPassword() {
@@ -53,15 +53,17 @@ export function ResetPassword() {
 
   // Schema para a etapa 2: validação dos campos de código e senha
   const schemaStep2 = yup.object().shape({
-    code_number: yup.string().required("O Número do código é obrigatório"),
-    new_password: yup
+    codigo_recupera_senha: yup
+      .string()
+      .required("O Número do código é obrigatório"),
+    nova_senha: yup
       .string()
       .required("A nova senha é obrigatória")
       .min(6, "A nova senha deve conter no mínimo 6 caracteres"),
-    confirm_new_password: yup
+    confirme_nova_senha: yup
       .string()
       .required("A confirmação de nova senha é obrigatória")
-      .oneOf([yup.ref("new_password")], "As senhas não conferem"),
+      .oneOf([yup.ref("nova_senha")], "As senhas não conferem"),
   });
 
   // Hook do useForm para a etapa 1
@@ -83,15 +85,15 @@ export function ResetPassword() {
   } = useForm<Step2FormData>({
     resolver: yupResolver(schemaStep2),
     defaultValues: {
-      code_number: "",
-      new_password: "",
-      confirm_new_password: "",
+      codigo_recupera_senha: "",
+      nova_senha: "",
+      confirme_nova_senha: "",
     },
   });
 
   // Utiliza watch para monitorar os valores dos campos de senha (para exibir os botões de visibilidade)
-  const newPasswordValue = watchStep2("new_password");
-  const confirmNewPasswordValue = watchStep2("confirm_new_password");
+  const novaSenhaValue = watchStep2("nova_senha");
+  const confirmeNovaSenhaValue = watchStep2("confirme_nova_senha");
 
   function toggleVisibility() {
     setIsVisible((prev) => !prev);
@@ -115,7 +117,6 @@ export function ResetPassword() {
           color: "primary",
           timeout: 5000,
         });
-        // Aqui você pode, opcionalmente, fazer uma chamada à API para enviar o código ao e-mail
         setTimeout(() => {
           setIsCode(true);
         }, 1000);
@@ -133,9 +134,9 @@ export function ResetPassword() {
   // Handler para a etapa 2 (código e nova senha)
   async function onSubmitStep2(data: Step2FormData) {
     try {
-      const { code_number, new_password } = data;
+      const { codigo_recupera_senha, nova_senha } = data;
 
-      await sendNewPassword(code_number, new_password);
+      await sendNewPassword(codigo_recupera_senha, nova_senha);
       addToast({
         title: "Informação",
         description: "Senha redefinida com sucesso!",
@@ -151,7 +152,6 @@ export function ResetPassword() {
       });
     }
 
-    // Aqui você pode fazer a chamada à API para redefinir a senha
     setIsSuccess(true);
   }
 
@@ -163,7 +163,7 @@ export function ResetPassword() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
       <section className="border border-gray-800 bg-zinc-950 rounded-lg px-28 py-6 flex flex-col items-center justify-center gap-10">
-        <Helmet title="Recovery" />
+        <Helmet title="Recup. Acesso" />
         <div className="w-80 md:w-full px-4 sm:px-6 md:px-4">
           <h1 className="text-2xl md:text-3xl lg:text-2xl font-bold text-center">
             Recuperação de acesso
@@ -203,7 +203,7 @@ export function ResetPassword() {
 
             <div className="flex items-center my-6">
               <Divider className="flex-1 bg-gray-800" />
-              <span className="mx-4 text-gray-600">ou</span>
+              <span className="mx-4 text-gray-600">Ou</span>
               <Divider className="flex-1 bg-gray-800" />
             </div>
 
@@ -233,7 +233,7 @@ export function ResetPassword() {
                 length={6}
                 size="lg"
                 variant={"bordered"}
-                {...registerStep2("code_number")}
+                {...registerStep2("codigo_recupera_senha")}
               />
             </div>
 
@@ -242,7 +242,7 @@ export function ResetPassword() {
                 isRequired
                 className="w-full p-3 rounded-lg focus:outline-none"
                 endContent={
-                  newPasswordValue && (
+                  novaSenhaValue && (
                     <button
                       aria-label="toggle password visibility"
                       className="focus:outline-none"
@@ -257,18 +257,18 @@ export function ResetPassword() {
                     </button>
                   )
                 }
-                id="new_password"
+                id="nova_senha"
                 label="Nova Senha"
                 size="sm"
                 type={isVisible ? "text" : "password"}
-                {...registerStep2("new_password")}
+                {...registerStep2("nova_senha")}
               />
 
               <Input
                 isRequired
                 className="w-full p-3 rounded-lg focus:outline-none"
                 endContent={
-                  confirmNewPasswordValue && (
+                  confirmeNovaSenhaValue && (
                     <button
                       aria-label="toggle password visibility"
                       className="focus:outline-none"
@@ -283,7 +283,7 @@ export function ResetPassword() {
                     </button>
                   )
                 }
-                id="confirm_new_password"
+                id="confirme_nova_senha"
                 label="Confirmar nova senha"
                 size="sm"
                 type={isVisibleConfirm ? "text" : "password"}
@@ -291,12 +291,12 @@ export function ResetPassword() {
                   if (value.length < 6) {
                     return "A confirmação de senha deve conter no mínimo 6 caracteres.";
                   }
-                  if (value !== newPasswordValue) {
+                  if (value !== novaSenhaValue) {
                     return "A confirmação de senha deve ser igual a senha.";
                   }
                 }}
-                value={confirmNewPasswordValue}
-                {...registerStep2("confirm_new_password")}
+                value={confirmeNovaSenhaValue}
+                {...registerStep2("confirme_nova_senha")}
               />
             </div>
 
@@ -320,7 +320,7 @@ export function ResetPassword() {
 
             <div className="flex items-center my-6">
               <Divider className="flex-1 bg-gray-800" />
-              <span className="mx-4 text-gray-600">ou</span>
+              <span className="mx-4 text-gray-600">Ou</span>
               <Divider className="flex-1 bg-gray-800" />
             </div>
 

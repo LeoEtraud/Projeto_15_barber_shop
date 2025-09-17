@@ -13,9 +13,9 @@ export async function SendCreateUser(data: SignInFormData) {
 }
 
 // CHAMADA DA API PARA REALIZAÇÃO DO LOGIN
-export async function LoginRequest(phone_number: string, password: string) {
+export async function LoginRequest(telefone: string, senha: string) {
   try {
-    const request = await apiBarber.post("/auth", { phone_number, password });
+    const request = await apiBarber.post("/auth", { telefone, senha });
 
     return request.data;
   } catch (error) {
@@ -37,11 +37,14 @@ export async function postCodeRecoverPassword(email: string) {
 }
 
 // CHAMADA PARA API DE ENVIO DE EMAIL PARA RECUPERAÇÃO DE SENHA
-export async function sendNewPassword(token: string, new_password: string) {
+export async function sendNewPassword(
+  codigo_recupera_senha: string,
+  nova_senha: string
+) {
   try {
     const request = await apiBarber.post("/reset-password", {
-      token,
-      new_password,
+      codigo_recupera_senha,
+      nova_senha,
     });
 
     return request.data;

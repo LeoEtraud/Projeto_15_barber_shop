@@ -7,7 +7,7 @@ import { AuthProvider } from "./contexts/AuthProvider";
 function App() {
   return (
     <HelmetProvider>
-      <Helmet titleTemplate="%s | Barber Shop" />
+      <Helmet titleTemplate="%s | Barbearia" />
       <ToastProvider placement="top-right" toastOffset={60} />
       <AuthProvider>
         <Router />
