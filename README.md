@@ -1,50 +1,186 @@
-# Vite & HeroUI Template
+# SaaS para Agendamento de Serviços de Barbearias
 
-This is a template for creating applications using Vite and HeroUI (v2).
+Este é um sistema SaaS para o agendamento de serviços de barbearias, projetado para facilitar o gerenciamento de barbearias e a experiência do cliente. O sistema permite que as barbearias criem contas, cadastrem serviços e profissionais, e que os clientes agendem serviços com pagamento integrado.
 
-[Try it on CodeSandbox](https://githubbox.com/frontio-ai/vite-template)
+## Estrutura do Banco de Dados
 
-## Technologies Used
+### Tabelas Principais
 
-- [Vite](https://vitejs.dev/guide/)
-- [HeroUI](https://heroui.com)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Tailwind Variants](https://tailwind-variants.org)
-- [TypeScript](https://www.typescriptlang.org)
-- [Framer Motion](https://www.framer.com/motion)
+#### **Barbearias**
 
-## How to Use
+- `id` (PK)
+- `nome`
+- `endereco`
+- `telefone`
+- `email`
+- `imagem_logo`
+- `horario_funcionamento`
+- `status` (ativo/inativo)
+- `data_criacao`
+- `data_atualizacao`
 
-To clone the project, run the following command:
+#### **Serviços**
 
-```bash
-git clone https://github.com/frontio-ai/vite-template.git
-```
+- `id` (PK)
+- `id_barbearia` (FK para Barbearias)
+- `nome`
+- `descricao`
+- `preco`
+- `duracao` (em minutos)
+- `imagem`
+- `data_criacao`
+- `data_atualizacao`
 
-### Install dependencies
+#### **Profissionais**
 
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+- `id` (PK)
+- `id_barbearia` (FK para Barbearias)
+- `nome`
+- `telefone`
+- `email`
+- `data_nascimento`
+- `especialidade`
+- `status` (ativo/inativo)
+- `data_criacao`
+- `data_atualizacao`
 
-```bash
-npm install
-```
+#### **Clientes**
 
-### Run the development server
+- `id` (PK)
+- `nome`
+- `data_nascimento`
+- `email`
+- `telefone`
+- `senha`
+- `data_criacao`
+- `data_atualizacao`
 
-```bash
-npm run dev
-```
+#### **Agendamentos**
 
-### Setup pnpm (optional)
+- `id` (PK)
+- `id_cliente` (FK para Clientes)
+- `id_servico` (FK para Serviços)
+- `id_profissional` (FK para Profissionais)
+- `id_barbearia` (FK para Barbearias)
+- `data_agendamento`
+- `status` (confirmado, pendente, cancelado)
+- `valor_pago`
+- `data_criacao`
+- `data_atualizacao`
 
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
+#### **Pagamentos**
 
-```bash
-public-hoist-pattern[]=*@heroui/*
-```
+- `id` (PK)
+- `id_agendamento` (FK para Agendamentos)
+- `valor`
+- `metodo_pagamento`
+- `status_pagamento` (pendente, pago, falhado)
+- `data_pagamento`
+- `data_criacao`
+- `data_atualizacao`
 
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
+#### **Avaliações**
 
-## License
+- `id` (PK)
+- `id_agendamento` (FK para Agendamentos)
+- `id_cliente` (FK para Clientes)
+- `id_servico` (FK para Serviços)
+- `id_profissional` (FK para Profissionais)
+- `id_barbearia` (FK para Barbearias)
+- `nota_da_avaliacao` (1 a 5)
+- `data_criacao`
+- `data_atualizacao`
 
-Licensed under the [MIT license](https://github.com/frontio-ai/vite-template/blob/main/LICENSE).
+### Relacionamentos
+
+- Cada barbearia pode ter múltiplos profissionais e serviços.
+- Cada agendamento é vinculado a um cliente, serviço, profissional e barbearia.
+- Cada pagamento é vinculado a um agendamento específico.
+
+## Fluxo de Processos
+
+### 1. **Criação da Conta da Barbearia**
+
+#### Cadastro da Barbearia
+
+- A barbearia se registra no sistema com nome, endereço, telefone, e-mail e horários de funcionamento.
+- Um perfil de barbearia é criado no banco de dados.
+
+#### Cadastro de Profissionais e Serviços
+
+- A barbearia cadastra seus profissionais (nome, especialidade, horários de trabalho).
+- A barbearia também cadastra os serviços que serão oferecidos (nome, preço, duração).
+
+#### Configuração de Pagamentos
+
+- A barbearia configura as formas de pagamento (cartão de crédito, débito, Pix, etc.) e vincula à sua conta de pagamento.
+
+### 2. **Cadastro e Login de Clientes**
+
+#### Cadastro do Cliente
+
+- O cliente cria uma conta com nome, e-mail, telefone e senha.
+
+#### Login e Perfil do Cliente
+
+- O cliente pode acessar seu perfil, histórico de agendamentos e agendar novos serviços.
+
+### 3. **Agendamento do Serviço**
+
+#### Escolha da Barbearia e Serviço
+
+- O cliente escolhe a barbearia, o serviço desejado, o profissional (se houver preferência) e o horário disponível.
+
+#### Seleção de Data e Hora
+
+- O sistema verifica a disponibilidade do profissional e do serviço na data e hora escolhidas. Se o horário estiver ocupado, o cliente será notificado.
+
+#### Confirmação do Agendamento
+
+- O cliente confirma o agendamento e o sistema gera o agendamento com o status "pendente".
+
+### 4. **Pagamento**
+
+#### Método de Pagamento
+
+- O cliente escolhe o método de pagamento (cartão de crédito, débito, etc.).
+
+#### Pagamento
+
+- O sistema processa o pagamento e, caso seja aprovado, o status do agendamento é alterado para "confirmado". Caso contrário, ele permanece "pendente".
+
+#### Notificação para a Barbearia
+
+- Após a confirmação do pagamento, a barbearia recebe uma notificação sobre o agendamento confirmado.
+
+### 5. **Realização do Serviço**
+
+#### Serviço Realizado
+
+- Na data e hora do agendamento, o cliente comparece à barbearia e o profissional realiza o serviço.
+
+#### Feedback do Cliente
+
+- Após a realização do serviço, o cliente pode avaliar o serviço e o profissional.
+
+#### Encerramento do Agendamento
+
+- O agendamento é marcado como "concluído", e o pagamento é registrado como "pago".
+
+### 6. **Cancelamento de Agendamento**
+
+- O cliente pode cancelar o agendamento com antecedência e o status será alterado para "cancelado".
+- Se o pagamento já foi realizado, a barbearia pode processar o reembolso, e o pagamento será atualizado no banco de dados.
+
+## Considerações Finais
+
+Com essa estrutura de banco de dados e fluxo de processos, seu SaaS pode oferecer uma solução eficiente para o agendamento de serviços de barbearias. A plataforma pode ser expandida para incluir funcionalidades adicionais como promoções, fidelização de clientes e integrações com outros sistemas de pagamento e CRM.
+
+---
+
+**Tecnologias Utilizadas:**
+
+- Backend: Node.js, Express
+- Banco de Dados: MySQL/PostgreSQL
+- Frontend: React, Vite
+- Pagamentos: Stripe, Pix, Cartão de Crédito/Débito
