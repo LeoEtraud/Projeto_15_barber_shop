@@ -10,7 +10,7 @@ import {
 import { button as buttonStyles } from "@heroui/theme";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 
@@ -43,6 +43,35 @@ export function ResetPassword() {
   const [isVisible, setIsVisible] = useState(false);
   const [isVisibleConfirm, setIsVisibleConfirm] = useState(false);
 
+  // no topo do componente ResetPassword:
+  const [submittedEmail, setSubmittedEmail] = useState<string>("");
+
+  function maskEmail(email: string) {
+    const [user, domain] = email.split("@");
+
+    if (!domain) return email;
+
+    // mascara o usuário (parte antes do @)
+    const maskUser = (s: string) => {
+      if (s.length <= 5) return s[0] + "*".repeat(s.length - 1);
+
+      return s.slice(0, 3) + "*".repeat(s.length - 5) + s.slice(-2);
+    };
+
+    // mascara o domínio (parte depois do @, antes do .)
+    const [dname, ...tldParts] = domain.split(".");
+    const maskDomain = (s: string) => {
+      if (s.length <= 3) return s[0] + "*".repeat(s.length - 1);
+
+      return s.slice(0, 2) + "*".repeat(s.length - 2);
+    };
+
+    const maskedDomain = dname ? maskDomain(dname) : domain;
+    const tld = tldParts.length ? "." + tldParts.join(".") : "";
+
+    return `${maskUser(user)}@${maskedDomain}${tld}`;
+  }
+
   // Schema para a etapa 1: validação do e-mail
   const schemaStep1 = yup.object().shape({
     email: yup
@@ -55,7 +84,8 @@ export function ResetPassword() {
   const schemaStep2 = yup.object().shape({
     codigo_recupera_senha: yup
       .string()
-      .required("O Número do código é obrigatório"),
+      .required("O Número do código é obrigatório")
+      .matches(/^\d{6}$/, "Informe os 6 dígitos do código"),
     nova_senha: yup
       .string()
       .required("A nova senha é obrigatória")
@@ -71,6 +101,7 @@ export function ResetPassword() {
     register: registerStep1,
     handleSubmit: handleSubmitStep1,
     formState: { isSubmitting: isSubmittingStep1 },
+    reset: resetStep1,
   } = useForm<Step1FormData>({
     resolver: yupResolver(schemaStep1),
     defaultValues: { email: "" },
@@ -81,7 +112,11 @@ export function ResetPassword() {
     register: registerStep2,
     handleSubmit: handleSubmitStep2,
     watch: watchStep2,
+    control,
     formState: { isSubmitting: isSubmittingStep2 },
+    setError,
+    clearErrors,
+    reset: resetStep2,
   } = useForm<Step2FormData>({
     resolver: yupResolver(schemaStep2),
     defaultValues: {
@@ -110,10 +145,13 @@ export function ResetPassword() {
     try {
       if (email.length > 0) {
         await postCodeRecoverPassword(email);
+
+        setSubmittedEmail(email.trim());
+
         addToast({
           title: "Informação",
           description:
-            "Código enviado com sucesso, verifique sua conta de E-mail.",
+            "Um código foi enviado ao seu email, verifique sua conta.",
           color: "primary",
           timeout: 5000,
         });
@@ -136,14 +174,42 @@ export function ResetPassword() {
     try {
       const { codigo_recupera_senha, nova_senha } = data;
 
-      await sendNewPassword(codigo_recupera_senha, nova_senha);
+      const result = await sendNewPassword(codigo_recupera_senha, nova_senha);
+
+      // Se sua função retorna algo tipo { ok: boolean } / { status }, valide aqui
+      if (
+        (result && result.ok === false) ||
+        (result?.status && result.status >= 400)
+      ) {
+        throw new Error("INVALID_CODE");
+      }
       addToast({
         title: "Informação",
         description: "Senha redefinida com sucesso!",
         color: "success",
         timeout: 5000,
       });
+
+      // limpar erros/inputs da etapa 2 (opcional)
+      resetStep2({
+        codigo_recupera_senha: "",
+        nova_senha: "",
+        confirme_nova_senha: "",
+      });
+
+      // avançar para a etapa de sucesso
+      setIsSuccess(true); // <-- volta pra cá
+      setIsCode(false); // <-- opcional, para garantir que só a etapa 3 apareça
     } catch {
+      // NÃO avança de etapa
+      setIsSuccess(false);
+
+      // Mostra erro no campo de código
+      setError("codigo_recupera_senha", {
+        type: "manual",
+        message: "Código inválido. Tente novamente.",
+      });
+
       addToast({
         title: "Informação",
         description: "Erro ao redefinir a senha!",
@@ -151,8 +217,6 @@ export function ResetPassword() {
         timeout: 5000,
       });
     }
-
-    setIsSuccess(true);
   }
 
   const allowedKeysConfig = {
@@ -221,19 +285,44 @@ export function ResetPassword() {
             className="flex flex-col w-80"
             onSubmit={handleSubmitStep2(onSubmitStep2)}
           >
-            <h4 className="text-xs text-gray-400 px-3 select-none">
-              Um código foi enviado ao seu e-mail, verifique na sua caixa de
-              entrada e informe-o no campo abaixo!
-            </h4>
+            <p
+              aria-live="polite"
+              className="text-xs text-gray-400 px-3 select-none text-center leading-relaxed"
+            >
+              Código enviado para{" "}
+              <span className="text-gray-200 font-medium break-all">
+                {submittedEmail ? maskEmail(submittedEmail) : "seu e-mail"}
+              </span>
+              . Verifique sua caixa de entrada (e também a pasta de spam) e
+              digite-o abaixo.
+            </p>
 
-            <div className="w-full flex flex-col items-center gap-4 my-4">
-              <InputOtp
-                allowedKeys={allowedKeysConfig.value}
-                color="primary"
-                length={6}
-                size="lg"
-                variant={"bordered"}
-                {...registerStep2("codigo_recupera_senha")}
+            <div className="w-full flex flex-col items-center gap-2 my-4">
+              <Controller
+                control={control}
+                name="codigo_recupera_senha"
+                render={({ field, fieldState }) => (
+                  <>
+                    <InputOtp
+                      allowedKeys={allowedKeysConfig.value}
+                      color="primary"
+                      length={6}
+                      size="lg"
+                      value={field.value}
+                      variant="bordered"
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        if (fieldState.error)
+                          clearErrors("codigo_recupera_senha");
+                      }}
+                    />
+                    {fieldState.error && (
+                      <span className="text-[11px] text-red-500 mt-1">
+                        {fieldState.error.message}
+                      </span>
+                    )}
+                  </>
+                )}
               />
             </div>
 
@@ -300,11 +389,11 @@ export function ResetPassword() {
               />
             </div>
 
-            <div className="flex items-center mb-6">
+            {/* <div className="flex items-center mb-6">
               <Link className="text-gray-400 pl-4" href="../recovery" size="sm">
                 Reenviar código?
               </Link>
-            </div>
+            </div> */}
 
             <Button
               className={`${buttonStyles({
@@ -313,6 +402,7 @@ export function ResetPassword() {
                 variant: "shadow",
               })} w-60 mx-auto mt-5 font-extrabold`}
               disabled={isSubmittingStep2}
+              isLoading={isSubmittingStep2}
               type="submit"
             >
               CADASTRAR NOVA SENHA
@@ -329,7 +419,13 @@ export function ResetPassword() {
                 className="text-gray-400"
                 href="/recovery"
                 size="sm"
-                onPress={() => setIsCode(false)}
+                onPress={(e) => {
+                  // @ts-ignore caso a tipagem do evento não exponha preventDefault
+                  e?.preventDefault?.();
+                  setIsCode(false);
+                  setSubmittedEmail("");
+                  resetStep1({ email: "" });
+                }}
               >
                 Alterar e-mail
               </Link>

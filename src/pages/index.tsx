@@ -61,8 +61,8 @@ export function Login() {
       reset(initialValues);
     } catch {
       addToast({
-        title: "Falha",
-        description: "Erro ao logar usuário",
+        title: "Erro de Auntenticação",
+        description: "Credenciais inválidas!",
         color: "danger",
       });
     } finally {
