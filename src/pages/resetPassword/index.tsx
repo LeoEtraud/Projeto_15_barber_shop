@@ -183,23 +183,27 @@ export function ResetPassword() {
       ) {
         throw new Error("INVALID_CODE");
       }
-      addToast({
-        title: "Informação",
-        description: "Senha redefinida com sucesso!",
-        color: "success",
-        timeout: 5000,
-      });
 
-      // limpar erros/inputs da etapa 2 (opcional)
-      resetStep2({
-        codigo_recupera_senha: "",
-        nova_senha: "",
-        confirme_nova_senha: "",
-      });
+      // Adiciona um delay de 1 segundo antes de disparar o toast e mudar para a tela de sucesso
+      setTimeout(() => {
+        addToast({
+          title: "Informação",
+          description: "Senha redefinida com sucesso!",
+          color: "success",
+          timeout: 5000,
+        });
 
-      // avançar para a etapa de sucesso
-      setIsSuccess(true); // <-- volta pra cá
-      setIsCode(false); // <-- opcional, para garantir que só a etapa 3 apareça
+        // limpar erros/inputs da etapa 2 (opcional)
+        resetStep2({
+          codigo_recupera_senha: "",
+          nova_senha: "",
+          confirme_nova_senha: "",
+        });
+
+        // avançar para a etapa de sucesso
+        setIsSuccess(true); // <-- volta pra cá
+        setIsCode(false); // <-- opcional, para garantir que só a etapa 3 apareça
+      }, 1000); // Delay de 1 segundo (1000 milissegundos)
     } catch {
       // NÃO avança de etapa
       setIsSuccess(false);
@@ -317,7 +321,7 @@ export function ResetPassword() {
                       }}
                     />
                     {fieldState.error && (
-                      <span className="text-[11px] text-red-500 mt-1">
+                      <span className="text-red-600 text-sm font-semibold mt-1">
                         {fieldState.error.message}
                       </span>
                     )}
@@ -425,6 +429,18 @@ export function ResetPassword() {
                   setIsCode(false);
                   setSubmittedEmail("");
                   resetStep1({ email: "" });
+
+                  // Limpa os campos da etapa 2 (código e senha)
+                  resetStep2({
+                    codigo_recupera_senha: "",
+                    nova_senha: "",
+                    confirme_nova_senha: "",
+                  });
+
+                  // Restaura os estados de visibilidade para a configuração inicial
+                  setIsVisible(false);
+                  setIsVisibleConfirm(false);
+                  setIsSuccess(false); // Garante que a tela de sucesso seja ocultada
                 }}
               >
                 Alterar e-mail
