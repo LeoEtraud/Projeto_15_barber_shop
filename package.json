@@ -27,6 +27,7 @@
     "@lottiefiles/dotlottie-react": "^0.14.0",
     "@react-aria/visually-hidden": "3.8.20",
     "@react-types/shared": "3.28.0",
+    "@tailwindcss/postcss": "^4.1.13",
     "axios": "^1.8.4",
     "caniuse-lite": "^1.0.30001743",
     "clsx": "2.1.1",
