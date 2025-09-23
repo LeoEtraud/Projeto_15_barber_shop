@@ -4,7 +4,7 @@ import { Input } from "@heroui/input";
 import { ChangeEvent, useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { addToast, Divider, ToastProvider, Image, Link } from "@heroui/react";
 import { Button } from "@heroui/react";
 import { useLoading } from "@/contexts/LoadingProvider";
@@ -24,12 +24,6 @@ export type SignInFormData = {
 };
 
 export function CreateAccount() {
-  const [nomeUser, setNomeUser] = useState<string>("");
-  const [dataNascimento, setDataNascimento] = useState<string>("");
-  const [telefoneUser, setTelefoneUser] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [senha, setSenha] = useState<string>("");
-
   const [isVisible, setIsVisible] = useState(false);
   const { show, hide } = useLoading();
 
@@ -55,7 +49,7 @@ export function CreateAccount() {
   });
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { isSubmitting },
     reset,
@@ -80,12 +74,6 @@ export function CreateAccount() {
         timeout: 5000,
       });
       reset();
-
-      setNomeUser("");
-      setDataNascimento("");
-      setTelefoneUser("");
-      setEmail("");
-      setSenha("");
     } catch (error) {
       addToast({
         title: "Falha no envio do formulário!",
@@ -113,117 +101,145 @@ export function CreateAccount() {
         <form
           className="flex flex-col w-80"
           onSubmit={handleSubmit(CreateUser)}
+          autoComplete="on"
         >
           {/* NOME */}
-          <Input
-            isRequired
-            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="nome"
-            label="Nome"
-            maxLength={60}
-            size="sm"
-            type="text"
-            validate={(value) => {
-              if (value.length < 3) {
-                return "O nome deve conter no mínimo 3 caracteres.";
-              }
-            }}
-            {...register("nome")}
-            value={nomeUser}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setNomeUser(e.target.value)
-            }
+          <Controller
+            control={control}
+            name="nome"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className={
+                  "w-auto p-3 rounded-lg text-black focus:outline-none"
+                }
+                id="nome"
+                label="Nome"
+                maxLength={60}
+                size="sm"
+                type="text"
+                autoComplete="name"
+                {...field}
+                validate={(value) => {
+                  if (value.length < 3) {
+                    return "O nome deve conter no mínimo 3 caracteres.";
+                  }
+                }}
+              />
+            )}
           />
 
           {/* DATA DE NASCIMENTO */}
-          <Input
-            isRequired
-            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="data_nascimento"
-            label="Data de Nascimento"
-            size="sm"
-            type="date"
-            {...register("data_nascimento")}
-            value={dataNascimento}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setDataNascimento(e.target.value)
-            }
+          <Controller
+            control={control}
+            name="data_nascimento"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className={
+                  "w-auto p-3 rounded-lg text-black focus:outline-none"
+                }
+                id="data_nascimento"
+                label="Data de Nascimento"
+                size="sm"
+                type="date"
+                autoComplete="bday"
+                {...field}
+              />
+            )}
           />
 
           {/* EMAIL */}
-          <Input
-            isRequired
-            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            errorMessage="Insira um e-mail válido."
-            id="email"
-            label="E-mail"
-            maxLength={60}
-            size="sm"
-            type="email"
-            {...register("email")}
-            value={email}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className={
+                  "w-auto p-3 rounded-lg text-black focus:outline-none"
+                }
+                errorMessage="Insira um e-mail válido."
+                id="email"
+                label="E-mail"
+                maxLength={60}
+                size="sm"
+                type="email"
+                autoComplete="email"
+                {...field}
+              />
+            )}
           />
 
           {/* TELEFONE */}
-          <Input
-            isRequired
-            className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
-            id="telefone"
-            inputMode="numeric"
-            label="Nº de contato"
-            size="sm"
-            type="tel"
-            {...register("telefone")}
-            maxLength={15}
-            validate={(value) => {
-              if (value.length < 14) {
-                return "O contato deve conter no mínimo 11 números.";
-              }
-            }}
-            value={telefoneUser}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setTelefoneUser(formatPhone(e.target.value))
-            }
+          <Controller
+            control={control}
+            name="telefone"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className={
+                  "w-auto p-3 rounded-lg text-black focus:outline-none"
+                }
+                id="telefone"
+                inputMode="numeric"
+                label="Nº de contato"
+                size="sm"
+                type="tel"
+                autoComplete="tel"
+                maxLength={15}
+                validate={(value) => {
+                  if (value.replace(/\D/g, "").length < 11) {
+                    return "O contato deve conter no mínimo 11 números.";
+                  }
+                }}
+                {...field}
+                value={field.value ? formatPhone(field.value) : ""}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  field.onChange(formatPhone(e.target.value))
+                }
+              />
+            )}
           />
 
           {/* SENHA */}
-          <Input
-            isRequired
-            className="w-full p-3 rounded-lg focus:outline-none"
-            description="A senha deve conter no mínimo 6 caracteres."
-            endContent={
-              senha && (
-                <button
-                  aria-label="toggle password visibility"
-                  className="focus:outline-none"
-                  type="button"
-                  onClick={toggleVisibility}
-                >
-                  {isVisible ? (
-                    <Image alt="Ocultar senha" src={eye_slash} width={30} />
-                  ) : (
-                    <Image alt="Mostrar senha" src={eye} width={30} />
-                  )}
-                </button>
-              )
-            }
-            id="senha"
-            label="Senha"
-            size="sm"
-            type={isVisible ? "text" : "password"}
-            validate={(value) => {
-              if (value.length < 6) {
-                return "A senha deve conter no mínimo 6 caracteres.";
-              }
-            }}
-            value={senha}
-            {...register("senha")}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setSenha(e.target.value)
-            }
+          <Controller
+            control={control}
+            name="senha"
+            render={({ field }) => (
+              <Input
+                isRequired
+                className="w-full p-3 rounded-lg focus:outline-none"
+                description="A senha deve conter no mínimo 6 caracteres."
+                endContent={
+                  field.value && (
+                    <button
+                      aria-label="toggle password visibility"
+                      className="focus:outline-none"
+                      type="button"
+                      onClick={toggleVisibility}
+                    >
+                      {isVisible ? (
+                        <Image alt="Ocultar senha" src={eye_slash} width={30} />
+                      ) : (
+                        <Image alt="Mostrar senha" src={eye} width={30} />
+                      )}
+                    </button>
+                  )
+                }
+                id="senha"
+                label="Senha"
+                size="sm"
+                type={isVisible ? "text" : "password"}
+                autoComplete="new-password"
+                validate={(value) => {
+                  if (value.length < 6) {
+                    return "A senha deve conter no mínimo 6 caracteres.";
+                  }
+                }}
+                {...field}
+              />
+            )}
           />
 
           <Button
