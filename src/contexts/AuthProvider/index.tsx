@@ -10,7 +10,7 @@ export const AuthContext = createContext<IContext>({} as IContext);
 
 export const AuthProvider = ({ children }: IAuthProvider) => {
   const navigate = useNavigate();
-  const { show, hide } = useLoading();
+  useLoading();
 
   const [user, setUser] = useState<IPayLoad | null>(
     typeof window !== "undefined"
@@ -56,7 +56,6 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
   // }
 
   async function authenticate(data: IPayLoad) {
-    show();
     try {
       setUserCookies(data);
       setUser(data);
@@ -65,7 +64,6 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
         navigate("/dashboard");
       }, 300);
     } finally {
-      setTimeout(() => hide(), 500);
     }
   }
 

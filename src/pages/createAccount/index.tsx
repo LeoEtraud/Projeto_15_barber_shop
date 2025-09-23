@@ -7,11 +7,11 @@ import * as yup from "yup";
 import { useForm, Controller } from "react-hook-form";
 import { addToast, Divider, ToastProvider, Image, Link } from "@heroui/react";
 import { Button } from "@heroui/react";
-import { useLoading } from "@/contexts/LoadingProvider";
 
 import eye_slash from "../../assets/eye-slash.svg";
 import eye from "../../assets/eye.svg";
 
+import { useLoading } from "@/contexts/LoadingProvider";
 import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { SendCreateUser } from "@/contexts/AuthProvider/util";
 
@@ -25,7 +25,7 @@ export type SignInFormData = {
 
 export function CreateAccount() {
   const [isVisible, setIsVisible] = useState(false);
-  const { show, hide } = useLoading();
+  const { show } = useLoading();
 
   const initialValues = {
     nome: "",
@@ -65,7 +65,6 @@ export function CreateAccount() {
   // FUNÇÃO DE CRIAÇÃO DE USUÁRIO DA BARBEARIA
   async function CreateUser(data: SignInFormData) {
     try {
-      show();
       await SendCreateUser(data);
       addToast({
         title: "Sucesso",
@@ -84,7 +83,6 @@ export function CreateAccount() {
         timeout: 5000,
       });
     } finally {
-      hide();
     }
   }
 
@@ -99,9 +97,9 @@ export function CreateAccount() {
         </div>
 
         <form
+          autoComplete="on"
           className="flex flex-col w-80"
           onSubmit={handleSubmit(CreateUser)}
-          autoComplete="on"
         >
           {/* NOME */}
           <Controller
@@ -110,6 +108,7 @@ export function CreateAccount() {
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="name"
                 className={
                   "w-auto p-3 rounded-lg text-black focus:outline-none"
                 }
@@ -118,7 +117,6 @@ export function CreateAccount() {
                 maxLength={60}
                 size="sm"
                 type="text"
-                autoComplete="name"
                 {...field}
                 validate={(value) => {
                   if (value.length < 3) {
@@ -136,6 +134,7 @@ export function CreateAccount() {
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="bday"
                 className={
                   "w-auto p-3 rounded-lg text-black focus:outline-none"
                 }
@@ -143,7 +142,6 @@ export function CreateAccount() {
                 label="Data de Nascimento"
                 size="sm"
                 type="date"
-                autoComplete="bday"
                 {...field}
               />
             )}
@@ -156,6 +154,7 @@ export function CreateAccount() {
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="email"
                 className={
                   "w-auto p-3 rounded-lg text-black focus:outline-none"
                 }
@@ -165,7 +164,6 @@ export function CreateAccount() {
                 maxLength={60}
                 size="sm"
                 type="email"
-                autoComplete="email"
                 {...field}
               />
             )}
@@ -178,16 +176,16 @@ export function CreateAccount() {
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="tel"
                 className={
                   "w-auto p-3 rounded-lg text-black focus:outline-none"
                 }
                 id="telefone"
                 inputMode="numeric"
                 label="Nº de contato"
+                maxLength={15}
                 size="sm"
                 type="tel"
-                autoComplete="tel"
-                maxLength={15}
                 validate={(value) => {
                   if (value.replace(/\D/g, "").length < 11) {
                     return "O contato deve conter no mínimo 11 números.";
@@ -209,6 +207,7 @@ export function CreateAccount() {
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="new-password"
                 className="w-full p-3 rounded-lg focus:outline-none"
                 description="A senha deve conter no mínimo 6 caracteres."
                 endContent={
@@ -231,7 +230,6 @@ export function CreateAccount() {
                 label="Senha"
                 size="sm"
                 type={isVisible ? "text" : "password"}
-                autoComplete="new-password"
                 validate={(value) => {
                   if (value.length < 6) {
                     return "A senha deve conter no mínimo 6 caracteres.";

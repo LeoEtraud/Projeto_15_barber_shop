@@ -22,7 +22,7 @@ import { useLoading } from "@/contexts/LoadingProvider";
 export function Login() {
   const [isVisible, setIsVisible] = useState(false);
   const isLoggingInRef = useRef(false);
-  const { show, hide } = useLoading();
+  const { show } = useLoading();
 
   const initialValues = { telefone: "", senha: "" };
   const { authenticate } = useAuth();
@@ -51,7 +51,6 @@ export function Login() {
     if (isLoggingInRef.current) return;
     isLoggingInRef.current = true;
     try {
-      show();
       const response = await LoginRequest(formData.telefone, formData.senha);
 
       authenticate(response);
@@ -70,7 +69,6 @@ export function Login() {
       });
     } finally {
       isLoggingInRef.current = false;
-      hide();
     }
   }
 
@@ -89,13 +87,18 @@ export function Login() {
           <h6 className="mt-2">Balata Barbearia</h6>
         </div>
 
-        <form className="flex flex-col w-80" onSubmit={handleSubmit(signIn)}>
+        <form
+          autoComplete="on"
+          className="flex flex-col w-80"
+          onSubmit={handleSubmit(signIn)}
+        >
           <Controller
             control={control}
             name="telefone"
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="username"
                 className="w-auto p-3 rounded-lg text-black focus:outline-none"
                 id="telefone"
                 inputMode="numeric"
@@ -130,6 +133,7 @@ export function Login() {
             render={({ field }) => (
               <Input
                 isRequired
+                autoComplete="current-password"
                 className="w-full p-3 rounded-lg focus:outline-none"
                 endContent={
                   field.value && (

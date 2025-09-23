@@ -12,16 +12,15 @@ interface PrivateRouteProps {
 export const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { token, checkAuth } = useAuth();
   const [loading, setLoading] = useState(true);
-  const { show, hide } = useLoading();
+
+  useLoading();
 
   useEffect(() => {
     (async () => {
-      show();
       try {
         await checkAuth();
       } finally {
         setLoading(false);
-        hide();
       }
     })();
     // Executa apenas uma vez na montagem
