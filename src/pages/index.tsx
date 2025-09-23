@@ -17,10 +17,12 @@ import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { SignInFormData } from "@/contexts/AuthProvider/types";
 import { LoginRequest } from "@/contexts/AuthProvider/util";
+import { useLoading } from "@/contexts/LoadingProvider";
 
 export function Login() {
   const [isVisible, setIsVisible] = useState(false);
   const isLoggingInRef = useRef(false);
+  const { show, hide } = useLoading();
 
   const initialValues = { telefone: "", senha: "" };
   const { authenticate } = useAuth();
@@ -49,6 +51,7 @@ export function Login() {
     if (isLoggingInRef.current) return;
     isLoggingInRef.current = true;
     try {
+      show();
       const response = await LoginRequest(formData.telefone, formData.senha);
 
       authenticate(response);
@@ -67,6 +70,7 @@ export function Login() {
       });
     } finally {
       isLoggingInRef.current = false;
+      hide();
     }
   }
 
@@ -160,7 +164,12 @@ export function Login() {
           />
 
           <div className="flex items-center mb-6">
-            <Link className="text-gray-400 pl-4" href="../recovery" size="sm">
+            <Link
+              className="text-gray-400 pl-4"
+              href="../recovery"
+              size="sm"
+              onPress={show}
+            >
               Esqueceu sua senha?
             </Link>
           </div>
@@ -185,7 +194,12 @@ export function Login() {
           </div>
 
           <div className="flex items-center justify-center">
-            <Link className="text-gray-400" href="../register" size="sm">
+            <Link
+              className="text-gray-400"
+              href="../register"
+              size="sm"
+              onPress={show}
+            >
               Criar uma conta
             </Link>
           </div>

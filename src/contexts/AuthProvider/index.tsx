@@ -2,6 +2,7 @@ import { createContext, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { addToast } from "@heroui/react";
+import { useLoading } from "@/contexts/LoadingProvider";
 
 import { IAuthProvider, IContext, IPayLoad } from "./types";
 
@@ -9,6 +10,7 @@ export const AuthContext = createContext<IContext>({} as IContext);
 
 export const AuthProvider = ({ children }: IAuthProvider) => {
   const navigate = useNavigate();
+  const { show, hide } = useLoading();
 
   const [user, setUser] = useState<IPayLoad | null>(
     typeof window !== "undefined"
@@ -54,12 +56,17 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
   // }
 
   async function authenticate(data: IPayLoad) {
-    setUserCookies(data);
-    setUser(data);
-    setToken(data.token);
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 750);
+    show();
+    try {
+      setUserCookies(data);
+      setUser(data);
+      setToken(data.token);
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 300);
+    } finally {
+      setTimeout(() => hide(), 500);
+    }
   }
 
   // Função memoizada com verificações condicionais

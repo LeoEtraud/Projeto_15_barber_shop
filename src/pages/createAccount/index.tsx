@@ -7,6 +7,7 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { addToast, Divider, ToastProvider, Image, Link } from "@heroui/react";
 import { Button } from "@heroui/react";
+import { useLoading } from "@/contexts/LoadingProvider";
 
 import eye_slash from "../../assets/eye-slash.svg";
 import eye from "../../assets/eye.svg";
@@ -30,6 +31,7 @@ export function CreateAccount() {
   const [senha, setSenha] = useState<string>("");
 
   const [isVisible, setIsVisible] = useState(false);
+  const { show, hide } = useLoading();
 
   const initialValues = {
     nome: "",
@@ -69,6 +71,7 @@ export function CreateAccount() {
   // FUNÇÃO DE CRIAÇÃO DE USUÁRIO DA BARBEARIA
   async function CreateUser(data: SignInFormData) {
     try {
+      show();
       await SendCreateUser(data);
       addToast({
         title: "Sucesso",
@@ -92,6 +95,8 @@ export function CreateAccount() {
         color: "danger",
         timeout: 5000,
       });
+    } finally {
+      hide();
     }
   }
 
@@ -241,7 +246,7 @@ export function CreateAccount() {
             <Divider className="flex-1 bg-gray-800" />
           </div>
           <div className="flex items-center justify-center">
-            <Link className="text-gray-400" href="/" size="sm">
+            <Link className="text-gray-400" href="/" size="sm" onPress={show}>
               Realizar login
             </Link>
           </div>
