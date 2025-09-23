@@ -167,9 +167,10 @@ export function CreateAccount() {
             isRequired
             className={"w-auto p-3 rounded-lg text-black focus:outline-none"}
             id="telefone"
+            inputMode="numeric"
             label="Nº de contato"
             size="sm"
-            type="text"
+            type="tel"
             {...register("telefone")}
             maxLength={15}
             validate={(value) => {

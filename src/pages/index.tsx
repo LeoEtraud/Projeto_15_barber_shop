@@ -95,7 +95,7 @@ export function Login() {
                 className="w-auto p-3 rounded-lg text-black focus:outline-none"
                 id="telefone"
                 inputMode="numeric"
-                label="Nº de telefone"
+                label="Nº de contato"
                 maxLength={15}
                 size="sm"
                 type="tel"
@@ -113,9 +113,6 @@ export function Login() {
 
                 if (phoneNumber.length < 11) {
                   return "O nº de celular deve conter no mínimo 11 números.";
-                }
-                if (phoneNumber.length > 11) {
-                  return "O nº de celular deve conter no máximo 11 números.";
                 }
 
                 return true;
