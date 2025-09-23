@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Mobile layout guards */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html,
+body {
+  background: #000; /* evita flicker branco */
+  overscroll-behavior: none; /* bloqueia bounce/overscroll */
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden; /* evita scroll horizontal */
+  touch-action: manipulation; /* reduz gestos que causam pan/zoom indesejado */
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari: evita “bump” e gaps em safe areas */
+  body {
+    position: relative;
+    background-color: #000;
+  }
+}

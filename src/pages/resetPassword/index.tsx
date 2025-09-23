@@ -230,7 +230,7 @@ export function ResetPassword() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-28 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Recup. Acesso" />
         <div className="w-80 md:w-full px-4 sm:px-6 md:px-4">
           <h1 className="text-2xl md:text-3xl lg:text-2xl font-bold text-center">
