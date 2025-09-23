@@ -43,19 +43,29 @@ export function CreateAccount() {
     email: yup.string().email().required("O E-mail é obrigatório"),
     telefone: yup
       .string()
-      .min(11)
-      .required("O número de contato é obrigatório"),
+      .required("O número de contato é obrigatório")
+      .test(
+        "telefone-valido",
+        "O contato deve conter no mínimo 11 números.",
+        (value) => {
+          const digits = (value || "").replace(/\D/g, "");
+
+          return digits.length >= 11;
+        }
+      ),
     senha: yup.string().required("A senha é obrigatória"),
   });
 
   const {
     control,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { isSubmitting, isSubmitted, submitCount, errors },
     reset,
   } = useForm<SignInFormData>({
     resolver: yupResolver(schema),
     defaultValues: initialValues,
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   function toggleVisibility() {
@@ -131,7 +141,7 @@ export function CreateAccount() {
           <Controller
             control={control}
             name="data_nascimento"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Input
                 isRequired
                 autoComplete="bday"
@@ -139,10 +149,18 @@ export function CreateAccount() {
                   "w-auto p-3 rounded-lg text-black focus:outline-none"
                 }
                 id="data_nascimento"
+                isInvalid={!!fieldState.error}
                 label="Data de Nascimento"
+                max={new Date().toISOString().slice(0, 10)}
                 size="sm"
                 type="date"
                 {...field}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                  const raw = e.target.value;
+                  const sanitized = raw.replace(/[^0-9-]/g, "").slice(0, 10);
+
+                  field.onChange(sanitized);
+                }}
               />
             )}
           />
@@ -173,31 +191,37 @@ export function CreateAccount() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field }) => (
-              <Input
-                isRequired
-                autoComplete="tel"
-                className={
-                  "w-auto p-3 rounded-lg text-black focus:outline-none"
-                }
-                id="telefone"
-                inputMode="numeric"
-                label="Nº de contato"
-                maxLength={15}
-                size="sm"
-                type="tel"
-                validate={(value) => {
-                  if (value.replace(/\D/g, "").length < 11) {
-                    return "O contato deve conter no mínimo 11 números.";
+            render={({ field, fieldState }) => {
+              const showError =
+                fieldState.isTouched || isSubmitted || submitCount > 0;
+              const message =
+                errors.telefone?.message || fieldState.error?.message;
+
+              return (
+                <Input
+                  isRequired
+                  autoComplete="tel"
+                  className={
+                    "w-auto p-3 rounded-lg text-black focus:outline-none"
                   }
-                }}
-                {...field}
-                value={field.value ? formatPhone(field.value) : ""}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  field.onChange(formatPhone(e.target.value))
-                }
-              />
-            )}
+                  errorMessage={showError ? message : undefined}
+                  id="telefone"
+                  inputMode="numeric"
+                  isInvalid={
+                    showError && !!(errors.telefone || fieldState.error)
+                  }
+                  label="Nº de contato"
+                  maxLength={15}
+                  size="sm"
+                  type="tel"
+                  {...field}
+                  value={formatPhone(field.value || "")}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    field.onChange(formatPhone(e.target.value))
+                  }
+                />
+              );
+            }}
           />
 
           {/* SENHA */}
