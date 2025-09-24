@@ -28,3 +28,30 @@ body {
     background-color: #000;
   }
 }
+
+/* Scrollbar escura (global) */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #000 #0a0a0a;
+}
+
+/* Chrome, Edge, Safari */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #000;
+  border-radius: 8px;
+  border: 2px solid #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #000;
+}
