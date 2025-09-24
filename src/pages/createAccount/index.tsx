@@ -75,7 +75,12 @@ export function CreateAccount() {
   // FUNÇÃO DE CRIAÇÃO DE USUÁRIO DA BARBEARIA
   async function CreateUser(data: SignInFormData) {
     try {
-      await SendCreateUser(data);
+      const payload: SignInFormData = {
+        ...data,
+        telefone: (data.telefone || "").replace(/\D/g, ""),
+      };
+
+      await SendCreateUser(payload);
       addToast({
         title: "Sucesso",
         description: "Usuário registrado com sucesso.",
@@ -98,7 +103,7 @@ export function CreateAccount() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-28 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Cadastro" />
         <ToastProvider placement={"top-right"} toastOffset={60} />
 

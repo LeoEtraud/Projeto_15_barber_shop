@@ -28,7 +28,24 @@ export function Login() {
   const { authenticate } = useAuth();
 
   const schema = yup.object().shape({
-    telefone: yup.string().required("O nº de telefone é obrigatório"),
+    telefone: yup
+      .string()
+      .required("Informe e-mail ou nº de contato")
+      .test(
+        "email-ou-telefone",
+        "Informe um e-mail válido ou nº com 11 dígitos",
+        (value) => {
+          const v = value || "";
+
+          if (!v) return false;
+          if (v.includes("@")) {
+            return /.+@.+\..+/.test(v);
+          }
+          const digits = v.replace(/\D/g, "");
+
+          return digits.length >= 11;
+        }
+      ),
     senha: yup.string().required("A senha é obrigatória"),
   });
 
@@ -51,7 +68,11 @@ export function Login() {
     if (isLoggingInRef.current) return;
     isLoggingInRef.current = true;
     try {
-      const response = await LoginRequest(formData.telefone, formData.senha);
+      const identifier = formData.telefone.includes("@")
+        ? formData.telefone
+        : formData.telefone.replace(/\D/g, "");
+
+      const response = await LoginRequest(identifier, formData.senha);
 
       authenticate(response);
       addToast({
@@ -74,7 +95,7 @@ export function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-8 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Login" />
 
         <div className="max-w-lg text-center">
@@ -95,34 +116,55 @@ export function Login() {
           <Controller
             control={control}
             name="telefone"
-            render={({ field }) => (
-              <Input
-                isRequired
-                autoComplete="username"
-                className="w-auto p-3 rounded-lg text-black focus:outline-none"
-                id="telefone"
-                inputMode="numeric"
-                label="Nº de contato"
-                maxLength={15}
-                size="sm"
-                type="tel"
-                {...field}
-                value={formatPhone(field.value)}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  field.onChange(formatPhone(e.target.value))
-                }
-              />
-            )}
+            render={({ field }) => {
+              const hasLettersOrAt = /[A-Za-z@]/.test(field.value || "");
+              const digits = (field.value || "")
+                .replace(/\D/g, "")
+                .slice(0, 11);
+              const displayValue = hasLettersOrAt
+                ? field.value
+                : formatPhone(digits);
+
+              return (
+                <Input
+                  isRequired
+                  autoComplete="username"
+                  className="w-auto p-3 rounded-lg text-black focus:outline-none"
+                  id="telefone"
+                  inputMode="text"
+                  label="E-mail ou Nº de contato"
+                  maxLength={60}
+                  size="sm"
+                  type="text"
+                  {...field}
+                  value={displayValue}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                    const val = e.target.value;
+
+                    if (/[A-Za-z@]/.test(val)) {
+                      field.onChange(val);
+                    } else {
+                      const onlyDigits = val.replace(/\D/g, "").slice(0, 11);
+
+                      field.onChange(formatPhone(onlyDigits));
+                    }
+                  }}
+                />
+              );
+            }}
             rules={{
-              required: "O nº de telefone é obrigatório",
+              required: "Informe e-mail ou nº de contato",
               validate: (value) => {
-                const phoneNumber = value.replace(/\D/g, "");
+                const v = value || "";
 
-                if (phoneNumber.length < 11) {
-                  return "O nº de celular deve conter no mínimo 11 números.";
+                if (/[A-Za-z@]/.test(v)) {
+                  return /.+@.+\..+/.test(v) || "E-mail inválido";
                 }
+                const digits = v.replace(/\D/g, "");
 
-                return true;
+                return (
+                  digits.length === 11 || "O nº de contato deve ter 11 dígitos"
+                );
               },
             }}
           />
