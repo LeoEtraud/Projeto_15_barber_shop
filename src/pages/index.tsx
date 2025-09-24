@@ -95,7 +95,7 @@ export function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-8 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Login" />
 
         <div className="max-w-lg text-center">

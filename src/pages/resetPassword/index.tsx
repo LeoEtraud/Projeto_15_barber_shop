@@ -253,7 +253,7 @@ export function ResetPassword() {
               size="sm"
               type="text"
               {...registerStep1("email")}
-              description="Informe seu e-mail para recuperação de senha."
+              description="Informe seu e-mail para redefinição de senha."
             />
 
             <Button

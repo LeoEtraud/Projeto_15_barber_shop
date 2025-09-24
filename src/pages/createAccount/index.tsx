@@ -103,12 +103,12 @@ export function CreateAccount() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-28 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
         <Helmet title="Cadastro" />
         <ToastProvider placement={"top-right"} toastOffset={60} />
 
         <div className="max-h-8 text-center">
-          <h1 className="text-2xl">{"Cadastro de Usuário"}</h1>
+          <h1 className="text-2xl">{"Cadastro de Cliente"}</h1>
         </div>
 
         <form
