@@ -8,7 +8,9 @@ import { Login } from "@/pages";
 import { ResetPassword } from "@/pages/resetPassword";
 import { CreateAccount } from "@/pages/createAccount";
 import { HomePage } from "@/pages/homePage";
-import ChoiceBarberPage from "@/pages/choiceBarber";
+import { ChoiceBarberPage } from "@/pages/choiceBarber";
+import { ChoiceServicePage } from "@/pages/choiceService";
+import { ChoiceSchedulePage } from "@/pages/choiceSchedule";
 
 export function Router() {
   return (
@@ -38,6 +40,24 @@ export function Router() {
           </PrivateRoute>
         }
         path="/choice-barber"
+      />
+
+      <Route
+        element={
+          <PrivateRoute>
+            <ChoiceServicePage />
+          </PrivateRoute>
+        }
+        path="/choice-service"
+      />
+
+      <Route
+        element={
+          <PrivateRoute>
+            <ChoiceSchedulePage />
+          </PrivateRoute>
+        }
+        path="/choice-schedule"
       />
 
       <Route

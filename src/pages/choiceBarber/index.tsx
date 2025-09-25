@@ -1,42 +1,88 @@
 import { Helmet } from "react-helmet-async";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-export default function ChoiceBarberPage() {
+export function ChoiceBarberPage() {
   const navigate = useNavigate();
-  const location = useLocation() as { state?: { barberId?: string } };
-  const barberId = location.state?.barberId;
 
   return (
     <section className="min-h-screen bg-gray-800 px-4 py-8 md:px-8">
-      <Helmet title="Selecionar serviço" />
+      <Helmet title="Selecionar barbeiro" />
+
       <div className="mx-auto max-w-2xl">
-        <button
-          className="text-sm text-gray-300 hover:text-white"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          Voltar
-        </button>
+        {/* Banner com imagem de fundo */}
+        <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-32 mb-6">
+          <img
+            alt="Banner"
+            className="absolute inset-0 w-full h-full object-cover opacity-80"
+            src="/image-1.png"
+          />
+          <div className="absolute bottom-0 left-0 p-4">
+            <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+              Escolha um barbeiro
+            </h1>
+          </div>
+        </div>
 
-        <h1 className="mt-4 text-2xl font-bold text-white">
-          Selecione o serviço {barberId ? `(Barbeiro #${barberId})` : ""}
-        </h1>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Lista de barbeiros */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[
-            { id: "haircut", label: "Corte de cabelo" },
-            { id: "beard", label: "Barba" },
-            { id: "line", label: "Pé de cabelo" },
-            { id: "skin", label: "Limpeza de pele" },
-          ].map((service) => (
+            {
+              id: "1",
+              firstName: "Léo",
+              lastName: "Balata",
+              services: 128,
+              img: "/barber-1.png",
+            },
+            {
+              id: "2",
+              firstName: "Felipe",
+              lastName: "Souza",
+              services: 73,
+              img: "/barber-2.png",
+            },
+            {
+              id: "3",
+              firstName: "João",
+              lastName: "Pereira",
+              services: 99,
+              img: "/barber-3.png",
+            },
+            {
+              id: "4",
+              firstName: "Henrique",
+              lastName: "Oliveira",
+              services: 85,
+              img: "/barber-4.png",
+            },
+          ].map((barber) => (
             <button
-              key={service.id}
-              className="rounded-lg bg-gray-900 p-4 text-left shadow hover:shadow-md transition-shadow"
+              key={barber.id}
+              className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 shadow hover:shadow-md transition-shadow text-left"
               type="button"
-              onClick={() => navigate("/dashboard")}
+              onClick={() =>
+                navigate("/choice-service", { state: { barberId: barber.id } })
+              }
             >
-              <div className="text-white font-medium">{service.label}</div>
-              <div className="text-xs text-gray-400">Toque para selecionar</div>
+              <img
+                alt={`Barbeiro ${barber.firstName}`}
+                className="h-16 w-14 rounded-md object-cover"
+                src={barber.img}
+              />
+              <div className="flex-1">
+                <div className="text-white font-medium">
+                  {barber.firstName} {barber.lastName}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {barber.services} atendimentos
+                </div>
+                <div className="mt-1 flex items-center gap-1">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span key={i} aria-hidden className="text-yellow-400">
+                      ★
+                    </span>
+                  ))}
+                </div>
+              </div>
             </button>
           ))}
         </div>
