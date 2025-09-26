@@ -15,7 +15,7 @@ type LoadingContextValue = {
 };
 
 const LoadingContext = createContext<LoadingContextValue | undefined>(
-  undefined
+  undefined,
 );
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
@@ -35,7 +35,7 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(
     () => ({ isLoading, show, hide, withLoading }),
-    [isLoading, show, hide, withLoading]
+    [isLoading, show, hide, withLoading],
   );
 
   return (

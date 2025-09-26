@@ -2,24 +2,26 @@ import { createContext, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { addToast } from "@heroui/react";
-import { useLoading } from "@/contexts/LoadingProvider";
 
 import { IAuthProvider, IContext, IPayLoad } from "./types";
+
+import { useLoading } from "@/contexts/LoadingProvider";
 
 export const AuthContext = createContext<IContext>({} as IContext);
 
 export const AuthProvider = ({ children }: IAuthProvider) => {
   const navigate = useNavigate();
+
   useLoading();
 
   const [user, setUser] = useState<IPayLoad | null>(
     typeof window !== "undefined"
       ? JSON.parse(Cookies.get("barberId") || "null")
-      : null
+      : null,
   );
 
   const [token, setToken] = useState<string | null>(
-    typeof window !== "undefined" ? Cookies.get("barberToken") || null : null
+    typeof window !== "undefined" ? Cookies.get("barberToken") || null : null,
   );
 
   function setUserCookies(user: IPayLoad | null) {

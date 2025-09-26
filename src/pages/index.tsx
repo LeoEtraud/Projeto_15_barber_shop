@@ -44,7 +44,7 @@ export function Login() {
           const digits = v.replace(/\D/g, "");
 
           return digits.length >= 11;
-        }
+        },
       ),
     senha: yup.string().required("A senha é obrigatória"),
   });

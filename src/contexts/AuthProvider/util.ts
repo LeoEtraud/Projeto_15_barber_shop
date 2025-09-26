@@ -45,7 +45,7 @@ export async function postCodeRecoverPassword(email: string) {
 // CHAMADA PARA API DE ENVIO DE EMAIL PARA RECUPERAÇÃO DE SENHA
 export async function sendNewPassword(
   codigo_recupera_senha: string,
-  nova_senha: string
+  nova_senha: string,
 ) {
   try {
     const request = await apiBarber.post("/reset-password", {

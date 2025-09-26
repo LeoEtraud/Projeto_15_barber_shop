@@ -51,7 +51,7 @@ export function CreateAccount() {
           const digits = (value || "").replace(/\D/g, "");
 
           return digits.length >= 11;
-        }
+        },
       ),
     senha: yup.string().required("A senha é obrigatória"),
   });
