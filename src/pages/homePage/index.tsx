@@ -25,7 +25,7 @@ export function HomePage() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-800">
+    <section className="min-h-screen bg-gray-800 flex flex-col">
       {/* Header fixo */}
       <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ export function HomePage() {
       </header>
 
       {/* Conteúdo principal */}
-      <div className="px-4 py-8 md:px-8">
+      <div className="px-4 py-8 md:px-8 flex-1">
         <Helmet title="Dashboard" />
 
         <div className="mx-auto max-w-2xl">
