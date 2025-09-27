@@ -6,7 +6,7 @@ export function Footer() {
           Balata Barbearia
         </h3>
         <p className="text-xs text-gray-500">
-          Cortamos cabelo, contamos histórias
+          Cortamos cabelo e contamos histórias.
         </p>
       </div>
     </footer>

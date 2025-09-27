@@ -38,7 +38,7 @@ export function HomePage() {
             <img
               alt="Logo da Barbearia"
               className="h-8 w-auto select-none"
-              src="/img-barber-icon.png"
+              src="/logo-ia.png"
             />
           </button>
         </div>
