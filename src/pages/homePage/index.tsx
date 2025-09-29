@@ -1,76 +1,16 @@
 import { Helmet } from "react-helmet-async";
-import {
-  Avatar,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
-  function getUserInitials(name?: string) {
-    if (!name) return "U";
-    const parts = name.trim().split(" ").filter(Boolean);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-
-    return (first + last).toUpperCase() || "U";
-  }
 
   return (
     <section className="min-h-screen bg-gray-800 flex flex-col">
       {/* Header fixo */}
-      <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Ir para inicial"
-            className="flex items-center gap-2 focus:outline-none"
-            type="button"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img
-              alt="Logo da Barbearia"
-              className="h-8 w-auto select-none"
-              src="/logo-ia.png"
-            />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <button className="rounded-full focus:outline-none">
-                <Avatar
-                  isBordered
-                  className="w-7 h-7 text-sm"
-                  color="default"
-                  name={user?.user?.nome}
-                >
-                  {getUserInitials(user?.user?.nome)}
-                </Avatar>
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Menu do usuário"
-              onAction={(key) => {
-                if (key === "profile") navigate("/about");
-                if (key === "logout") logout();
-              }}
-            >
-              <DropdownItem key="profile">Perfil</DropdownItem>
-              <DropdownItem key="logout" className="text-danger" color="danger">
-                Sair
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-      </header>
+      <Header />
 
       {/* Conteúdo principal */}
       <div className="px-4 py-8 md:px-8 flex-1">
@@ -78,16 +18,19 @@ export function HomePage() {
 
         <div className="mx-auto max-w-2xl">
           {/* Banner de boas-vindas */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-32 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
               alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover opacity-80"
+              className="absolute inset-0 w-full h-full object-cover opacity-70"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
               <h1 className="text-2xl font-bold text-white drop-shadow-lg">
                 Bem-vindo à Balata Barbearia
               </h1>
+              <span className="text-gray-200">
+                Cortamos cabelo e contamos histórias.
+              </span>
             </div>
           </div>
 

@@ -1,77 +1,66 @@
 import { Helmet } from "react-helmet-async";
-import {
-  Avatar,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
+import { Header } from "@/components/Header";
+
+type Service = {
+  id: string;
+  label: string;
+  price: string;
+  duration: string;
+};
+
+const SERVICES: Service[] = [
+  {
+    id: "haircut",
+    label: "Corte de cabelo",
+    price: "R$ 35,00",
+    duration: "30 min",
+  },
+  { id: "beard", label: "Barba", price: "R$ 35,00", duration: "30 min" },
+  { id: "line", label: "Pé de cabelo", price: "R$ 15,00", duration: "10 min" },
+  {
+    id: "skin",
+    label: "Limpeza de pele",
+    price: "R$ 20,00",
+    duration: "15 min",
+  },
+];
 
 export function ChoiceServicePage() {
   const navigate = useNavigate();
   const location = useLocation() as { state?: { barberId?: string } };
   const barberId = location.state?.barberId;
-  const { user, logout } = useAuth();
 
-  function getUserInitials(name?: string) {
-    if (!name) return "U";
-    const parts = name.trim().split(" ").filter(Boolean);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-    return (first + last).toUpperCase() || "U";
+  function toggleService(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+
+      return next;
+    });
+  }
+
+  const selectedServices = SERVICES.filter((s) => selectedIds.has(s.id));
+
+  function handleProceed() {
+    navigate("/choice-schedule", {
+      state: {
+        barberId,
+        selectedServices, // array de { id, label, price, duration }
+      },
+    });
   }
 
   return (
     <section className="min-h-screen bg-gray-800">
-      {/* Header fixo */}
-      <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Ir para inicial"
-            className="flex items-center gap-2 focus:outline-none"
-            type="button"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img
-              alt="Logo da Barbearia"
-              className="h-8 w-auto select-none"
-              src="/img-barber-icon.png"
-            />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <button className="rounded-full focus:outline-none">
-                <Avatar
-                  isBordered
-                  className="w-7 h-7 text-sm"
-                  color="default"
-                  name={user?.user?.nome}
-                >
-                  {getUserInitials(user?.user?.nome)}
-                </Avatar>
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Menu do usuário"
-              onAction={(key) => {
-                if (key === "profile") navigate("/about");
-                if (key === "logout") logout();
-              }}
-            >
-              <DropdownItem key="profile">Perfil</DropdownItem>
-              <DropdownItem key="logout" className="text-danger" color="danger">
-                Sair
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-      </header>
+      {/* COMPONENTE CABEÇALHO */}
+      <Header />
 
       {/* Conteúdo principal */}
       <div className="px-4 py-8 md:px-8">
@@ -87,79 +76,79 @@ export function ChoiceServicePage() {
           </button>
 
           {/* Banner com imagem de fundo */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-32 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
               alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover opacity-80"
+              className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
               <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-                Selecione o serviço {barberId ? `(Barbeiro #${barberId})` : ""}
+                Selecione o(s) serviço(s)
               </h1>
             </div>
           </div>
 
+          {/* Lista de serviços (multi-seleção) */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[
-              {
-                id: "haircut",
-                label: "Corte de cabelo",
-                price: "R$ 25,00",
-                duration: "30 min",
-              },
-              {
-                id: "beard",
-                label: "Barba",
-                price: "R$ 20,00",
-                duration: "25 min",
-              },
-              {
-                id: "line",
-                label: "Pé de cabelo",
-                price: "R$ 15,00",
-                duration: "15 min",
-              },
-              {
-                id: "skin",
-                label: "Limpeza de pele",
-                price: "R$ 35,00",
-                duration: "45 min",
-              },
-            ].map((service) => (
-              <button
-                key={service.id}
-                className="rounded-lg bg-gray-900 p-4 text-left shadow hover:shadow-md transition-shadow"
-                type="button"
-                onClick={() =>
-                  navigate("/choice-schedule", {
-                    state: {
-                      barberId,
-                      serviceId: service.id,
-                      serviceName: service.label,
-                      servicePrice: service.price,
-                      serviceDuration: service.duration,
-                    },
-                  })
-                }
-              >
-                <div className="text-white font-medium mb-2">
-                  {service.label}
-                </div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-green-400 font-semibold">
-                    {service.price}
-                  </span>
-                  <span className="text-blue-400 text-sm">
-                    {service.duration}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-400">
-                  Toque para selecionar
-                </div>
-              </button>
-            ))}
+            {SERVICES.map((service) => {
+              const isSelected = selectedIds.has(service.id);
+
+              return (
+                <button
+                  key={service.id}
+                  aria-pressed={isSelected}
+                  className={[
+                    "rounded-lg p-4 text-left shadow transition-all border",
+                    isSelected
+                      ? "bg-gray-600 border-green-400 hover:bg-gray-700"
+                      : "bg-gray-900 border-transparent hover:shadow-md",
+                  ].join(" ")}
+                  type="button"
+                  onClick={() => toggleService(service.id)}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="text-white font-medium">
+                      {service.label}
+                    </div>
+                    {isSelected && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-600 text-white border border-green-300/50">
+                        Selecionado
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-green-300 font-semibold">
+                      {service.price}
+                    </span>
+                    <span className="text-green-200 text-sm">
+                      {service.duration}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    Toque para {isSelected ? "remover" : "selecionar"}
+                  </div>
+                </button>
+              );
+            })}
           </div>
+
+          {/* Botão de prosseguir (aparece quando há seleção) */}
+          {selectedServices.length > 0 && (
+            <div className="mt-6">
+              <button
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                type="button"
+                onClick={handleProceed}
+              >
+                Prosseguir no agendamento
+              </button>
+              <p className="text-xs text-gray-300 mt-2">
+                {selectedServices.length} serviço(s) selecionado(s).
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

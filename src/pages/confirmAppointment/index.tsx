@@ -1,52 +1,33 @@
 import { Helmet } from "react-helmet-async";
-import {
-  Avatar,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
+import { Header } from "@/components/Header";
+
+type Service = {
+  id: string;
+  label: string;
+  price: string;
+  duration: string;
+};
 
 export function ConfirmAppointmentPage() {
   const navigate = useNavigate();
   const location = useLocation() as {
     state?: {
       barberId?: string;
-      serviceId?: string;
-      serviceName?: string;
-      servicePrice?: string;
-      serviceDuration?: string;
+      selectedServices?: Service[];
       selectedDate?: string;
       selectedTime?: string;
     };
   };
 
-  const {
-    barberId,
-    serviceName,
-    servicePrice,
-    serviceDuration,
-    selectedDate,
-    selectedTime,
-  } = location.state || {};
+  const { barberId, selectedServices, selectedDate, selectedTime } =
+    location.state || {};
 
   const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const { user, logout } = useAuth();
-
-  function getUserInitials(name?: string) {
-    if (!name) return "U";
-    const parts = name.trim().split(" ").filter(Boolean);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-
-    return (first + last).toUpperCase() || "U";
-  }
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
@@ -65,10 +46,17 @@ export function ConfirmAppointmentPage() {
   const paymentMethods = [
     {
       id: "pix",
-      name: "PIX",
+      name: "Pix",
       description: "Pagamento instantâneo",
-      icon: "💳",
+      icon: (
+        <img
+          alt="Logo do Pix"
+          className="w-8 h-8 drop-shadow-md"
+          src="/pix.png"
+        />
+      ),
     },
+
     {
       id: "credit",
       name: "Cartão de Crédito",
@@ -102,56 +90,8 @@ export function ConfirmAppointmentPage() {
   if (isCompleted) {
     return (
       <section className="min-h-screen bg-gray-800">
-        {/* Header fixo */}
-        <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
-          <div className="flex items-center gap-3">
-            <button
-              aria-label="Ir para inicial"
-              className="flex items-center gap-2 focus:outline-none"
-              type="button"
-              onClick={() => navigate("/dashboard")}
-            >
-              <img
-                alt="Logo da Barbearia"
-                className="h-8 w-auto select-none"
-                src="/img-barber-icon.png"
-              />
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <Dropdown placement="bottom-end">
-              <DropdownTrigger>
-                <button className="rounded-full focus:outline-none">
-                  <Avatar
-                    isBordered
-                    className="w-7 h-7 text-sm"
-                    color="default"
-                    name={user?.user?.nome}
-                  >
-                    {getUserInitials(user?.user?.nome)}
-                  </Avatar>
-                </button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label="Menu do usuário"
-                onAction={(key) => {
-                  if (key === "profile") navigate("/about");
-                  if (key === "logout") logout();
-                }}
-              >
-                <DropdownItem key="profile">Perfil</DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  className="text-danger"
-                  color="danger"
-                >
-                  Sair
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        </header>
-
+        {/* COMPONENTE CABEÇALH0 */}
+        <Header />
         {/* Conteúdo principal */}
         <div className="px-4 py-8 md:px-8">
           <Helmet title="Agendamento Concluído" />
@@ -162,33 +102,37 @@ export function ConfirmAppointmentPage() {
               <div className="text-center">
                 <div className="text-6xl mb-2">✅</div>
                 <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-                  Agendamento Concluído!
+                  Agendamento concluído!
                 </h1>
               </div>
             </div>
 
             {/* Mensagem de sucesso */}
             <div className="bg-gray-900 rounded-lg p-6 mb-6">
-              <div className="text-center">
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  Seu agendamento foi confirmado com sucesso!
-                </h2>
-                <p className="text-gray-300 mb-4">
-                  Chegue com antecedência no local, obrigado pela preferência.
-                </p>
+              <div className="text-left">
                 <div className="bg-gray-800 rounded-lg p-4 mb-4">
                   <h3 className="text-lg font-medium text-white mb-2">
                     Detalhes do Agendamento
                   </h3>
-                  <div className="text-sm text-gray-300 space-y-1">
-                    <div>Serviço: {serviceName}</div>
-                    <div>Preço: {servicePrice}</div>
-                    <div>Duração: {serviceDuration}</div>
-                    <div>Data: {formatDate(selectedDate)}</div>
-                    <div>Horário: {selectedTime}</div>
-                    {barberId && <div>Barbeiro: #{barberId}</div>}
-                  </div>
+                  {selectedServices?.map((service) => (
+                    <div
+                      key={service.id}
+                      className="text-sm text-yellow-400 space-y-1"
+                    >
+                      <div>Data: {formatDate(selectedDate)}</div>
+                      <div>Horário: {selectedTime}</div>
+                      <div>Serviço: {service.label}</div>
+                      <div>Duração: {service.duration}</div>
+                      <div>Preço: {service.price}</div>
+                      {barberId && <div>Barbeiro: #{barberId}</div>}
+                    </div>
+                  ))}
                 </div>
+
+                <p className="text-white my-4 text-sm mb-10">
+                  Pedimos que chegue com antecedência no horário agendado.
+                  Obrigado pela preferência! 😉
+                </p>
                 <button
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                   type="button"
@@ -206,52 +150,8 @@ export function ConfirmAppointmentPage() {
 
   return (
     <section className="min-h-screen bg-gray-800">
-      {/* Header fixo */}
-      <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Ir para inicial"
-            className="flex items-center gap-2 focus:outline-none"
-            type="button"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img
-              alt="Logo da Barbearia"
-              className="h-8 w-auto select-none"
-              src="/img-barber-icon.png"
-            />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <button className="rounded-full focus:outline-none">
-                <Avatar
-                  isBordered
-                  className="w-7 h-7 text-sm"
-                  color="default"
-                  name={user?.user?.nome}
-                >
-                  {getUserInitials(user?.user?.nome)}
-                </Avatar>
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Menu do usuário"
-              onAction={(key) => {
-                if (key === "profile") navigate("/about");
-                if (key === "logout") logout();
-              }}
-            >
-              <DropdownItem key="profile">Perfil</DropdownItem>
-              <DropdownItem key="logout" className="text-danger" color="danger">
-                Sair
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-      </header>
-
+      {/* COMPONENTE CABEÇALH0 */}
+      <Header />
       {/* Conteúdo principal */}
       <div className="px-4 py-8 md:px-8">
         <Helmet title="Confirmar Agendamento" />
@@ -266,10 +166,10 @@ export function ConfirmAppointmentPage() {
           </button>
 
           {/* Banner com imagem de fundo */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-32 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
               alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover opacity-80"
+              className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
@@ -284,14 +184,17 @@ export function ConfirmAppointmentPage() {
             <h3 className="text-white font-medium mb-2">
               Resumo do Agendamento
             </h3>
-            <div className="text-sm text-gray-300 space-y-1">
-              <div>Serviço: {serviceName}</div>
-              <div>Preço: {servicePrice}</div>
-              <div>Duração: {serviceDuration}</div>
-              <div>Data: {formatDate(selectedDate)}</div>
-              <div>Horário: {selectedTime}</div>
-              {barberId && <div>Barbeiro: #{barberId}</div>}
-            </div>
+
+            {selectedServices?.map((service) => (
+              <div key={service.id} className="text-sm text-gray-300 space-y-1">
+                <div>Data: {formatDate(selectedDate)}</div>
+                <div>Horário: {selectedTime}</div>
+                <div>Serviço: {service.label}</div>
+                <div>Duração: {service.duration}</div>
+                <div>Preço: {service.price}</div>
+                {barberId && <div>Barbeiro: #{barberId}</div>}
+              </div>
+            ))}
           </div>
 
           {/* Seleção de forma de pagamento */}

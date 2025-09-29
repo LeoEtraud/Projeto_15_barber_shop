@@ -1,86 +1,35 @@
 import { Helmet } from "react-helmet-async";
-import {
-  Avatar,
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRightIcon } from "@heroicons/react/24/solid"; // << ADICIONE
 
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
+import { Header } from "@/components/Header";
 
 export function ChoiceBarberPage() {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
-  function getUserInitials(name?: string) {
-    if (!name) return "U";
-    const parts = name.trim().split(" ").filter(Boolean);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
-
-    return (first + last).toUpperCase() || "U";
-  }
 
   return (
     <section className="min-h-screen bg-gray-800">
-      {/* Header fixo */}
-      <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Ir para inicial"
-            className="flex items-center gap-2 focus:outline-none"
-            type="button"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img
-              alt="Logo da Barbearia"
-              className="h-8 w-auto select-none"
-              src="/img-barber-icon.png"
-            />
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          <Dropdown placement="bottom-end">
-            <DropdownTrigger>
-              <button className="rounded-full focus:outline-none">
-                <Avatar
-                  isBordered
-                  className="w-7 h-7 text-sm"
-                  color="default"
-                  name={user?.user?.nome}
-                >
-                  {getUserInitials(user?.user?.nome)}
-                </Avatar>
-              </button>
-            </DropdownTrigger>
-            <DropdownMenu
-              aria-label="Menu do usuário"
-              onAction={(key) => {
-                if (key === "profile") navigate("/about");
-                if (key === "logout") logout();
-              }}
-            >
-              <DropdownItem key="profile">Perfil</DropdownItem>
-              <DropdownItem key="logout" className="text-danger" color="danger">
-                Sair
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-      </header>
+      {/* COMPONENTE CABEÇALHO */}
+      <Header />
 
       {/* Conteúdo principal */}
       <div className="px-4 py-8 md:px-8">
         <Helmet title="Selecionar barbeiro" />
 
         <div className="mx-auto max-w-2xl">
+          <button
+            className="text-sm text-gray-300 hover:text-white mb-4"
+            type="button"
+            onClick={() => navigate(-1)}
+          >
+            Voltar
+          </button>
+
           {/* Banner com imagem de fundo */}
           <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
               alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover opacity-80"
+              className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
@@ -124,7 +73,7 @@ export function ChoiceBarberPage() {
             ].map((barber) => (
               <button
                 key={barber.id}
-                className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 shadow hover:shadow-md transition-shadow text-left"
+                className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 shadow hover:shadow-md transition-shadow text-left relative"
                 type="button"
                 onClick={() =>
                   navigate("/choice-service", {
@@ -152,6 +101,8 @@ export function ChoiceBarberPage() {
                     ))}
                   </div>
                 </div>
+                {/* Seta amarela, mais cheia e maior */}
+                <ArrowRightIcon className="absolute right-4 text-yellow-400 w-8 h-8" />
               </button>
             ))}
           </div>
