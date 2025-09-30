@@ -31,7 +31,7 @@ export function Router() {
             <HomePage />
           </PrivateRoute>
         }
-        path="/dashboard"
+        path="/home"
       />
 
       <Route

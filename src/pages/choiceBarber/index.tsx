@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { ArrowRightIcon } from "@heroicons/react/24/solid"; // << ADICIONE
+import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid"; // << ADICIONE
 
 import { Header } from "@/components/Header";
 
@@ -13,16 +13,18 @@ export function ChoiceBarberPage() {
       <Header />
 
       {/* Conteúdo principal */}
-      <div className="px-4 py-8 md:px-8">
+      <div className="px-4 py-6 md:px-8">
         <Helmet title="Selecionar barbeiro" />
 
         <div className="mx-auto max-w-2xl">
           <button
-            className="text-sm text-gray-300 hover:text-white mb-4"
+            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
+             w-8 h-8 flex items-center justify-center 
+             border border-gray-400 rounded-full"
             type="button"
             onClick={() => navigate(-1)}
           >
-            Voltar
+            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
           </button>
 
           {/* Banner com imagem de fundo */}

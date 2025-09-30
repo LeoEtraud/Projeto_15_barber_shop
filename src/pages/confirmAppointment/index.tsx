@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 
 import { Header } from "@/components/Header";
 
@@ -83,8 +84,8 @@ export function ConfirmAppointmentPage() {
     setIsCompleted(true);
   };
 
-  const handleBackToDashboard = () => {
-    navigate("/dashboard");
+  const handleBackTohome = () => {
+    navigate("/home");
   };
 
   if (isCompleted) {
@@ -136,9 +137,9 @@ export function ConfirmAppointmentPage() {
                 <button
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                   type="button"
-                  onClick={handleBackToDashboard}
+                  onClick={handleBackTohome}
                 >
-                  Voltar ao Dashboard
+                  Voltar à página inicial
                 </button>
               </div>
             </div>
@@ -158,11 +159,13 @@ export function ConfirmAppointmentPage() {
 
         <div className="mx-auto max-w-2xl">
           <button
-            className="text-sm text-gray-300 hover:text-white mb-4"
+            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
+             w-8 h-8 flex items-center justify-center 
+             border border-gray-400 rounded-full"
             type="button"
             onClick={() => navigate(-1)}
           >
-            Voltar
+            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
           </button>
 
           {/* Banner com imagem de fundo */}

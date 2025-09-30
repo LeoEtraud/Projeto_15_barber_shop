@@ -30,7 +30,7 @@ export function Header() {
           aria-label="Ir para inicial"
           className="flex items-center gap-2 focus:outline-none"
           type="button"
-          onClick={() => navigate("/dashboard")}
+          onClick={() => navigate("/home")}
         >
           <img
             alt="Logo da Barbearia"

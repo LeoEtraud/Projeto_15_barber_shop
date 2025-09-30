@@ -14,7 +14,7 @@ export function HomePage() {
 
       {/* Conteúdo principal */}
       <div className="px-4 py-8 md:px-8 flex-1">
-        <Helmet title="Dashboard" />
+        <Helmet title="home" />
 
         <div className="mx-auto max-w-2xl">
           {/* Banner de boas-vindas */}
