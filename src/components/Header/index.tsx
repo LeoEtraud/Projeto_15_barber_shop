@@ -34,11 +34,13 @@ export function Header() {
         >
           <img
             alt="Logo da Barbearia"
-            className="h-8 w-auto select-none"
+            className="h-8 w-auto select-none border-1 border-gray-300 rounded-lg "
             src="/logo-ia.png"
           />
+          <span className="text-white font-semibold text-lg">Barbearia</span>
         </button>
       </div>
+
       <div className="flex items-center gap-2">
         <Dropdown placement="bottom-end">
           <DropdownTrigger>
