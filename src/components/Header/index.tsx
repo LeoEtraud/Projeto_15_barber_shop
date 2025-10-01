@@ -48,7 +48,7 @@ export function Header() {
               <Avatar
                 isBordered
                 className="w-7 h-7 text-sm"
-                color="default"
+                color="primary"
                 name={user?.user?.nome}
               >
                 {getUserInitials(user?.user?.nome)}

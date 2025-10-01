@@ -160,7 +160,7 @@ export function UserProfilePage() {
           </button>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-500 text-white text-2xl font-bold select-none">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 text-white text-2xl font-bold select-none">
               {initials}
             </div>
             <div className="flex flex-col">
