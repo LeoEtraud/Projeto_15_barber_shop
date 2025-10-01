@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { updateUserProfile } from "@/contexts/AuthProvider/util";
 import { formatPhone } from "@/utils/format-Cpf-Phone";
+import { Header } from "@/components/Header";
 
 type ProfileFormData = {
   nome: string;
@@ -138,129 +139,135 @@ export function UserProfilePage() {
   const initials = getInitials(defaultValues.nome || "");
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-800 text-white">
-      <section className="relative border border-gray-700 bg-gray-800 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-2xl">
-        <Helmet title="Perfil" />
-        <ToastProvider placement={"top-right"} toastOffset={60} />
+    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+      {/* COMPONENTE CABEÇALHO */}
+      <Header />
 
-        <button
-          aria-label="Fechar"
-          className="absolute right-3 top-3 h-8 w-8 flex items-center justify-center rounded-full text-gray-200 hover:text-white hover:bg-gray-700 transition"
-          title="Fechar"
-          type="button"
-          onClick={() => navigate(-1)}
-        >
-          ×
-        </button>
+      {/* Conteúdo principal */}
+      <div className="flex items-center justify-center flex-1 px-4 py-8 md:px-8">
+        <div className="relative border border-gray-700 bg-gray-800 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-2xl">
+          <Helmet title="Perfil" />
+          <ToastProvider placement={"top-right"} toastOffset={60} />
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-500 text-white text-2xl font-bold select-none">
-            {initials}
+          <button
+            aria-label="Fechar"
+            className="absolute right-3 top-3 h-8 w-8 flex items-center justify-center rounded-full text-gray-200 hover:text-white hover:bg-gray-700 transition"
+            title="Fechar"
+            type="button"
+            onClick={() => navigate(-1)}
+          >
+            ×
+          </button>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-gray-500 text-white text-2xl font-bold select-none">
+              {initials}
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-xl font-semibold">Meu perfil</h1>
+              <span className="text-gray-400 text-sm">
+                As iniciais são geradas automaticamente
+              </span>
+            </div>
           </div>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-semibold">Meu perfil</h1>
-            <span className="text-gray-400 text-sm">
-              As iniciais são geradas automaticamente
-            </span>
-          </div>
-        </div>
 
-        <Card className="bg-gray-900 border border-gray-700">
-          <CardBody className="gap-4">
-            <form
-              className="flex flex-col gap-4 w-full max-w-xl mx-auto"
-              onSubmit={handleSubmit(onSubmit)}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Controller
-                  control={control}
-                  name="nome"
-                  render={({ field }) => (
-                    <Input
-                      isRequired
-                      autoComplete="name"
-                      className="w-full p-3 rounded-lg text-black focus:outline-none"
-                      id="nome"
-                      isReadOnly={!isEditing}
-                      label="Nome"
-                      maxLength={60}
-                      size="sm"
-                      type="text"
-                      {...field}
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="telefone"
-                  render={({ field }) => (
-                    <Input
-                      isRequired
-                      autoComplete="tel"
-                      className="w-full p-3 rounded-lg text-black focus:outline-none"
-                      id="telefone"
-                      inputMode="numeric"
-                      isReadOnly={!isEditing}
-                      label="Nº de contato"
-                      maxLength={15}
-                      size="sm"
-                      type="tel"
-                      {...field}
-                      value={formatPhone(field.value || "")}
-                      onChange={(e) =>
-                        field.onChange(formatPhone(e.target.value))
-                      }
-                    />
-                  )}
-                />
-
-                <div className="md:col-span-2">
+          <Card className="bg-gray-900 border border-gray-700">
+            <CardBody className="gap-4">
+              <form
+                className="flex flex-col gap-4 w-full max-w-xl mx-auto"
+                onSubmit={handleSubmit(onSubmit)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Controller
                     control={control}
-                    name="email"
+                    name="nome"
                     render={({ field }) => (
                       <Input
                         isRequired
-                        autoComplete="email"
+                        autoComplete="name"
                         className="w-full p-3 rounded-lg text-black focus:outline-none"
-                        id="email"
+                        id="nome"
                         isReadOnly={!isEditing}
-                        label="E-mail"
+                        label="Nome"
                         maxLength={60}
                         size="sm"
-                        type="email"
+                        type="text"
                         {...field}
                       />
                     )}
                   />
+
+                  <Controller
+                    control={control}
+                    name="telefone"
+                    render={({ field }) => (
+                      <Input
+                        isRequired
+                        autoComplete="tel"
+                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        id="telefone"
+                        inputMode="numeric"
+                        isReadOnly={!isEditing}
+                        label="Nº de contato"
+                        maxLength={15}
+                        size="sm"
+                        type="tel"
+                        {...field}
+                        value={formatPhone(field.value || "")}
+                        onChange={(e) =>
+                          field.onChange(formatPhone(e.target.value))
+                        }
+                      />
+                    )}
+                  />
+
+                  <div className="md:col-span-2">
+                    <Controller
+                      control={control}
+                      name="email"
+                      render={({ field }) => (
+                        <Input
+                          isRequired
+                          autoComplete="email"
+                          className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          id="email"
+                          isReadOnly={!isEditing}
+                          label="E-mail"
+                          maxLength={60}
+                          size="sm"
+                          type="email"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex justify-end">
-                <Button
-                  color="primary"
-                  disabled={isSubmitting}
-                  isLoading={isSubmitting}
-                  radius="full"
-                  type={isEditing ? "submit" : "button"}
-                  variant="shadow"
-                  onClick={() => {
-                    if (!isEditing) setIsEditing(true);
-                  }}
-                >
-                  {isEditing ? "Salvar alterações" : "Editar"}
-                </Button>
-              </div>
-            </form>
-          </CardBody>
-        </Card>
+                <div className="flex justify-end">
+                  <Button
+                    color="primary"
+                    disabled={isSubmitting}
+                    isLoading={isSubmitting}
+                    radius="full"
+                    type={isEditing ? "submit" : "button"}
+                    variant="shadow"
+                    onClick={() => {
+                      if (!isEditing) setIsEditing(true);
+                    }}
+                  >
+                    {isEditing ? "Salvar alterações" : "Editar"}
+                  </Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
 
-        <Divider className="bg-gray-700" />
+          <Divider className="bg-gray-700" />
 
-        <PasswordSection />
-      </section>
-    </div>
+          <PasswordSection />
+        </div>
+      </div>
+    </section>
   );
 }
 
