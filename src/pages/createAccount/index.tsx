@@ -51,7 +51,7 @@ export function CreateAccount() {
           const digits = (value || "").replace(/\D/g, "");
 
           return digits.length >= 11;
-        },
+        }
       ),
     senha: yup.string().required("A senha é obrigatória"),
   });
@@ -83,7 +83,7 @@ export function CreateAccount() {
       await SendCreateUser(payload);
       addToast({
         title: "Sucesso",
-        description: "Usuário registrado com sucesso.",
+        description: "Cliente cadastrado com sucesso.",
         color: "success",
         timeout: 5000,
       });
@@ -93,7 +93,7 @@ export function CreateAccount() {
         title: "Falha no envio do formulário!",
         description:
           (error as any).response?.data?.error ||
-          "Erro ao criar conta de usuário",
+          "Erro ao criar conta de cliente",
         color: "danger",
         timeout: 5000,
       });
