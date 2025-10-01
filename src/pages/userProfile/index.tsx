@@ -27,9 +27,9 @@ type ProfileFormData = {
 };
 
 const MOCK_PROFILE: ProfileFormData = {
-  nome: "João Silva",
-  email: "joao.silva@example.com",
-  telefone: "(11) 98765-4321",
+  nome: "Leonardo Duarte",
+  email: "leonardo.duarte.of@gmail.com",
+  telefone: "(98) 98519-8944",
 };
 
 function getInitials(fullName: string) {
