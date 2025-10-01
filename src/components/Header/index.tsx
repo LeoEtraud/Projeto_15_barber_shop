@@ -58,7 +58,7 @@ export function Header() {
           <DropdownMenu
             aria-label="Menu do usuário"
             onAction={(key) => {
-              if (key === "profile") navigate("/about");
+              if (key === "profile") navigate("/user-profile");
               if (key === "logout") logout();
             }}
           >
