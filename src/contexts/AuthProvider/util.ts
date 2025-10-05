@@ -15,11 +15,13 @@ export async function SendCreateUser(data: SignInFormData) {
 // CHAMADA DA API PARA REALIZAÇÃO DO LOGIN
 export async function LoginRequest(identifier: string, senha: string) {
   try {
+    // VALIDADORES DE DADOS
     const isEmail = identifier.includes("@");
     const telefoneDigits = identifier.replace(/\D/g, "");
+    const validateSenha = senha.trim();
     const payload = isEmail
-      ? { email: identifier, senha }
-      : { telefone: telefoneDigits, senha };
+      ? { email: identifier, senha: validateSenha }
+      : { telefone: telefoneDigits, senha: validateSenha };
 
     const request = await apiBarber.post("/auth", payload);
 
