@@ -4,33 +4,14 @@ import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Input } from "@heroui/input";
-import {
-  addToast,
-  Button,
-  Card,
-  CardBody,
-  Divider,
-  ToastProvider,
-} from "@heroui/react";
-import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { Button, Card, CardBody, Divider, ToastProvider } from "@heroui/react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
-import { updateUserProfile } from "@/contexts/AuthProvider/util";
 import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { Header } from "@/components/Header";
-
-type ProfileFormData = {
-  nome: string;
-  email: string;
-  telefone: string;
-};
-
-const MOCK_PROFILE: ProfileFormData = {
-  nome: "Leonardo Duarte",
-  email: "leonardo.duarte.of@gmail.com",
-  telefone: "(98) 98519-8944",
-};
+import { useUser } from "@/contexts/UserProvider/useUser";
+import { PasswordForm } from "@/contexts/UserProvider/types";
+import { useAuth } from "@/contexts/AuthProvider";
 
 function getInitials(fullName: string) {
   const parts = (fullName || "").trim().split(/\s+/);
@@ -43,23 +24,57 @@ function getInitials(fullName: string) {
   return `${first}${last}`;
 }
 
-export function UserProfilePage() {
-  const { user, checkAuth } = useAuth();
+function UserProfile() {
+  const {
+    userData,
+    searchUser,
+    onChangePassword,
+    onSubmitFormProfile,
+    isEditing,
+    setIsEditing,
+  } = useUser();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
+  const { id } = useParams();
 
-  const currentUser = user?.user;
+  useEffect(() => {
+    // Buscar dados do usuário quando o componente for montado
+    const fetchUser = async () => {
+      if (id && id !== user?.user?.id) {
+        // Se o ID da URL for diferente do usuário logado, buscar dados específicos
+        await searchUser(id);
+      } else if (user?.user && !userData) {
+        // Se for o próprio usuário e não há dados carregados, buscar dados específicos
+        await searchUser(user.user.id);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // Usar dados do contexto de autenticação se não houver dados específicos carregados
+  const currentUser =
+    userData ||
+    (user?.user as
+      | { nome: string; email: string; telefone: string }
+      | undefined);
+
+  type ProfileFormData = {
+    nome: string;
+    email: string;
+    telefone: string;
+  };
 
   const defaultValues = useMemo<ProfileFormData>(
     () => ({
-      nome: currentUser?.nome || MOCK_PROFILE.nome,
-      email: currentUser?.email || MOCK_PROFILE.email,
-      telefone: currentUser?.tefefone || MOCK_PROFILE.telefone,
+      nome: currentUser?.nome || "",
+      email: currentUser?.email || "",
+      telefone: currentUser?.telefone || "",
     }),
     [currentUser]
   );
 
-  const schema = yup.object().shape({
+  const schema_user = yup.object().shape({
     nome: yup.string().min(3).required("O Nome é obrigatório"),
     email: yup.string().email().required("O E-mail é obrigatório"),
     telefone: yup
@@ -77,66 +92,51 @@ export function UserProfilePage() {
   });
 
   const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { isSubmitting },
+    control: control_user,
+    handleSubmit: handleSubmit_user,
+    formState: { isSubmitting: isSubmitting_user },
   } = useForm<ProfileFormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema_user),
     defaultValues,
     mode: "onChange",
     reValidateMode: "onChange",
   });
 
+  const [isVisible, setIsVisible] = useState(false);
+  const [isVisibleNew, setIsVisibleNew] = useState(false);
+  const [isVisibleConfirm, setIsVisibleConfirm] = useState(false);
+
+  const schema = yup.object().shape({
+    senha_atual: yup.string().required("Informe a senha atual"),
+    nova_senha: yup.string().min(6).required("Informe a nova senha"),
+    confirma: yup
+      .string()
+      .oneOf([yup.ref("nova_senha"), ""], "As senhas não coincidem")
+      .required("Confirme a nova senha"),
+  });
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<PasswordForm>({
+    resolver: yupResolver(schema),
+    defaultValues: { senha_atual: "", nova_senha: "", confirma: "" },
+  });
+
   useEffect(() => {
-    reset(defaultValues);
-  }, [defaultValues, reset]);
+    reset({ senha_atual: "", nova_senha: "", confirma: "" });
+  }, [reset]);
 
-  async function onSubmit(data: ProfileFormData) {
-    try {
-      const payload = {
-        ...data,
-        telefone: (data.telefone || "").replace(/\D/g, ""),
-      };
+  const [initials, setInitials] = useState<string>("");
 
-      const response = await updateUserProfile(payload);
+  useEffect(() => {
+    // Atualiza as iniciais sempre que o nome mudar
+    const newInitials = getInitials(user?.user.nome ?? "");
 
-      // Atualiza cookie com os dados locais (ou da resposta se existir)
-      const updatedUser = {
-        ...(user?.user || {}),
-        nome: response?.user?.nome ?? data.nome,
-        email: response?.user?.email ?? data.email,
-        tefefone: response?.user?.tefefone ?? payload.telefone,
-      };
-      const token =
-        response?.token || user?.token || Cookies.get("barberToken") || "";
-
-      Cookies.set("barberId", JSON.stringify({ token, user: updatedUser }), {
-        expires: (30 / 1440) * 24,
-      });
-      if (token) {
-        Cookies.set("barberToken", token, { expires: (30 / 1440) * 24 });
-      }
-      await checkAuth();
-      addToast({
-        title: "Sucesso",
-        description: "Perfil atualizado com sucesso.",
-        color: "success",
-        timeout: 4000,
-      });
-      setIsEditing(false);
-    } catch (error) {
-      addToast({
-        title: "Falha ao atualizar",
-        description:
-          (error as any).response?.data?.error || "Erro ao atualizar perfil",
-        color: "danger",
-        timeout: 5000,
-      });
-    }
-  }
-
-  const initials = getInitials(defaultValues.nome || "");
+    setInitials(newInitials);
+  }, [user?.user.nome]);
 
   return (
     <section className="min-h-screen bg-gray-800 flex flex-col text-white">
@@ -171,15 +171,16 @@ export function UserProfilePage() {
             </div>
           </div>
 
+          {/*   FORMULÁRIO DE ATUALIZAÇÃO DE DADOS  */}
           <Card className="bg-gray-900 border border-gray-700">
             <CardBody className="gap-4">
               <form
                 className="flex flex-col gap-4 w-full max-w-xl mx-auto"
-                onSubmit={handleSubmit(onSubmit)}
+                onSubmit={handleSubmit_user(onSubmitFormProfile)}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Controller
-                    control={control}
+                    control={control_user}
                     name="nome"
                     render={({ field }) => (
                       <Input
@@ -198,7 +199,7 @@ export function UserProfilePage() {
                   />
 
                   <Controller
-                    control={control}
+                    control={control_user}
                     name="telefone"
                     render={({ field }) => (
                       <Input
@@ -223,7 +224,7 @@ export function UserProfilePage() {
 
                   <div className="md:col-span-2">
                     <Controller
-                      control={control}
+                      control={control_user}
                       name="email"
                       render={({ field }) => (
                         <Input
@@ -246,8 +247,8 @@ export function UserProfilePage() {
                 <div className="flex justify-end">
                   <Button
                     color="primary"
-                    disabled={isSubmitting}
-                    isLoading={isSubmitting}
+                    disabled={isSubmitting_user}
+                    isLoading={isSubmitting_user}
                     radius="full"
                     type={isEditing ? "submit" : "button"}
                     variant="shadow"
@@ -264,175 +265,119 @@ export function UserProfilePage() {
 
           <Divider className="bg-gray-700" />
 
-          <PasswordSection />
+          {/*   FORMULÁRIO DE ATUALIZAÇÃO DE SENHA  */}
+          <Card className="bg-gray-900 border border-gray-700">
+            <CardBody className="gap-4">
+              <h2 className="text-lg text-white font-semibold">
+                Alterar senha
+              </h2>
+              <form
+                className="flex flex-col gap-4 w-full max-w-xl mx-auto"
+                onSubmit={handleSubmit(onChangePassword)}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                  <div className="md:col-span-2">
+                    <Controller
+                      control={control}
+                      name="senha_atual"
+                      render={({ field }) => (
+                        <Input
+                          isRequired
+                          className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          id="senha_atual"
+                          label="Senha atual"
+                          size="sm"
+                          type={isVisible ? "text" : "password"}
+                          {...field}
+                          endContent={
+                            <button
+                              aria-label="toggle"
+                              className="text-xs"
+                              type="button"
+                              onClick={() => setIsVisible((v) => !v)}
+                            >
+                              {isVisible ? "Ocultar" : "Mostrar"}
+                            </button>
+                          }
+                        />
+                      )}
+                    />
+                  </div>
+
+                  <Controller
+                    control={control}
+                    name="nova_senha"
+                    render={({ field }) => (
+                      <Input
+                        isRequired
+                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        id="nova_senha"
+                        label="Nova senha"
+                        size="sm"
+                        type={isVisibleNew ? "text" : "password"}
+                        {...field}
+                        endContent={
+                          <button
+                            aria-label="toggle"
+                            className="text-xs"
+                            type="button"
+                            onClick={() => setIsVisibleNew((v) => !v)}
+                          >
+                            {isVisibleNew ? "Ocultar" : "Mostrar"}
+                          </button>
+                        }
+                      />
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="confirma"
+                    render={({ field }) => (
+                      <Input
+                        isRequired
+                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        id="confirma"
+                        label="Confirme a nova senha"
+                        size="sm"
+                        type={isVisibleConfirm ? "text" : "password"}
+                        {...field}
+                        endContent={
+                          <button
+                            aria-label="toggle"
+                            className="text-xs"
+                            type="button"
+                            onClick={() => setIsVisibleConfirm((v) => !v)}
+                          >
+                            {isVisibleConfirm ? "Ocultar" : "Mostrar"}
+                          </button>
+                        }
+                      />
+                    )}
+                  />
+                </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    color="primary"
+                    disabled={isSubmitting}
+                    isLoading={isSubmitting}
+                    radius="full"
+                    type="submit"
+                    variant="shadow"
+                  >
+                    Salvar Nova Senha
+                  </Button>
+                </div>
+              </form>
+            </CardBody>
+          </Card>
         </div>
       </div>
     </section>
   );
 }
 
-function PasswordSection() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isVisibleNew, setIsVisibleNew] = useState(false);
-  const [isVisibleConfirm, setIsVisibleConfirm] = useState(false);
-
-  const schema = yup.object().shape({
-    senha_atual: yup.string().required("Informe a senha atual"),
-    nova_senha: yup.string().min(6).required("Informe a nova senha"),
-    confirma: yup
-      .string()
-      .oneOf([yup.ref("nova_senha"), ""], "As senhas não coincidem")
-      .required("Confirme a nova senha"),
-  });
-
-  type PasswordForm = {
-    senha_atual: string;
-    nova_senha: string;
-    confirma: string;
-  };
-
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { isSubmitting },
-  } = useForm<PasswordForm>({
-    resolver: yupResolver(schema),
-    defaultValues: { senha_atual: "", nova_senha: "", confirma: "" },
-  });
-
-  async function onChangePassword(data: PasswordForm) {
-    try {
-      const { updateUserPassword } = await import(
-        "@/contexts/AuthProvider/util"
-      );
-
-      await updateUserPassword({
-        senha_atual: data.senha_atual,
-        nova_senha: data.nova_senha,
-      });
-      addToast({
-        title: "Sucesso",
-        description: "Senha alterada com sucesso.",
-        color: "success",
-        timeout: 4000,
-      });
-      reset();
-    } catch (error) {
-      addToast({
-        title: "Falha ao alterar senha",
-        description:
-          (error as any).response?.data?.error || "Erro ao alterar senha",
-        color: "danger",
-        timeout: 5000,
-      });
-    }
-  }
-
-  return (
-    <Card className="bg-gray-900 border border-gray-700">
-      <CardBody className="gap-4">
-        <h2 className="text-lg text-white font-semibold">Alterar senha</h2>
-        <form
-          className="flex flex-col gap-4 w-full max-w-xl mx-auto"
-          onSubmit={handleSubmit(onChangePassword)}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-            <div className="md:col-span-2">
-              <Controller
-                control={control}
-                name="senha_atual"
-                render={({ field }) => (
-                  <Input
-                    isRequired
-                    className="w-full p-3 rounded-lg text-black focus:outline-none"
-                    id="senha_atual"
-                    label="Senha atual"
-                    size="sm"
-                    type={isVisible ? "text" : "password"}
-                    {...field}
-                    endContent={
-                      <button
-                        aria-label="toggle"
-                        className="text-xs"
-                        type="button"
-                        onClick={() => setIsVisible((v) => !v)}
-                      >
-                        {isVisible ? "Ocultar" : "Mostrar"}
-                      </button>
-                    }
-                  />
-                )}
-              />
-            </div>
-
-            <Controller
-              control={control}
-              name="nova_senha"
-              render={({ field }) => (
-                <Input
-                  isRequired
-                  className="w-full p-3 rounded-lg text-black focus:outline-none"
-                  id="nova_senha"
-                  label="Nova senha"
-                  size="sm"
-                  type={isVisibleNew ? "text" : "password"}
-                  {...field}
-                  endContent={
-                    <button
-                      aria-label="toggle"
-                      className="text-xs"
-                      type="button"
-                      onClick={() => setIsVisibleNew((v) => !v)}
-                    >
-                      {isVisibleNew ? "Ocultar" : "Mostrar"}
-                    </button>
-                  }
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="confirma"
-              render={({ field }) => (
-                <Input
-                  isRequired
-                  className="w-full p-3 rounded-lg text-black focus:outline-none"
-                  id="confirma"
-                  label="Confirme a nova senha"
-                  size="sm"
-                  type={isVisibleConfirm ? "text" : "password"}
-                  {...field}
-                  endContent={
-                    <button
-                      aria-label="toggle"
-                      className="text-xs"
-                      type="button"
-                      onClick={() => setIsVisibleConfirm((v) => !v)}
-                    >
-                      {isVisibleConfirm ? "Ocultar" : "Mostrar"}
-                    </button>
-                  }
-                />
-              )}
-            />
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              color="primary"
-              disabled={isSubmitting}
-              isLoading={isSubmitting}
-              radius="full"
-              type="submit"
-              variant="shadow"
-            >
-              Salvar Nova Senha
-            </Button>
-          </div>
-        </form>
-      </CardBody>
-    </Card>
-  );
+export default function UserProfilePage() {
+  return <UserProfile />;
 }

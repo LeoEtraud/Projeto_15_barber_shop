@@ -1,17 +1,15 @@
+import { IUser } from "../UserProvider/types";
+
 export interface IPayLoad {
   msg?: string;
   token: string;
   user: IUser;
 }
 
-export interface IUser {
-  id: string;
-  nome: string;
-  email: string;
-  tefefone: string;
-}
-
 export type SignInFormData = {
+  nome: string;
+  data_nascimento: string;
+  email: string;
   telefone: string;
   senha: string;
 };
@@ -20,7 +18,7 @@ export interface IContext {
   token: string | null;
   authenticate: (data: IPayLoad) => void;
   user: IPayLoad | null;
-  checkAuth: () => void;
+  checkAuth: () => Promise<void>;
   logout: () => void;
 }
 

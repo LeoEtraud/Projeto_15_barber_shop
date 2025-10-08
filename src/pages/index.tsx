@@ -15,9 +15,13 @@ import barberImage from "../assets/barber.png";
 
 import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
-import { SignInFormData } from "@/contexts/AuthProvider/types";
 import { LoginRequest } from "@/contexts/AuthProvider/util";
 import { useLoading } from "@/contexts/LoadingProvider";
+
+type LoginFormData = {
+  telefone: string;
+  senha: string;
+};
 
 export function Login() {
   const [isVisible, setIsVisible] = useState(false);
@@ -44,7 +48,7 @@ export function Login() {
           const digits = v.replace(/\D/g, "");
 
           return digits.length >= 11;
-        },
+        }
       ),
     senha: yup.string().required("A senha é obrigatória"),
   });
@@ -55,7 +59,7 @@ export function Login() {
     control,
     reset,
     formState: { isSubmitting },
-  } = useForm<SignInFormData>({
+  } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
     defaultValues: initialValues,
     mode: "onChange", // valida a cada mudança
@@ -64,7 +68,7 @@ export function Login() {
 
   const toggleVisibility = () => setIsVisible((prev) => !prev);
 
-  async function signIn(formData: SignInFormData) {
+  async function signIn(formData: LoginFormData) {
     if (isLoggingInRef.current) return;
     isLoggingInRef.current = true;
     try {

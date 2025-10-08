@@ -14,13 +14,14 @@ export function Header() {
   const { user, logout } = useAuth();
 
   // FUNÇÃO PARA GERAR LETRAS INICIAIS DO NOME DE USUÁRIO
-  function getUserInitials(name?: string) {
+  function getUserInitials(name: string) {
     if (!name) return "U";
     const parts = name.trim().split(" ").filter(Boolean);
-    const first = parts[0]?.[0] ?? "";
-    const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? "") : "";
+    const first = parts[0]?.[0]?.toUpperCase() ?? "";
+    const last =
+      parts.length > 1 ? parts[parts.length - 1]?.[0]?.toUpperCase() : "";
 
-    return (first + last).toUpperCase() || "U";
+    return first + last || "U";
   }
 
   return (
@@ -34,7 +35,7 @@ export function Header() {
         >
           <img
             alt="Logo da Barbearia"
-            className="h-8 w-auto select-none border-1 border-gray-300 rounded-lg "
+            className="h-9 w-9 select-none border-1 border-gray-300 rounded-lg "
             src="/logo-ia.png"
           />
           <span className="text-white font-semibold text-lg">Barbearia</span>
@@ -47,18 +48,22 @@ export function Header() {
             <button className="rounded-full focus:outline-none">
               <Avatar
                 isBordered
-                className="w-7 h-7 text-sm"
+                className="w-10 h-10 text-md"
                 color="primary"
-                name={user?.user?.nome}
+                name={getUserInitials(user?.user.nome ?? "")}
               >
-                {getUserInitials(user?.user?.nome)}
+                {getUserInitials(user?.user.nome ?? "")}
               </Avatar>
             </button>
           </DropdownTrigger>
           <DropdownMenu
             aria-label="Menu do usuário"
             onAction={(key) => {
-              if (key === "profile") navigate("/user-profile");
+              if (key === "profile") {
+                if (user?.user?.id) {
+                  navigate(`/user-profile/${user.user.id}`);
+                }
+              }
               if (key === "logout") logout();
             }}
           >

@@ -47,16 +47,6 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
     return user ?? null;
   }
 
-  // function getTokenCookies() {
-  //   const token = Cookies.get("barberToken");
-
-  //   if (!token) {
-  //     return null;
-  //   }
-
-  //   return token;
-  // }
-
   async function authenticate(data: IPayLoad) {
     try {
       setUserCookies(data);
@@ -124,3 +114,5 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
     </AuthContext.Provider>
   );
 };
+
+export { useAuth } from "./useAuth";

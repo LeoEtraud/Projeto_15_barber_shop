@@ -14,14 +14,7 @@ import eye from "../../assets/eye.svg";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { SendCreateUser } from "@/contexts/AuthProvider/util";
-
-export type SignInFormData = {
-  nome: string;
-  data_nascimento: string;
-  email: string;
-  telefone: string;
-  senha: string;
-};
+import { SignInFormData } from "@/contexts/AuthProvider/types";
 
 export function CreateAccount() {
   const [isVisible, setIsVisible] = useState(false);
