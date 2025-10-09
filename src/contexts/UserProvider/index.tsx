@@ -11,7 +11,7 @@ export const UserContext = createContext<IContext>({} as IContext);
 
 export const UserProvider = ({ children }: IUserProvider) => {
   const [userData, setUserdata] = useState<IUser | null>(null);
-  const { user, checkAuth } = useAuth();
+  const { user } = useAuth();
 
   // FUNÇÃO PARA BUSCAR TODOS OS DADOS DO USUÁRIO
   async function searchUser(id: string) {
