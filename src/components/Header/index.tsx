@@ -46,7 +46,7 @@ export function Header() {
         <Dropdown placement="bottom-end">
           <DropdownTrigger>
             <button className="rounded-full focus:outline-none">
-              <Avatar isBordered className="w-10 h-10 text-md" color="primary">
+              <Avatar isBordered className="w-9 h-9 text-md" color="primary">
                 {getUserInitials(user?.user.nome ?? "")}
               </Avatar>
             </button>

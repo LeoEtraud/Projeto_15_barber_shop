@@ -1,8 +1,8 @@
-import { UpdatePasswordPayload, UpdateProfilePayload } from "./types";
+import { IUser, UpdatePasswordPayload } from "./types";
 
 import { apiBarber } from "@/services/apiServer";
 
-// CHAMADA DA API PARA CRIAÇÃO DE NOVO USUÁRIO
+// CHAMADA DA API PARA BUSCA DE DADOS DO USUÁRIO
 export async function getUser(id: string) {
   try {
     const request = await apiBarber.get(`/get-user/${id}`);
@@ -13,15 +13,10 @@ export async function getUser(id: string) {
   }
 }
 
-// CHAMADA DA API PARA ATUALIZAÇÃO DE DADOS DO USUÁRIO
-export async function updateUserProfile(payload: UpdateProfilePayload) {
+// CHAMADA DA API PARA ATUALIZAÇÃO DE DADOS DO PERFIL DO USUÁRIO
+export async function updateUserProfile(payload: IUser) {
   try {
-    const sanitized = {
-      ...payload,
-      telefone: (payload.telefone || "").replace(/\D/g, ""),
-    };
-
-    const request = await apiBarber.put("/update-user", sanitized);
+    const request = await apiBarber.put("/update-user", payload);
 
     return request.data;
   } catch (error) {
@@ -29,6 +24,7 @@ export async function updateUserProfile(payload: UpdateProfilePayload) {
   }
 }
 
+// CHAMADA DA API PARA ATUALIZAÇÃO DE SENHA DO USUÁRIO
 export async function updateUserPassword(payload: UpdatePasswordPayload) {
   try {
     const request = await apiBarber.post("/change-password", payload);

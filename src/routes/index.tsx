@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { PrivateRoute } from "./privateRoute";
 
-import UserProfilePage from "@/pages/userProfile";
+import { UserProfilePage } from "@/pages/userProfile";
 import { NotFound } from "@/pages/notFound";
 import { Login } from "@/pages";
 import { ResetPassword } from "@/pages/resetPassword";

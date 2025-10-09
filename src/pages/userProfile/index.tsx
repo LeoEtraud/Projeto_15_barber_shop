@@ -4,13 +4,23 @@ import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Input } from "@heroui/input";
-import { Button, Card, CardBody, Divider, ToastProvider } from "@heroui/react";
+import {
+  Button,
+  Card,
+  CardBody,
+  Divider,
+  Image,
+  ToastProvider,
+} from "@heroui/react";
 import { useNavigate, useParams } from "react-router-dom";
+import { XCircleIcon } from "@heroicons/react/24/solid";
 
+import eye_slash from "@/assets/eye-slash.svg";
+import eye from "@/assets/eye.svg";
 import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { Header } from "@/components/Header";
 import { useUser } from "@/contexts/UserProvider/useUser";
-import { PasswordForm } from "@/contexts/UserProvider/types";
+import { IUser, PasswordForm } from "@/contexts/UserProvider/types";
 import { useAuth } from "@/contexts/AuthProvider";
 
 function getInitials(fullName: string) {
@@ -24,15 +34,9 @@ function getInitials(fullName: string) {
   return `${first}${last}`;
 }
 
-function UserProfile() {
-  const {
-    userData,
-    searchUser,
-    onChangePassword,
-    onSubmitFormProfile,
-    isEditing,
-    setIsEditing,
-  } = useUser();
+export function UserProfilePage() {
+  const { userData, searchUser, onChangePassword, onSubmitFormProfile } =
+    useUser();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -59,14 +63,9 @@ function UserProfile() {
       | { nome: string; email: string; telefone: string }
       | undefined);
 
-  type ProfileFormData = {
-    nome: string;
-    email: string;
-    telefone: string;
-  };
-
-  const defaultValues = useMemo<ProfileFormData>(
+  const defaultValues = useMemo<IUser>(
     () => ({
+      id: user?.user?.id ?? (id as string) ?? "",
       nome: currentUser?.nome || "",
       email: currentUser?.email || "",
       telefone: currentUser?.telefone || "",
@@ -75,6 +74,7 @@ function UserProfile() {
   );
 
   const schema_user = yup.object().shape({
+    id: yup.string().min(3).required("O Nome é obrigatório"),
     nome: yup.string().min(3).required("O Nome é obrigatório"),
     email: yup.string().email().required("O E-mail é obrigatório"),
     telefone: yup
@@ -95,7 +95,7 @@ function UserProfile() {
     control: control_user,
     handleSubmit: handleSubmit_user,
     formState: { isSubmitting: isSubmitting_user },
-  } = useForm<ProfileFormData>({
+  } = useForm<IUser>({
     resolver: yupResolver(schema_user),
     defaultValues,
     mode: "onChange",
@@ -145,7 +145,7 @@ function UserProfile() {
 
       {/* Conteúdo principal */}
       <div className="flex items-center justify-center flex-1 px-4 py-8 md:px-8">
-        <div className="relative border border-gray-700 bg-gray-800 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-2xl">
+        <div className="relative border border-gray-700 bg-gray-900 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-2xl">
           <Helmet title="Perfil" />
           <ToastProvider placement={"top-right"} toastOffset={60} />
 
@@ -156,7 +156,7 @@ function UserProfile() {
             type="button"
             onClick={() => navigate(-1)}
           >
-            ×
+            <XCircleIcon className="w-8 h-8 text-black-700" />
           </button>
 
           <div className="flex items-center gap-4">
@@ -172,12 +172,17 @@ function UserProfile() {
           </div>
 
           {/*   FORMULÁRIO DE ATUALIZAÇÃO DE DADOS  */}
-          <Card className="bg-gray-900 border border-gray-700">
+          <Card className="bg-gray-800 border border-gray-700">
             <CardBody className="gap-4">
+              <h2 className="text-lg text-white font-semibold">
+                Informações pessoais
+              </h2>
+
               <form
                 className="flex flex-col gap-4 w-full max-w-xl mx-auto"
                 onSubmit={handleSubmit_user(onSubmitFormProfile)}
               >
+                <input id="id" name="id" type="hidden" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Controller
                     control={control_user}
@@ -188,7 +193,6 @@ function UserProfile() {
                         autoComplete="name"
                         className="w-full p-3 rounded-lg text-black focus:outline-none"
                         id="nome"
-                        isReadOnly={!isEditing}
                         label="Nome"
                         maxLength={60}
                         size="sm"
@@ -208,7 +212,6 @@ function UserProfile() {
                         className="w-full p-3 rounded-lg text-black focus:outline-none"
                         id="telefone"
                         inputMode="numeric"
-                        isReadOnly={!isEditing}
                         label="Nº de contato"
                         maxLength={15}
                         size="sm"
@@ -232,7 +235,6 @@ function UserProfile() {
                           autoComplete="email"
                           className="w-full p-3 rounded-lg text-black focus:outline-none"
                           id="email"
-                          isReadOnly={!isEditing}
                           label="E-mail"
                           maxLength={60}
                           size="sm"
@@ -250,13 +252,10 @@ function UserProfile() {
                     disabled={isSubmitting_user}
                     isLoading={isSubmitting_user}
                     radius="full"
-                    type={isEditing ? "submit" : "button"}
+                    type="submit"
                     variant="shadow"
-                    onClick={() => {
-                      if (!isEditing) setIsEditing(true);
-                    }}
                   >
-                    {isEditing ? "Salvar alterações" : "Editar"}
+                    Salvar dados
                   </Button>
                 </div>
               </form>
@@ -266,7 +265,7 @@ function UserProfile() {
           <Divider className="bg-gray-700" />
 
           {/*   FORMULÁRIO DE ATUALIZAÇÃO DE SENHA  */}
-          <Card className="bg-gray-900 border border-gray-700">
+          <Card className="bg-gray-800 border border-gray-700">
             <CardBody className="gap-4">
               <h2 className="text-lg text-white font-semibold">
                 Alterar senha
@@ -296,7 +295,19 @@ function UserProfile() {
                               type="button"
                               onClick={() => setIsVisible((v) => !v)}
                             >
-                              {isVisible ? "Ocultar" : "Mostrar"}
+                              {isVisible ? (
+                                <Image
+                                  alt="Ocultar senha"
+                                  src={eye_slash}
+                                  width={30}
+                                />
+                              ) : (
+                                <Image
+                                  alt="Mostrar senha"
+                                  src={eye}
+                                  width={30}
+                                />
+                              )}
                             </button>
                           }
                         />
@@ -323,7 +334,15 @@ function UserProfile() {
                             type="button"
                             onClick={() => setIsVisibleNew((v) => !v)}
                           >
-                            {isVisibleNew ? "Ocultar" : "Mostrar"}
+                            {isVisible ? (
+                              <Image
+                                alt="Ocultar senha"
+                                src={eye_slash}
+                                width={30}
+                              />
+                            ) : (
+                              <Image alt="Mostrar senha" src={eye} width={30} />
+                            )}
                           </button>
                         }
                       />
@@ -349,7 +368,15 @@ function UserProfile() {
                             type="button"
                             onClick={() => setIsVisibleConfirm((v) => !v)}
                           >
-                            {isVisibleConfirm ? "Ocultar" : "Mostrar"}
+                            {isVisible ? (
+                              <Image
+                                alt="Ocultar senha"
+                                src={eye_slash}
+                                width={30}
+                              />
+                            ) : (
+                              <Image alt="Mostrar senha" src={eye} width={30} />
+                            )}
                           </button>
                         }
                       />
@@ -376,8 +403,4 @@ function UserProfile() {
       </div>
     </section>
   );
-}
-
-export default function UserProfilePage() {
-  return <UserProfile />;
 }

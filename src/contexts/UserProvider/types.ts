@@ -11,13 +11,6 @@ export interface UpdatePasswordPayload {
   nova_senha: string;
 }
 
-// ATUALIZAÇÃO DE PERFIL DO USUÁRIO (NOME, EMAIL, TELEFONE)
-export interface UpdateProfilePayload {
-  nome: string;
-  email: string;
-  telefone: string;
-}
-
 export type PasswordForm = {
   senha_atual: string;
   nova_senha: string;
@@ -28,9 +21,7 @@ export interface IContext {
   searchUser: (id: string) => void;
   userData: IUser | null;
   onChangePassword: (data: PasswordForm) => void;
-  onSubmitFormProfile: (data: UpdateProfilePayload) => void;
-  isEditing: boolean;
-  setIsEditing: (value: boolean) => void;
+  onSubmitFormProfile: (data: IUser) => void;
 }
 
 export interface IUserProvider {
