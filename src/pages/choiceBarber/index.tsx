@@ -1,11 +1,18 @@
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid"; // << ADICIONE
+import { useEffect } from "react";
 
 import { Header } from "@/components/Header";
+import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 
 export function ChoiceBarberPage() {
   const navigate = useNavigate();
+  const { fetchBarbers, barbers } = useSchedule();
+
+  useEffect(() => {
+    fetchBarbers();
+  }, []);
 
   return (
     <section className="min-h-screen bg-gray-800">
@@ -43,36 +50,7 @@ export function ChoiceBarberPage() {
 
           {/* Lista de barbeiros */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[
-              {
-                id: "1",
-                firstName: "Léo",
-                lastName: "Balata",
-                services: 128,
-                img: "/barber-1.png",
-              },
-              {
-                id: "2",
-                firstName: "Felipe",
-                lastName: "Souza",
-                services: 73,
-                img: "/barber-2.png",
-              },
-              {
-                id: "3",
-                firstName: "João",
-                lastName: "Pereira",
-                services: 99,
-                img: "/barber-3.png",
-              },
-              {
-                id: "4",
-                firstName: "Henrique",
-                lastName: "Oliveira",
-                services: 85,
-                img: "/barber-4.png",
-              },
-            ].map((barber) => (
+            {barbers.map((barber) => (
               <button
                 key={barber.id}
                 className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 shadow hover:shadow-md transition-shadow text-left relative"
@@ -84,19 +62,20 @@ export function ChoiceBarberPage() {
                 }
               >
                 <img
-                  alt={`Barbeiro ${barber.firstName}`}
+                  alt={`Barbeiro ${barber.nome}`}
                   className="h-16 w-14 rounded-md object-cover"
-                  src={barber.img}
+                  src={
+                    barber.avatar &&
+                    `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
+                  }
                 />
                 <div className="flex-1">
-                  <div className="text-white font-medium">
-                    {barber.firstName} {barber.lastName}
-                  </div>
+                  <div className="text-white font-medium">{barber.nome}</div>
                   <div className="text-xs text-gray-400">
-                    {barber.services} atendimentos
+                    {barber.qtd_atendimentos} atendimentos
                   </div>
                   <div className="mt-1 flex items-center gap-1">
-                    {[0, 1, 2, 3, 4].map((i) => (
+                    {Array.from({ length: barber.nota_avaliacao }, (_, i) => (
                       <span key={i} aria-hidden className="text-yellow-400">
                         ★
                       </span>
