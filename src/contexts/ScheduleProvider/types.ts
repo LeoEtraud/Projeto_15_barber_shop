@@ -11,9 +11,28 @@ export interface IBarbers {
   status: string;
 }
 
+export interface IServices {
+  id: string;
+  nome: string;
+  preco: string;
+  duracao: number;
+  imagem?: string;
+}
+
+export interface ISchedules {
+  id: string;
+  data_agendamento: string;
+  hora_inicio: string;
+  hora_fim: string;
+}
+
 export interface IContext {
   barbers: IBarbers[];
   fetchBarbers: () => void;
+  services: IServices[];
+  fetchServices: () => void;
+  schedules: ISchedules[];
+  fetchSchedules: () => void;
 }
 
 export interface IScheduleProvider {

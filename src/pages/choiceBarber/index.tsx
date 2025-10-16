@@ -2,6 +2,8 @@ import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid"; // << ADICIONE
 import { useEffect } from "react";
+import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
+import { StarIcon as StarIconOutline } from "@heroicons/react/24/outline";
 
 import { Header } from "@/components/Header";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
@@ -57,7 +59,7 @@ export function ChoiceBarberPage() {
                 type="button"
                 onClick={() =>
                   navigate("/choice-service", {
-                    state: { barberId: barber.id },
+                    state: { barber: { id: barber.id, nome: barber.nome } },
                   })
                 }
               >
@@ -75,11 +77,21 @@ export function ChoiceBarberPage() {
                     {barber.qtd_atendimentos} atendimentos
                   </div>
                   <div className="mt-1 flex items-center gap-1">
-                    {Array.from({ length: barber.nota_avaliacao }, (_, i) => (
-                      <span key={i} aria-hidden className="text-yellow-400">
-                        ★
-                      </span>
-                    ))}
+                    {Array.from({ length: 5 }, (_, i) =>
+                      i < barber.nota_avaliacao ? (
+                        <StarIconSolid
+                          key={i}
+                          aria-hidden="true"
+                          className="w-3 h-3 text-yellow-400"
+                        />
+                      ) : (
+                        <StarIconOutline
+                          key={i}
+                          aria-hidden="true"
+                          className="w-3 h-3 text-gray-500"
+                        />
+                      )
+                    )}
                   </div>
                 </div>
                 {/* Seta amarela, mais cheia e maior */}

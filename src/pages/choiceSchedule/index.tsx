@@ -1,32 +1,44 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 
 import { Header } from "@/components/Header";
-
-type Service = {
-  id: string;
-  label: string;
-  price: string;
-  duration: string;
-};
+import { IServices } from "@/contexts/ScheduleProvider/types";
+import { formatPrice } from "@/utils/format-price";
+import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 
 export function ChoiceSchedulePage() {
   const navigate = useNavigate();
+  const { fetchSchedules, schedules } = useSchedule();
   const location = useLocation() as {
     state?: {
-      barberId?: string;
-      selectedServices?: Service[];
+      barber?: { id: string; nome: string };
+      selectedServices?: IServices[];
     };
   };
 
-  const { barberId, selectedServices } = location.state || {};
+  const { barber, selectedServices } = location.state || {};
 
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
 
-  // Gerar próximos 7 dias
+  // Estado para armazenar os horários disponíveis (incluindo ocupado/livre)
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<
+    { time: string; isOccupied: boolean }[]
+  >([]);
+
+  // Soma total da duração dos serviços
+  const totalDuration = useMemo(
+    () =>
+      selectedServices?.reduce(
+        (sum, service) => sum + (service.duracao || 0),
+        0
+      ) || 0,
+    [selectedServices]
+  );
+
+  // Gerar próximos 7 dias (exceto domingo)
   const generateDates = () => {
     const dates = [];
     const today = new Date();
@@ -36,7 +48,9 @@ export function ChoiceSchedulePage() {
 
       date.setDate(today.getDate() + i);
 
-      // Formatar data no fuso horário local para evitar problemas de UTC
+      // Verifica se é domingo e pula
+      if (date.getDay() === 0) continue; // 0 representa o domingo
+
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
@@ -61,29 +75,80 @@ export function ChoiceSchedulePage() {
     return dates;
   };
 
-  // Horários disponíveis (8h às 18h, intervalos de 30min)
+  // Gerar horários disponíveis
   const generateTimeSlots = () => {
-    const slots = [];
+    const slots: { time: string; isOccupied: boolean }[] = [];
+    const step = totalDuration >= 60 ? 60 : 30;
 
-    for (let hour = 8; hour < 18; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
+    // Filtra os horários ocupados com base nos agendamentos existentes
+    const occupiedSlots = schedules.filter((schedule) => {
+      const scheduleDate = new Date(schedule.data_agendamento); // Data da API (em UTC)
+      const selectedDateObj = new Date(selectedDate); // Data selecionada pelo usuário (local)
+
+      // Compara as datas para garantir que estamos verificando o mesmo dia
+      return (
+        scheduleDate.getUTCFullYear() === selectedDateObj.getUTCFullYear() &&
+        scheduleDate.getUTCMonth() === selectedDateObj.getUTCMonth() &&
+        scheduleDate.getUTCDate() === selectedDateObj.getUTCDate()
+      );
+    });
+
+    // Mapeia os horários ocupados com hora de início e fim
+    const occupiedTimes: { start: number; end: number }[] = occupiedSlots.map(
+      (schedule) => {
+        const scheduleStart = new Date(
+          `${schedule.data_agendamento}T${schedule.hora_inicio}:00`
+        ).getTime(); // Usando getTime() para obter o timestamp
+        const scheduleEnd = new Date(
+          `${schedule.data_agendamento}T${schedule.hora_fim}:00`
+        ).getTime(); // Usando getTime() para obter o timestamp
+
+        return {
+          start: scheduleStart,
+          end: scheduleEnd,
+        };
+      }
+    );
+
+    // Gerar horários disponíveis para o dia
+    for (let hour = 9; hour < 19; hour++) {
+      for (let minute = 0; minute < 60; minute += step) {
         const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 
-        slots.push(time);
+        const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
+        const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
+
+        // Verifica se o horário está ocupado
+        const isOccupied = occupiedTimes.some(({ start, end }) => {
+          // Verifica se o horário selecionado se sobrepõe a algum horário ocupado
+          return (
+            (timeSlotStart >= start && timeSlotStart < end) || // O início do horário se sobrepõe
+            (timeSlotEnd > start && timeSlotEnd <= end) || // O fim do horário se sobrepõe
+            (timeSlotStart <= start && timeSlotEnd >= end) // O horário selecionado cobre o horário ocupado
+          );
+        });
+
+        // Armazena o horário e se está ocupado ou não
+        slots.push({ time, isOccupied });
       }
     }
 
     return slots;
   };
 
-  const dates = generateDates();
-  const timeSlots = generateTimeSlots();
+  // Atualiza os horários disponíveis ao selecionar uma data
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date); // Atualiza o estado da data selecionada
+    const availableSlots = generateTimeSlots(); // Gera os horários disponíveis para a nova data
+
+    setAvailableTimeSlots(availableSlots); // Armazena os horários no estado
+  };
 
   const handleSchedule = () => {
     if (selectedDate && selectedTime) {
       navigate("/confirm-appointment", {
         state: {
-          barberId,
+          barber,
           selectedServices,
           selectedDate,
           selectedTime,
@@ -92,11 +157,15 @@ export function ChoiceSchedulePage() {
     }
   };
 
+  useEffect(() => {
+    fetchSchedules(); // Carrega os agendamentos ao carregar a página
+  }, []);
+
   return (
     <section className="min-h-screen bg-gray-800">
       {/* COMPONENTE CABEÇALH0 */}
       <Header />
-      {/* Conteúdo principal */}
+
       <div className="px-4 pt-8 pb-14 md:px-8">
         <Helmet title="Selecionar data e horário" />
 
@@ -111,7 +180,7 @@ export function ChoiceSchedulePage() {
             <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
           </button>
 
-          {/* Banner com imagem de fundo */}
+          {/* Banner */}
           <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
               alt="Banner"
@@ -126,19 +195,31 @@ export function ChoiceSchedulePage() {
           </div>
 
           {/* Resumo do agendamento */}
-          {selectedServices?.map((service) => (
-            <div key={service.id} className="bg-gray-900 rounded-lg p-4 mb-6">
+          {selectedServices && selectedServices.length > 0 && (
+            <div className="bg-gray-900 rounded-lg p-4 mb-6">
               <h3 className="text-white font-medium mb-2">
                 Resumo do agendamento
               </h3>
-              <div className="text-sm text-gray-300 space-y-1">
-                <div>Serviço: {service.label}</div>
-                <div>Preço: {service.price}</div>
-                <div>Duração: {service.duration}</div>
-                {barberId && <div>Barbeiro: #{barberId}</div>}
+              <div className="text-sm text-gray-300">
+                {barber && <div>Barbeiro: {barber.nome}</div>}
+
+                {selectedServices.map((service) => (
+                  <div
+                    key={service.id}
+                    className="border-b border-gray-700 pb-2 last:border-0 last:pb-0"
+                  >
+                    <div>Serviço: {service.nome}</div>
+                    <div>Preço: {formatPrice(Number(service.preco))}</div>
+                    <div>Duração: {service.duracao} min</div>
+                  </div>
+                ))}
+
+                <div className="mt-2 font-medium text-green-400">
+                  Tempo total: {totalDuration} min
+                </div>
               </div>
             </div>
-          ))}
+          )}
 
           {/* Seleção de data */}
           <div className="mb-6">
@@ -146,7 +227,7 @@ export function ChoiceSchedulePage() {
               Escolha a data
             </h2>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {dates.map((date) => (
+              {generateDates().map((date) => (
                 <button
                   key={date.value}
                   className={`p-3 rounded-lg text-center transition-colors ${
@@ -155,7 +236,7 @@ export function ChoiceSchedulePage() {
                       : "bg-gray-900 text-gray-300 hover:bg-gray-700"
                   }`}
                   type="button"
-                  onClick={() => setSelectedDate(date.value)}
+                  onClick={() => handleDateSelect(date.value)}
                 >
                   <div className="text-sm font-medium">{date.label}</div>
                 </button>
@@ -164,22 +245,26 @@ export function ChoiceSchedulePage() {
           </div>
 
           {/* Seleção de horário */}
-          {selectedDate && (
+          {/* Seleção de horário */}
+          {selectedDate && availableTimeSlots.length > 0 && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white mb-3">
                 Escolha o horário
               </h2>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {timeSlots.map((time) => (
+                {availableTimeSlots.map(({ time, isOccupied }) => (
                   <button
                     key={time}
                     className={`p-2 rounded-lg text-center text-sm transition-colors ${
-                      selectedTime === time
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                      isOccupied
+                        ? "bg-gray-700 text-gray-500 cursor-not-allowed" // Estilo de ocupado
+                        : selectedTime === time
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-900 text-gray-300 hover:bg-gray-700"
                     }`}
+                    disabled={isOccupied} // Desabilita o botão se estiver ocupado
                     type="button"
-                    onClick={() => setSelectedTime(time)}
+                    onClick={() => !isOccupied && setSelectedTime(time)} // Não permite selecionar se estiver ocupado
                   >
                     {time}
                   </button>
