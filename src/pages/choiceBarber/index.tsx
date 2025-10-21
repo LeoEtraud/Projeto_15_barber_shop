@@ -67,9 +67,13 @@ export function ChoiceBarberPage() {
                   alt={`Barbeiro ${barber.nome}`}
                   className="h-16 w-14 rounded-md object-cover"
                   src={
-                    barber.avatar &&
-                    `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
+                    barber.avatar
+                      ? `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
+                      : "/img-barber-icon.png"
                   }
+                  onError={(e) => {
+                    e.currentTarget.src = "/img-barber-icon.png";
+                  }}
                 />
                 <div className="flex-1">
                   <div className="text-white font-medium">{barber.nome}</div>
