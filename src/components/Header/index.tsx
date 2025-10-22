@@ -38,7 +38,9 @@ export function Header() {
             className="h-9 w-9 select-none border-1 border-gray-300 rounded-lg "
             src="/logo-ia.png"
           />
-          <span className="text-white font-semibold text-lg">Barbearia</span>
+          <span className="text-white font-semibold text-lg">
+            Balata Barbearia
+          </span>
         </button>
       </div>
 
@@ -46,7 +48,7 @@ export function Header() {
         <Dropdown placement="bottom-end">
           <DropdownTrigger>
             <button className="rounded-full focus:outline-none">
-              <Avatar isBordered className="w-9 h-9 text-md" color="primary">
+              <Avatar isBordered className="w-9 h-9 text-md" color="default">
                 {getUserInitials(user?.user.nome ?? "")}
               </Avatar>
             </button>
