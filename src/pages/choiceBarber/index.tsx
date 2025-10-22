@@ -70,9 +70,6 @@ export function ChoiceBarberPage() {
                     barber.avatar &&
                     `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
                   }
-                  onError={(e) => {
-                    e.currentTarget.src = "/img-barber-icon.png";
-                  }}
                 />
                 <div className="flex-1">
                   <div className="text-white font-medium">{barber.nome}</div>
