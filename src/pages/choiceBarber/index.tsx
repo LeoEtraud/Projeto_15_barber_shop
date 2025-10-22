@@ -12,22 +12,22 @@ export function ChoiceBarberPage() {
   const navigate = useNavigate();
   const { fetchBarbers, barbers } = useSchedule();
 
-  // Função para gerar URL do avatar do barbeiro
-  const getBarberAvatarUrl = (avatar: string | undefined) => {
-    if (!avatar) return "/img-barber-icon.png";
+  // // Função para gerar URL do avatar do barbeiro
+  // const getBarberAvatarUrl = (avatar: string | undefined) => {
+  //   if (!avatar) return "/img-barber-icon.png";
 
-    const apiUrl = import.meta.env.VITE_API;
+  //   const apiUrl = import.meta.env.VITE_API;
 
-    if (!apiUrl) {
-      console.warn(
-        "VITE_API não está configurada. Configure a variável de ambiente."
-      );
+  //   if (!apiUrl) {
+  //     console.warn(
+  //       "VITE_API não está configurada. Configure a variável de ambiente."
+  //     );
 
-      return "/img-barber-icon.png";
-    }
+  //     return "/img-barber-icon.png";
+  //   }
 
-    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
-  };
+  //   return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+  // };
 
   useEffect(() => {
     fetchBarbers();
@@ -83,7 +83,10 @@ export function ChoiceBarberPage() {
                 <img
                   alt={`Barbeiro ${barber.nome}`}
                   className="h-16 w-14 rounded-md object-cover"
-                  src={getBarberAvatarUrl(barber.avatar)}
+                  src={
+                    barber.avatar &&
+                    `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
+                  }
                   onError={(e) => {
                     e.currentTarget.src = "/img-barber-icon.png";
                   }}
