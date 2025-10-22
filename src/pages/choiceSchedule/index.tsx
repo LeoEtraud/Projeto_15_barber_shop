@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 
 import { Header } from "@/components/Header";
@@ -23,9 +23,9 @@ export function ChoiceSchedulePage() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
 
-  // Estado para armazenar os horários disponíveis (incluindo ocupado/livre)
+  // Estado para armazenar os horários disponíveis (incluindo ocupado/livre/passado)
   const [availableTimeSlots, setAvailableTimeSlots] = useState<
-    { time: string; isOccupied: boolean }[]
+    { time: string; isOccupied: boolean; isPast: boolean }[]
   >([]);
 
   // Soma total da duração dos serviços
@@ -76,9 +76,14 @@ export function ChoiceSchedulePage() {
   };
 
   // Gerar horários disponíveis
-  const generateTimeSlots = () => {
-    const slots: { time: string; isOccupied: boolean }[] = [];
+  const generateTimeSlots = useCallback(() => {
+    const slots: { time: string; isOccupied: boolean; isPast: boolean }[] = [];
     const step = totalDuration >= 60 ? 60 : 30;
+
+    // Obtém a data e hora atual
+    const now = new Date();
+    const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const isToday = selectedDate === todayString;
 
     // Filtra os horários ocupados com base nos agendamentos existentes
     const occupiedSlots = schedules.filter((schedule) => {
@@ -128,21 +133,31 @@ export function ChoiceSchedulePage() {
           );
         });
 
-        // Armazena o horário e se está ocupado ou não
-        slots.push({ time, isOccupied });
+        // Verifica se o horário já passou (apenas para hoje)
+        const isPast = isToday && timeSlotStart < now.getTime();
+
+        // Armazena o horário e se está ocupado, passado ou não
+        slots.push({ time, isOccupied, isPast });
       }
     }
 
     return slots;
-  };
+  }, [selectedDate, schedules, totalDuration]);
 
   // Atualiza os horários disponíveis ao selecionar uma data
   const handleDateSelect = (date: string) => {
     setSelectedDate(date); // Atualiza o estado da data selecionada
-    const availableSlots = generateTimeSlots(); // Gera os horários disponíveis para a nova data
-
-    setAvailableTimeSlots(availableSlots); // Armazena os horários no estado
+    setSelectedTime(""); // Limpa o horário selecionado ao mudar a data
   };
+
+  // Atualiza os horários disponíveis quando a data selecionada muda
+  useEffect(() => {
+    if (selectedDate) {
+      const availableSlots = generateTimeSlots(); // Gera os horários disponíveis para a nova data
+
+      setAvailableTimeSlots(availableSlots); // Armazena os horários no estado
+    }
+  }, [selectedDate, generateTimeSlots]);
 
   const handleSchedule = () => {
     if (selectedDate && selectedTime) {
@@ -245,30 +260,63 @@ export function ChoiceSchedulePage() {
           </div>
 
           {/* Seleção de horário */}
-          {/* Seleção de horário */}
           {selectedDate && availableTimeSlots.length > 0 && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white mb-3">
                 Escolha o horário
               </h2>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {availableTimeSlots.map(({ time, isOccupied }) => (
-                  <button
-                    key={time}
-                    className={`p-2 rounded-lg text-center text-sm transition-colors ${
-                      isOccupied
-                        ? "bg-gray-700 text-gray-500 cursor-not-allowed" // Estilo de ocupado
-                        : selectedTime === time
-                          ? "bg-green-600 text-white"
-                          : "bg-gray-900 text-gray-300 hover:bg-gray-700"
-                    }`}
-                    disabled={isOccupied} // Desabilita o botão se estiver ocupado
-                    type="button"
-                    onClick={() => !isOccupied && setSelectedTime(time)} // Não permite selecionar se estiver ocupado
-                  >
-                    {time}
-                  </button>
-                ))}
+                {availableTimeSlots.map(({ time, isOccupied, isPast }) => {
+                  const isDisabled = isOccupied || isPast;
+
+                  return (
+                    <button
+                      key={time}
+                      className={`p-2 rounded-lg text-center text-sm transition-colors relative ${
+                        isDisabled
+                          ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                          : selectedTime === time
+                            ? "bg-green-600 text-white"
+                            : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                      }`}
+                      disabled={isDisabled}
+                      title={
+                        isPast
+                          ? "Horário já passou"
+                          : isOccupied
+                            ? "Horário ocupado"
+                            : "Disponível"
+                      }
+                      type="button"
+                      onClick={() => !isDisabled && setSelectedTime(time)}
+                    >
+                      {time}
+                      {isOccupied && !isPast && (
+                        <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex gap-4 text-xs text-gray-400">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-600 rounded" />
+                  <span>Selecionado</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-900 rounded" />
+                  <span>Disponível</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-700 rounded relative">
+                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
+                  </div>
+                  <span>Ocupado</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-700 rounded" />
+                  <span>Indisponível</span>
+                </div>
               </div>
             </div>
           )}
