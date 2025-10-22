@@ -67,9 +67,8 @@ export function ChoiceBarberPage() {
                   alt={`Barbeiro ${barber.nome}`}
                   className="h-16 w-14 rounded-md object-cover"
                   src={
-                    barber.avatar
-                      ? `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
-                      : "/img-barber-icon.png"
+                    barber.avatar &&
+                    `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
                   }
                   onError={(e) => {
                     e.currentTarget.src = "/img-barber-icon.png";
