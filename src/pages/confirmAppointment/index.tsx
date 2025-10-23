@@ -99,7 +99,7 @@ export function ConfirmAppointmentPage() {
 
           <div className="mx-auto max-w-2xl">
             {/* Banner de sucesso */}
-            <div className="relative rounded-xl overflow-hidden shadow-lg bg-green-600 h-40 mb-6 flex items-center justify-center">
+            <div className="relative rounded-xl overflow-hidden shadow-lg bg-green-700 h-40 mb-6 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-2">✅</div>
                 <h1 className="text-2xl font-bold text-white drop-shadow-lg">
@@ -154,7 +154,7 @@ export function ConfirmAppointmentPage() {
       {/* COMPONENTE CABEÇALH0 */}
       <Header />
       {/* Conteúdo principal */}
-      <div className="px-4 py-8 md:px-8">
+      <div className="p-4 pb-10 md:px-8">
         <Helmet title="Confirmar Agendamento" />
 
         <div className="mx-auto max-w-2xl">

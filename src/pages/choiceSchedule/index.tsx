@@ -200,7 +200,7 @@ export function ChoiceSchedulePage() {
       {/* COMPONENTE CABEÇALH0 */}
       <Header />
 
-      <div className="px-4 pt-8 pb-14 md:px-8">
+      <div className="p-4 pb-10 md:px-8">
         <Helmet title="Selecionar data e horário" />
 
         <div className="mx-auto max-w-2xl">
@@ -255,7 +255,7 @@ export function ChoiceSchedulePage() {
             </div>
           )}
 
-          {/* Seleção de data */}
+          {/* SELEÇÃO DE DATA */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-white mb-3">
               Escolha a data
@@ -285,7 +285,7 @@ export function ChoiceSchedulePage() {
             </div>
           </div>
 
-          {/* Seleção de horário */}
+          {/* SELEÇÃO DE HORÁRIO */}
           {selectedDate && availableTimeSlots.length > 0 && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white mb-3">

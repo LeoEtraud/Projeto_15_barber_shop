@@ -22,7 +22,7 @@ export function ChoiceBarberPage() {
       <Header />
 
       {/* Conteúdo principal */}
-      <div className="px-4 py-8 md:px-8">
+      <div className="px-4 py-4 md:px-8">
         <Helmet title="Selecionar barbeiro" />
 
         <div className="mx-auto max-w-2xl">

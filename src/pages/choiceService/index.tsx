@@ -114,7 +114,7 @@ export function ChoiceServicePage() {
     <section className="min-h-screen bg-gray-800">
       <Header />
 
-      <div className="px-4 py-8 md:px-8">
+      <div className="p-4 md:px-8">
         <Helmet title="Selecionar serviço" />
 
         <div className="mx-auto max-w-2xl">
