@@ -38,7 +38,7 @@ export function ChoiceSchedulePage() {
     [selectedServices]
   );
 
-  // Gerar próximos 7 dias (exceto domingo)
+  // FUNÇÃO PARA GERAR PRÓXIMOS 7 DIAS (EXCETO DOMINGO)
   const generateDates = () => {
     const dates = [];
     const today = new Date();
@@ -75,7 +75,7 @@ export function ChoiceSchedulePage() {
     return dates;
   };
 
-  // Gerar horários disponíveis
+  // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS
   const generateTimeSlots = useCallback(() => {
     const slots: { time: string; isOccupied: boolean; isPast: boolean }[] = [];
     const step = totalDuration >= 60 ? 60 : 30;
@@ -115,7 +115,7 @@ export function ChoiceSchedulePage() {
       }
     );
 
-    // Gerar horários disponíveis para o dia
+    // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS PARA O DIA
     for (let hour = 9; hour < 19; hour++) {
       for (let minute = 0; minute < 60; minute += step) {
         const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
@@ -266,37 +266,26 @@ export function ChoiceSchedulePage() {
                 Escolha o horário
               </h2>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {availableTimeSlots.map(({ time, isOccupied, isPast }) => {
-                  const isDisabled = isOccupied || isPast;
-
-                  return (
+                {availableTimeSlots
+                  .filter(({ isPast }) => !isPast)
+                  .map(({ time, isOccupied }) => (
                     <button
                       key={time}
-                      className={`p-2 rounded-lg text-center text-sm transition-colors relative ${
-                        isDisabled
+                      className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                        isOccupied
                           ? "bg-gray-700 text-gray-500 cursor-not-allowed"
                           : selectedTime === time
                             ? "bg-green-600 text-white"
                             : "bg-gray-900 text-gray-300 hover:bg-gray-700"
                       }`}
-                      disabled={isDisabled}
-                      title={
-                        isPast
-                          ? "Horário já passou"
-                          : isOccupied
-                            ? "Horário ocupado"
-                            : "Disponível"
-                      }
+                      disabled={isOccupied}
+                      title={isOccupied ? "Horário ocupado" : "Disponível"}
                       type="button"
-                      onClick={() => !isDisabled && setSelectedTime(time)}
+                      onClick={() => !isOccupied && setSelectedTime(time)}
                     >
                       {time}
-                      {isOccupied && !isPast && (
-                        <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
-                      )}
                     </button>
-                  );
-                })}
+                  ))}
               </div>
               <div className="mt-3 flex gap-4 text-xs text-gray-400">
                 <div className="flex items-center gap-2">
@@ -308,14 +297,8 @@ export function ChoiceSchedulePage() {
                   <span>Disponível</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-700 rounded relative">
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />
-                  </div>
-                  <span>Ocupado</span>
-                </div>
-                <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-gray-700 rounded" />
-                  <span>Indisponível</span>
+                  <span>Ocupado</span>
                 </div>
               </div>
             </div>
