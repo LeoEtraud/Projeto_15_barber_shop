@@ -42,6 +42,7 @@ export function ChoiceSchedulePage() {
   const generateDates = () => {
     const dates = [];
     const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     for (let i = 0; i < 7; i++) {
       const date = new Date(today);
@@ -56,19 +57,36 @@ export function ChoiceSchedulePage() {
       const day = String(date.getDate()).padStart(2, "0");
       const dateString = `${year}-${month}-${day}`;
 
+      const isToday = dateString === todayString;
+
+      // Formato: dia/mês
+      const shortDate = `${day}/${month}`;
+
+      // Nome do dia da semana
+      const weekdayLong = date.toLocaleDateString("pt-BR", {
+        weekday: "long",
+      });
+      const weekdayShort = date.toLocaleDateString("pt-BR", {
+        weekday: "short",
+      });
+
+      // Capitalizar primeira letra
+      const weekdayLongCapitalized =
+        weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
+      const weekdayShortCapitalized =
+        weekdayShort.charAt(0).toUpperCase() + weekdayShort.slice(1);
+
       dates.push({
         value: dateString,
-        label: date.toLocaleDateString("pt-BR", {
-          weekday: "short",
-          day: "2-digit",
-          month: "2-digit",
-        }),
-        fullDate: date.toLocaleDateString("pt-BR", {
-          weekday: "long",
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        }),
+        // Para desktop: "Hoje (24/10)" ou "Sexta-feira (24/10)"
+        labelDesktop: isToday
+          ? `Hoje (${shortDate})`
+          : `${weekdayLongCapitalized} (${shortDate})`,
+        // Para mobile: "Hoje (24/10)" ou "Sex (24/10)"
+        labelMobile: isToday
+          ? `Hoje (${shortDate})`
+          : `${weekdayShortCapitalized} (${shortDate})`,
+        isToday,
       });
     }
 
@@ -159,6 +177,7 @@ export function ChoiceSchedulePage() {
     }
   }, [selectedDate, generateTimeSlots]);
 
+  // FUNÕES PARA CONFIRMAR O AGENDAMENTO
   const handleSchedule = () => {
     if (selectedDate && selectedTime) {
       navigate("/confirm-appointment", {
@@ -253,7 +272,14 @@ export function ChoiceSchedulePage() {
                   type="button"
                   onClick={() => handleDateSelect(date.value)}
                 >
-                  <div className="text-sm font-medium">{date.label}</div>
+                  {/* Mobile: versão abreviada */}
+                  <div className="text-sm font-medium sm:hidden">
+                    {date.labelMobile}
+                  </div>
+                  {/* Desktop: versão completa */}
+                  <div className="hidden text-sm font-medium sm:block">
+                    {date.labelDesktop}
+                  </div>
                 </button>
               ))}
             </div>
