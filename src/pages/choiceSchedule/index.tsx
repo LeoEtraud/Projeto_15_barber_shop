@@ -186,6 +186,7 @@ export function ChoiceSchedulePage() {
           selectedServices,
           selectedDate,
           selectedTime,
+          totalDuration,
         },
       });
     }
