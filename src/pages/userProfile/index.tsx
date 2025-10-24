@@ -16,6 +16,7 @@ import { useUser } from "@/contexts/UserProvider/useUser";
 import { IUser, PasswordForm } from "@/contexts/UserProvider/types";
 import { useAuth } from "@/contexts/AuthProvider";
 
+// FUNÇÃO PARA DEFINIR AS LETRAS INICIAIS DO USUÁRIO
 function getInitials(fullName: string) {
   const parts = (fullName || "").trim().split(/\s+/);
 
@@ -102,7 +103,7 @@ export function UserProfilePage() {
   const schema = yup.object().shape({
     senha_atual: yup.string().required("Informe a senha atual"),
     nova_senha: yup.string().min(6).required("Informe a nova senha"),
-    confirma: yup
+    confirma_nova_senha: yup
       .string()
       .oneOf([yup.ref("nova_senha"), ""], "As senhas não coincidem")
       .required("Confirme a nova senha"),
@@ -115,12 +116,24 @@ export function UserProfilePage() {
     formState: { isSubmitting },
   } = useForm<PasswordForm>({
     resolver: yupResolver(schema),
-    defaultValues: { senha_atual: "", nova_senha: "", confirma: "" },
+    defaultValues: { senha_atual: "", nova_senha: "", confirma_nova_senha: "" },
   });
 
   useEffect(() => {
-    reset({ senha_atual: "", nova_senha: "", confirma: "" });
+    reset({ senha_atual: "", nova_senha: "", confirma_nova_senha: "" });
   }, [reset]);
+
+  // Função intermediária para adicionar o id ao payload antes de chamar onChangePassword
+  const handlePasswordSubmit = (data: PasswordForm) => {
+    const userId = user?.user?.id ?? (id as string) ?? "";
+
+    onChangePassword({
+      id: userId,
+      senha_atual: data.senha_atual,
+      nova_senha: data.nova_senha,
+    });
+    reset({ senha_atual: "", nova_senha: "", confirma_nova_senha: "" });
+  };
 
   const [initials, setInitials] = useState<string>("");
 
@@ -153,7 +166,7 @@ export function UserProfilePage() {
           </button>
 
           {/* Header do Perfil */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-gray-700">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 pb-6 border-b border-gray-700">
             <div className="flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none">
               {initials}
             </div>
@@ -161,9 +174,6 @@ export function UserProfilePage() {
               <h1 className="text-3xl font-bold text-white">
                 {currentUser?.nome || "Meu Perfil"}
               </h1>
-              <p className="text-gray-400 text-sm">
-                {currentUser?.email || ""}
-              </p>
             </div>
           </div>
 
@@ -319,10 +329,12 @@ export function UserProfilePage() {
                 </p>
               </div>
 
+              {/* FORMULÁRIO DE ATUALIZAÇÃO DE SENHA */}
               <form
                 className="flex flex-col gap-6 w-full"
-                onSubmit={handleSubmit(onChangePassword)}
+                onSubmit={handleSubmit(handlePasswordSubmit)}
               >
+                <input id="id" name="id" type="hidden" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                   <div className="md:col-span-2">
                     <Controller
@@ -383,7 +395,7 @@ export function UserProfilePage() {
                             type="button"
                             onClick={() => setIsVisibleNew((v) => !v)}
                           >
-                            {isVisible ? (
+                            {isVisibleNew ? (
                               <Image
                                 alt="Ocultar senha"
                                 src={eye_slash}
@@ -400,7 +412,7 @@ export function UserProfilePage() {
 
                   <Controller
                     control={control}
-                    name="confirma"
+                    name="confirma_nova_senha"
                     render={({ field }) => (
                       <Input
                         isRequired
@@ -417,7 +429,7 @@ export function UserProfilePage() {
                             type="button"
                             onClick={() => setIsVisibleConfirm((v) => !v)}
                           >
-                            {isVisible ? (
+                            {isVisibleConfirm ? (
                               <Image
                                 alt="Ocultar senha"
                                 src={eye_slash}

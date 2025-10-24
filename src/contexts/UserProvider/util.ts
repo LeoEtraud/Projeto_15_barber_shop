@@ -27,7 +27,7 @@ export async function updateUserProfile(payload: IUser) {
 // CHAMADA DA API PARA ATUALIZAÇÃO DE SENHA DO USUÁRIO
 export async function updateUserPassword(payload: UpdatePasswordPayload) {
   try {
-    const request = await apiBarber.post("/change-password", payload);
+    const request = await apiBarber.put("/change-password", payload);
 
     return request.data;
   } catch (error) {

@@ -2,7 +2,7 @@ import { createContext, useState } from "react";
 import { addToast } from "@heroui/react";
 import Cookies from "js-cookie";
 
-import { IContext, IUser, IUserProvider, PasswordForm } from "./types";
+import { IContext, IUser, IUserProvider, UpdatePasswordPayload } from "./types";
 import { getUser, updateUserPassword, updateUserProfile } from "./util";
 
 import { useAuth } from "@/contexts/AuthProvider";
@@ -69,9 +69,10 @@ export const UserProvider = ({ children }: IUserProvider) => {
   }
 
   // FUNÇÃO PARA ALTERAR A SENHA DO USUÁRIO
-  async function onChangePassword(data: PasswordForm) {
+  async function onChangePassword(data: UpdatePasswordPayload) {
     try {
       await updateUserPassword({
+        id: data.id,
         senha_atual: data.senha_atual,
         nova_senha: data.nova_senha,
       });

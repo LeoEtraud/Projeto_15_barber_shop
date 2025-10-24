@@ -7,6 +7,7 @@ export interface IUser {
 
 // ATUALIZAÇÃO DE SENHA DO USUÁRIO
 export interface UpdatePasswordPayload {
+  id: string;
   senha_atual: string;
   nova_senha: string;
 }
@@ -14,13 +15,13 @@ export interface UpdatePasswordPayload {
 export type PasswordForm = {
   senha_atual: string;
   nova_senha: string;
-  confirma: string;
+  confirma_nova_senha: string;
 };
 
 export interface IContext {
   searchUser: (id: string) => void;
   userData: IUser | null;
-  onChangePassword: (data: PasswordForm) => void;
+  onChangePassword: (data: UpdatePasswordPayload) => void;
   onSubmitFormProfile: (data: IUser) => void;
 }
 
