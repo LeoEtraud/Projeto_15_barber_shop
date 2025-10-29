@@ -29,13 +29,8 @@ function getInitials(fullName: string) {
 }
 
 export function UserProfilePage() {
-  const {
-    userData,
-    searchUser,
-    onChangePassword,
-    onSubmitFormProfile,
-    clearUserData,
-  } = useUser();
+  const { userData, searchUser, onChangePassword, onSubmitFormProfile } =
+    useUser();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
