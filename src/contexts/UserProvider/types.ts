@@ -23,6 +23,8 @@ export interface IContext {
   userData: IUser | null;
   onChangePassword: (data: UpdatePasswordPayload) => void;
   onSubmitFormProfile: (data: IUser) => void;
+  isLoadingUser: boolean;
+  clearUserData: () => void;
 }
 
 export interface IUserProvider {

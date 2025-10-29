@@ -38,19 +38,55 @@ export function ChoiceSchedulePage() {
     [selectedServices]
   );
 
-  // FUNÇÃO PARA GERAR PRÓXIMOS 7 DIAS (EXCETO DOMINGO)
+  // FUNÇÃO PARA VERIFICAR SE TODOS OS HORÁRIOS DO DIA ATUAL JÁ PASSARAM
+  const isAllTimeSlotsPassed = useCallback(
+    (dateString: string) => {
+      const now = new Date();
+      const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+      // Só verifica se for o dia atual
+      if (dateString !== todayString) return false;
+
+      const step = totalDuration >= 60 ? 60 : 30;
+
+      // Gera todos os horários do dia atual
+      for (let hour = 9; hour < 19; hour++) {
+        for (let minute = 0; minute < 60; minute += step) {
+          const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+          const timeSlotStart = new Date(`${dateString}T${time}:00`).getTime();
+
+          // Se encontrar pelo menos um horário que ainda não passou, retorna false
+          if (timeSlotStart >= now.getTime()) {
+            return false;
+          }
+        }
+      }
+
+      // Se chegou até aqui, todos os horários já passaram
+      return true;
+    },
+    [totalDuration]
+  );
+
+  // FUNÇÃO PARA GERAR PRÓXIMOS 6 DIAS DISPONÍVEIS (EXCETO DOMINGO)
   const generateDates = () => {
     const dates = [];
     const today = new Date();
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-    for (let i = 0; i < 7; i++) {
+    let dayOffset = 0;
+
+    // Continua até ter 6 dias válidos
+    while (dates.length < 6) {
       const date = new Date(today);
 
-      date.setDate(today.getDate() + i);
+      date.setDate(today.getDate() + dayOffset);
 
       // Verifica se é domingo e pula
-      if (date.getDay() === 0) continue; // 0 representa o domingo
+      if (date.getDay() === 0) {
+        dayOffset++;
+        continue; // 0 representa o domingo
+      }
 
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -58,6 +94,12 @@ export function ChoiceSchedulePage() {
       const dateString = `${year}-${month}-${day}`;
 
       const isToday = dateString === todayString;
+
+      // Se for hoje e todos os horários já passaram, pula este dia
+      if (isToday && isAllTimeSlotsPassed(dateString)) {
+        dayOffset++;
+        continue;
+      }
 
       // Formato: dia/mês
       const shortDate = `${day}/${month}`;
@@ -88,6 +130,8 @@ export function ChoiceSchedulePage() {
           : `${weekdayShortCapitalized} (${shortDate})`,
         isToday,
       });
+
+      dayOffset++;
     }
 
     return dates;

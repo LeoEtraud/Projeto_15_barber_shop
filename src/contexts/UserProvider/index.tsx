@@ -1,27 +1,59 @@
 import { createContext, useState } from "react";
 import { addToast } from "@heroui/react";
-import Cookies from "js-cookie";
 
 import { IContext, IUser, IUserProvider, UpdatePasswordPayload } from "./types";
 import { getUser, updateUserPassword, updateUserProfile } from "./util";
-
-import { useAuth } from "@/contexts/AuthProvider";
 
 export const UserContext = createContext<IContext>({} as IContext);
 
 export const UserProvider = ({ children }: IUserProvider) => {
   const [userData, setUserdata] = useState<IUser | null>(null);
-  const { user } = useAuth();
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
+
+  // Função para limpar os dados do usuário
+  const clearUserData = () => {
+    setUserdata(null);
+  };
 
   // FUNÇÃO PARA BUSCAR TODOS OS DADOS DO USUÁRIO
   async function searchUser(id: string) {
     try {
+      setIsLoadingUser(true);
+
       const response = await getUser(id);
 
-      const data = (response && (response.user ?? response)) as IUser;
+      // A API retorna { user: { nome, email, telefone } } mas não inclui o id
+      // Vamos adicionar o id que foi usado na busca
+      const userData = response?.user || response;
 
-      setUserdata(data);
-    } catch {}
+      if (userData && (userData.nome || userData.email)) {
+        const data: IUser = {
+          id: id, // Usar o id que foi passado como parâmetro
+          nome: userData.nome || "",
+          email: userData.email || "",
+          telefone: userData.telefone || "",
+        };
+
+        setUserdata(data);
+      } else {
+        addToast({
+          title: "Aviso",
+          description: "Dados do usuário não encontrados.",
+          color: "warning",
+          timeout: 4000,
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+      addToast({
+        title: "Erro",
+        description: "Falha ao carregar dados do usuário. Tente novamente.",
+        color: "danger",
+        timeout: 5000,
+      });
+    } finally {
+      setIsLoadingUser(false);
+    }
   }
 
   // FUNÇÃO PARA ALTERAR OS DADOS DO USUÁRIO
@@ -32,31 +64,24 @@ export const UserProvider = ({ children }: IUserProvider) => {
         telefone: (data.telefone || "").replace(/\D/g, ""),
       };
 
-      const response = await updateUserProfile(payload);
+      await updateUserProfile(payload);
 
-      // Atualiza cookie com os dados locais (ou da resposta se existir)
-      const updatedUser = {
-        ...(user?.user || {}),
-        nome: response?.user?.nome ?? data.nome,
-        email: response?.user?.email ?? data.email,
-        telefone: response?.user?.telefone ?? payload.telefone,
-      };
-      const token =
-        response?.token || user?.token || Cookies.get("barberToken") || "";
-
-      Cookies.set("barberId", JSON.stringify({ token, user: updatedUser }), {
-        expires: (30 / 1440) * 24,
-      });
-      if (token) {
-        Cookies.set("barberToken", token, { expires: (30 / 1440) * 24 });
-      }
-      // await checkAuth();
       addToast({
         title: "Sucesso",
-        description: "Perfil atualizado com sucesso.",
+        description:
+          "Perfil atualizado com sucesso. Você será redirecionado para fazer login novamente.",
         color: "success",
-        timeout: 4000,
+        timeout: 5000,
       });
+
+      // Limpar dados do usuário após atualização
+      setUserdata(null);
+
+      // Aguardar um pouco para o usuário ver a mensagem de sucesso
+      setTimeout(() => {
+        // Fazer logout para forçar novo login
+        window.location.href = "/";
+      }, 2000);
     } catch (error) {
       addToast({
         title: "Falha ao atualizar",
@@ -76,12 +101,23 @@ export const UserProvider = ({ children }: IUserProvider) => {
         senha_atual: data.senha_atual,
         nova_senha: data.nova_senha,
       });
+
       addToast({
         title: "Sucesso",
-        description: "Senha alterada com sucesso.",
+        description:
+          "Senha alterada com sucesso. Você será redirecionado para fazer login novamente.",
         color: "success",
-        timeout: 4000,
+        timeout: 5000,
       });
+
+      // Limpar dados do usuário após alteração de senha
+      setUserdata(null);
+
+      // Aguardar um pouco para o usuário ver a mensagem de sucesso
+      setTimeout(() => {
+        // Fazer logout para forçar novo login
+        window.location.href = "/";
+      }, 2000);
     } catch (error) {
       addToast({
         title: "Falha ao alterar senha",
@@ -100,6 +136,8 @@ export const UserProvider = ({ children }: IUserProvider) => {
         onChangePassword,
         userData,
         onSubmitFormProfile,
+        isLoadingUser,
+        clearUserData,
       }}
     >
       {children}

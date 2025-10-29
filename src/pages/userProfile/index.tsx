@@ -29,26 +29,23 @@ function getInitials(fullName: string) {
 }
 
 export function UserProfilePage() {
-  const { userData, searchUser, onChangePassword, onSubmitFormProfile } =
-    useUser();
+  const {
+    userData,
+    searchUser,
+    onChangePassword,
+    onSubmitFormProfile,
+    clearUserData,
+  } = useUser();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
-    // Buscar dados do usuário quando o componente for montado
-    const fetchUser = async () => {
-      if (id && id !== user?.user?.id) {
-        // Se o ID da URL for diferente do usuário logado, buscar dados específicos
-        await searchUser(id);
-      } else if (user?.user && !userData) {
-        // Se for o próprio usuário e não há dados carregados, buscar dados específicos
-        await searchUser(user.user.id);
-      }
-    };
-
-    fetchUser();
-  }, []);
+    // Sempre buscar dados quando o componente montar ou o ID mudar
+    if (id) {
+      searchUser(id);
+    }
+  }, [id]);
 
   // Usar dados do contexto de autenticação se não houver dados específicos carregados
   const currentUser =
@@ -124,10 +121,10 @@ export function UserProfilePage() {
   }, [reset]);
 
   // Função intermediária para adicionar o id ao payload antes de chamar onChangePassword
-  const handlePasswordSubmit = (data: PasswordForm) => {
+  const handlePasswordSubmit = async (data: PasswordForm) => {
     const userId = user?.user?.id ?? (id as string) ?? "";
 
-    onChangePassword({
+    await onChangePassword({
       id: userId,
       senha_atual: data.senha_atual,
       nova_senha: data.nova_senha,
