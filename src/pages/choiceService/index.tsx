@@ -2,6 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
@@ -74,6 +75,18 @@ export function ChoiceServicePage() {
       if (next.has(id)) {
         next.delete(id);
       } else {
+        // Limitar seleção a no máximo 2 serviços
+        if (next.size >= 2) {
+          addToast({
+            title: "Limite de serviços",
+            description: "Você pode selecionar no máximo 2 serviços.",
+            color: "warning",
+            timeout: 3000,
+          });
+
+          return prev; // Não faz alteração
+        }
+
         // Se for Corte, remove Pé antes de adicionar
         if (isCorte) {
           services.forEach((s) => {
@@ -146,6 +159,7 @@ export function ChoiceServicePage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {sortedServices.map((service) => {
               const isSelected = selectedIds.has(service.id);
+              const isDisabled = !isSelected && selectedIds.size >= 2;
 
               return (
                 <button
@@ -155,8 +169,16 @@ export function ChoiceServicePage() {
                     "rounded-lg p-4 text-left shadow transition-all border",
                     isSelected
                       ? "bg-gray-600 border-green-400 hover:bg-gray-700"
-                      : "bg-gray-900 border-transparent hover:shadow-md",
+                      : isDisabled
+                        ? "bg-gray-900/50 border-gray-700 opacity-60 cursor-not-allowed"
+                        : "bg-gray-900 border-transparent hover:shadow-md",
                   ].join(" ")}
+                  disabled={isDisabled}
+                  title={
+                    isDisabled
+                      ? "Você pode selecionar no máximo 2 serviços"
+                      : ""
+                  }
                   type="button"
                   onClick={() => toggleService(service.id, service.nome)}
                 >
@@ -198,7 +220,7 @@ export function ChoiceServicePage() {
                 Prosseguir no agendamento
               </button>
               <p className="text-xs text-gray-300 mt-2">
-                {selectedServices.length} serviço(s) selecionado(s).
+                {selectedServices.length} de 2 serviço(s) selecionado(s).
               </p>
             </div>
           )}
