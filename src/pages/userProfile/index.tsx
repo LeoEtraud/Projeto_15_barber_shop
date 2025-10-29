@@ -80,6 +80,7 @@ export function UserProfilePage() {
   const {
     control: control_user,
     handleSubmit: handleSubmit_user,
+    watch,
     formState: { isSubmitting: isSubmitting_user },
   } = useForm<IUser>({
     resolver: yupResolver(schema_user),
@@ -87,6 +88,28 @@ export function UserProfilePage() {
     mode: "onChange",
     reValidateMode: "onChange",
   });
+
+  // Observa os valores do formulário para detectar alterações
+  const watchedValues = watch();
+
+  // Compara os valores atuais com os valores originais
+  const hasChanges = useMemo(() => {
+    if (!currentUser) return false;
+
+    const currentNome = watchedValues.nome?.trim() || "";
+    const currentEmail = watchedValues.email?.trim() || "";
+    const currentTelefone = (watchedValues.telefone || "").replace(/\D/g, "");
+
+    const originalNome = (currentUser.nome || "").trim();
+    const originalEmail = (currentUser.email || "").trim();
+    const originalTelefone = (currentUser.telefone || "").replace(/\D/g, "");
+
+    return (
+      currentNome !== originalNome ||
+      currentEmail !== originalEmail ||
+      currentTelefone !== originalTelefone
+    );
+  }, [watchedValues, currentUser]);
 
   const [isVisible, setIsVisible] = useState(false);
   const [isVisibleNew, setIsVisibleNew] = useState(false);
@@ -263,12 +286,21 @@ export function UserProfilePage() {
 
                 <div className="flex justify-end pt-2">
                   <Button
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8"
+                    className={`bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 ${
+                      !hasChanges && !isSubmitting_user
+                        ? "cursor-not-allowed opacity-60"
+                        : ""
+                    }`}
                     color="primary"
-                    disabled={isSubmitting_user}
+                    disabled={isSubmitting_user || !hasChanges}
                     isLoading={isSubmitting_user}
                     radius="lg"
                     size="lg"
+                    title={
+                      !hasChanges && !isSubmitting_user
+                        ? "Nenhuma alteração foi feita"
+                        : ""
+                    }
                     type="submit"
                     variant="shadow"
                   >

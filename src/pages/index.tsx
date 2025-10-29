@@ -78,14 +78,21 @@ export function Login() {
 
       const response = await LoginRequest(identifier, formData.senha);
 
+      // Evita reload do SW logo após o login para não perder o toast
+      sessionStorage.setItem("skipReloadForToast", "1");
+
       authenticate(response);
-      addToast({
-        title: "Login",
-        description: response.message,
-        color: "success",
-        timeout: 3000,
-      });
       reset(initialValues);
+
+      // Mostrar toast após a navegação ser iniciada
+      setTimeout(() => {
+        addToast({
+          title: "Login",
+          description: response.message,
+          color: "success",
+          timeout: 4000,
+        });
+      }, 400);
     } catch {
       addToast({
         title: "Erro de Auntenticação",

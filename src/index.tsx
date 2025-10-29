@@ -21,10 +21,21 @@ const updateSW = registerSW({
   },
 });
 
-// Listener: quando o SW assume, recarrega a página
+// Listener: quando o SW assume, recarrega a página (com guarda para não interferir no toast pós-login)
 if ("serviceWorker" in navigator) {
+  let reloaded = false;
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    window.location.reload();
+    // Se o login acabou de ocorrer, pulamos um reload para não perder o toast
+    const skipOnce = sessionStorage.getItem("skipReloadForToast");
+    if (skipOnce === "1") {
+      sessionStorage.removeItem("skipReloadForToast");
+      return;
+    }
+
+    if (!reloaded) {
+      reloaded = true;
+      window.location.reload();
+    }
   });
 }
 
@@ -33,5 +44,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <Provider>
       <App />
     </Provider>
-  </BrowserRouter>,
+  </BrowserRouter>
 );
