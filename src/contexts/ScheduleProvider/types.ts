@@ -21,9 +21,8 @@ export interface IServices {
 
 export interface ISchedules {
   id: string;
-  data_agendamento: string;
-  hora_inicio: string;
-  hora_fim: string;
+  hora_inicio: string; // DateTime ISO 8601 (ex: "2025-10-31T18:00:00.000Z")
+  hora_fim: string; // DateTime ISO 8601 (ex: "2025-10-31T19:00:00.000Z")
 }
 
 export interface IContext {

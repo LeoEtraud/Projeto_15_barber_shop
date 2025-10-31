@@ -172,34 +172,76 @@ export function ChoiceSchedulePage() {
     const isToday = selectedDate === todayString;
 
     // Filtra os horários ocupados com base nos agendamentos existentes
+    // Extrai a data do campo hora_inicio (DateTime ISO 8601 em UTC) e compara com a data selecionada
     const occupiedSlots = schedules.filter((schedule) => {
-      const scheduleDate = new Date(schedule.data_agendamento); // Data da API (em UTC)
-      const selectedDateObj = new Date(selectedDate); // Data selecionada pelo usuário (local)
+      // API retorna em UTC (ex: "2025-10-31T18:00:00.000Z")
+      // Se a API retorna horários locais marcados como UTC, usamos UTC diretamente
+      const scheduleStartDate = new Date(schedule.hora_inicio);
 
-      // Compara as datas para garantir que estamos verificando o mesmo dia
-      return (
-        scheduleDate.getUTCFullYear() === selectedDateObj.getUTCFullYear() &&
-        scheduleDate.getUTCMonth() === selectedDateObj.getUTCMonth() &&
-        scheduleDate.getUTCDate() === selectedDateObj.getUTCDate()
-      );
+      // Extrai a data UTC para comparação (YYYY-MM-DD)
+      const scheduleUtcDate = `${scheduleStartDate.getUTCFullYear()}-${String(
+        scheduleStartDate.getUTCMonth() + 1
+      ).padStart(2, "0")}-${String(scheduleStartDate.getUTCDate()).padStart(
+        2,
+        "0"
+      )}`;
+
+      // Compara a data UTC extraída do DateTime com a data selecionada
+      return scheduleUtcDate === selectedDate;
     });
 
-    // Mapeia os horários ocupados com hora de início e fim
-    const occupiedTimes: { start: number; end: number }[] = occupiedSlots.map(
-      (schedule) => {
-        const scheduleStart = new Date(
-          `${schedule.data_agendamento}T${schedule.hora_inicio}:00`
-        ).getTime(); // Usando getTime() para obter o timestamp
-        const scheduleEnd = new Date(
-          `${schedule.data_agendamento}T${schedule.hora_fim}:00`
-        ).getTime(); // Usando getTime() para obter o timestamp
+    // Mapeia os horários ocupados com hora de início e fim usando DateTime ISO 8601
+    const occupiedTimes: { start: number; end: number }[] = occupiedSlots
+      .map((schedule) => {
+        // hora_inicio e hora_fim vêm em UTC (ISO 8601 com Z)
+        // Usa diretamente os timestamps convertidos para comparar com os timeSlots locais
+        const scheduleStartDate = new Date(schedule.hora_inicio);
+        const scheduleEndDate = new Date(schedule.hora_fim);
+
+        // Extrai a data UTC do DateTime para garantir o dia correto
+        const scheduleUtcDate = `${scheduleStartDate.getUTCFullYear()}-${String(
+          scheduleStartDate.getUTCMonth() + 1
+        ).padStart(2, "0")}-${String(scheduleStartDate.getUTCDate()).padStart(
+          2,
+          "0"
+        )}`;
+
+        // Se a data UTC do schedule não corresponder à data selecionada, retorna null
+        if (scheduleUtcDate !== selectedDate) {
+          return null;
+        }
+
+        // IMPORTANTE: Se a API retorna "2025-10-31T18:00:00.000Z" mas significa 18:00 local,
+        // precisamos extrair as horas UTC diretamente sem conversão
+        // A API pode estar retornando horários locais marcados como UTC
+
+        // Extrai as horas e minutos UTC (sem conversão para local)
+        const scheduleStartHours = scheduleStartDate.getUTCHours();
+        const scheduleStartMinutes = scheduleStartDate.getUTCMinutes();
+        const scheduleEndHours = scheduleEndDate.getUTCHours();
+        const scheduleEndMinutes = scheduleEndDate.getUTCMinutes();
+
+        // Cria horários no mesmo dia selecionado (selectedDate) para comparação
+        // Usa selectedDate e as horas/minutos UTC extraídos diretamente
+        const scheduleStartLocal = new Date(
+          `${selectedDate}T${String(scheduleStartHours).padStart(
+            2,
+            "0"
+          )}:${String(scheduleStartMinutes).padStart(2, "0")}:00`
+        ).getTime();
+        const scheduleEndLocal = new Date(
+          `${selectedDate}T${String(scheduleEndHours).padStart(
+            2,
+            "0"
+          )}:${String(scheduleEndMinutes).padStart(2, "0")}:00`
+        ).getTime();
 
         return {
-          start: scheduleStart,
-          end: scheduleEnd,
+          start: scheduleStartLocal,
+          end: scheduleEndLocal,
         };
-      }
-    );
+      })
+      .filter((item): item is { start: number; end: number } => item !== null);
 
     // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS PARA O DIA
     // Primeiro período: 09h até 12h30
@@ -212,6 +254,8 @@ export function ChoiceSchedulePage() {
 
         const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 
+        // Cria o horário no timezone local para comparação
+        // O horário é interpretado como horário local (não UTC)
         const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
         const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
 
@@ -254,6 +298,8 @@ export function ChoiceSchedulePage() {
 
         const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 
+        // Cria o horário no timezone local para comparação
+        // O horário é interpretado como horário local (não UTC)
         const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
         const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
 
