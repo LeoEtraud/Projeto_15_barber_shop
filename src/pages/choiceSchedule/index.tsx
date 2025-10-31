@@ -49,9 +49,33 @@ export function ChoiceSchedulePage() {
 
       const step = totalDuration >= 60 ? 60 : 30;
 
-      // Gera todos os horários do dia atual
-      for (let hour = 9; hour < 19; hour++) {
-        for (let minute = 0; minute < 60; minute += step) {
+      // Gera todos os horários do dia atual (09h-12h30 e 14h-19h30)
+      // Primeiro período: 09h até 12h30
+      for (let hour = 9; hour <= 12; hour++) {
+        const maxMinute = hour === 12 ? 30 : 60;
+
+        for (let minute = 0; minute < maxMinute; minute += step) {
+          // Pula se for depois das 12h30
+          if (hour === 12 && minute > 30) break;
+
+          const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+          const timeSlotStart = new Date(`${dateString}T${time}:00`).getTime();
+
+          // Se encontrar pelo menos um horário que ainda não passou, retorna false
+          if (timeSlotStart >= now.getTime()) {
+            return false;
+          }
+        }
+      }
+
+      // Segundo período: 14h até 19h30
+      for (let hour = 14; hour <= 19; hour++) {
+        const maxMinute = hour === 19 ? 30 : 60;
+
+        for (let minute = 0; minute < maxMinute; minute += step) {
+          // Pula se for depois das 19h30
+          if (hour === 19 && minute > 30) break;
+
           const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
           const timeSlotStart = new Date(`${dateString}T${time}:00`).getTime();
 
@@ -178,12 +202,71 @@ export function ChoiceSchedulePage() {
     );
 
     // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS PARA O DIA
-    for (let hour = 9; hour < 19; hour++) {
-      for (let minute = 0; minute < 60; minute += step) {
+    // Primeiro período: 09h até 12h30
+    for (let hour = 9; hour <= 12; hour++) {
+      const maxMinute = hour === 12 ? 30 : 60;
+
+      for (let minute = 0; minute < maxMinute; minute += step) {
+        // Pula se for depois das 12h30
+        if (hour === 12 && minute > 30) break;
+
         const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
 
         const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
         const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
+
+        // Verifica se o horário extrapola o limite (não permite agendamento que termine depois das 12h30)
+        const timeSlotEndHour = new Date(timeSlotEnd).getHours();
+        const timeSlotEndMinute = new Date(timeSlotEnd).getMinutes();
+
+        if (
+          timeSlotEndHour > 12 ||
+          (timeSlotEndHour === 12 && timeSlotEndMinute > 30)
+        ) {
+          continue; // Pula este horário se o serviço terminaria depois das 12h30
+        }
+
+        // Verifica se o horário está ocupado
+        const isOccupied = occupiedTimes.some(({ start, end }) => {
+          // Verifica se o horário selecionado se sobrepõe a algum horário ocupado
+          return (
+            (timeSlotStart >= start && timeSlotStart < end) || // O início do horário se sobrepõe
+            (timeSlotEnd > start && timeSlotEnd <= end) || // O fim do horário se sobrepõe
+            (timeSlotStart <= start && timeSlotEnd >= end) // O horário selecionado cobre o horário ocupado
+          );
+        });
+
+        // Verifica se o horário já passou (apenas para hoje)
+        const isPast = isToday && timeSlotStart < now.getTime();
+
+        // Armazena o horário e se está ocupado, passado ou não
+        slots.push({ time, isOccupied, isPast });
+      }
+    }
+
+    // Segundo período: 14h até 19h30 (intervalo de almoço entre 12h30 e 14h)
+    for (let hour = 14; hour <= 19; hour++) {
+      const maxMinute = hour === 19 ? 30 : 60;
+
+      for (let minute = 0; minute < maxMinute; minute += step) {
+        // Pula se for depois das 19h30
+        if (hour === 19 && minute > 30) break;
+
+        const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+
+        const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
+        const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
+
+        // Verifica se o horário extrapola o limite (não permite agendamento que termine depois das 19h30)
+        const timeSlotEndHour = new Date(timeSlotEnd).getHours();
+        const timeSlotEndMinute = new Date(timeSlotEnd).getMinutes();
+
+        if (
+          timeSlotEndHour > 19 ||
+          (timeSlotEndHour === 19 && timeSlotEndMinute > 30)
+        ) {
+          continue; // Pula este horário se o serviço terminaria depois das 19h30
+        }
 
         // Verifica se o horário está ocupado
         const isOccupied = occupiedTimes.some(({ start, end }) => {
