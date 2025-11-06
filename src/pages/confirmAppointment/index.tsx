@@ -1,3 +1,4 @@
+// src/pages/ConfirmAppointmentPage.tsx
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -6,18 +7,22 @@ import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { Header } from "@/components/Header";
 import { formatPrice } from "@/utils/format-price";
 import { IServices } from "@/contexts/ScheduleProvider/types";
+import useMercadoPago from "@/hooks/useMercadoPago";
+import { useAuth } from "@/contexts/AuthProvider/useAuth";
+
+interface LocationState {
+  barber?: { id: string; nome: string };
+  selectedServices?: IServices[];
+  selectedDate?: string;
+  selectedTime?: string;
+  totalDuration?: number;
+}
 
 export function ConfirmAppointmentPage() {
+  const { createMercadoPagoCheckout } = useMercadoPago();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation() as {
-    state?: {
-      barber?: { id: string; nome: string };
-      selectedServices?: IServices[];
-      selectedDate?: string;
-      selectedTime?: string;
-      totalDuration?: number;
-    };
-  };
+  const location = useLocation() as { state?: LocationState };
 
   const {
     barber,
@@ -28,9 +33,8 @@ export function ConfirmAppointmentPage() {
   } = location.state || {};
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted] = useState(false); // você pode ligar isso a uma página de resultado depois
 
-  // Calcula o valor total
   const totalPrice =
     selectedServices?.reduce(
       (sum, service) => sum + Number(service.preco),
@@ -39,9 +43,8 @@ export function ConfirmAppointmentPage() {
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
-    // Criar a data no fuso horário local para evitar problemas de UTC
     const [year, month, day] = dateString.split("-").map(Number);
-    const date = new Date(year, month - 1, day); // month - 1 porque Date usa 0-11 para meses
+    const date = new Date(year, month - 1, day);
 
     return date.toLocaleDateString("pt-BR", {
       weekday: "long",
@@ -52,13 +55,61 @@ export function ConfirmAppointmentPage() {
   };
 
   const handleConfirmAppointment = async () => {
+    if (!selectedServices || selectedServices.length === 0) {
+      alert("Selecione pelo menos um serviço.");
+
+      return;
+    }
+
+    if (!user?.user?.email) {
+      alert("Erro: usuário não autenticado. Faça login novamente.");
+      navigate("/");
+
+      return;
+    }
+
     setIsProcessing(true);
 
-    // Simular processamento do pagamento
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      const servicesDescription = selectedServices
+        .map((service) => service.nome)
+        .join(", ");
 
-    setIsProcessing(false);
-    setIsCompleted(true);
+      // Esse shape bate com o seu hook + controller
+      const checkoutData = {
+        title: `Agendamento - ${barber?.nome || "Barbeiro"}`,
+        quantity: 1,
+        unit_price: totalPrice,
+        description: `Serviços: ${servicesDescription} | Data: ${formatDate(
+          selectedDate
+        )} | Horário: ${selectedTime}`,
+        payer: {
+          email: user.user.email,
+          name: user.user.nome?.split(" ")[0] || "",
+          surname: user.user.nome?.split(" ").slice(1).join(" ") || "",
+        },
+        metadata: {
+          barberId: barber?.id,
+          barberName: barber?.nome,
+          selectedDate,
+          selectedTime,
+          totalDuration,
+          services: selectedServices.map((s) => ({
+            id: s.id,
+            nome: s.nome,
+            preco: s.preco,
+            duracao: s.duracao,
+          })),
+          userId: user.user.id, // se quiser usar depois no webhook
+        },
+      };
+
+      await createMercadoPagoCheckout(checkoutData);
+      // usuário será redirecionado para o Checkout Pro
+    } catch (error) {
+      console.error("Erro ao processar pagamento:", error);
+      setIsProcessing(false);
+    }
   };
 
   const handleBackTohome = () => {
@@ -68,14 +119,10 @@ export function ConfirmAppointmentPage() {
   if (isCompleted) {
     return (
       <section className="min-h-screen bg-gray-800">
-        {/* COMPONENTE CABEÇALH0 */}
         <Header />
-        {/* Conteúdo principal */}
         <div className="px-4 py-8 md:px-8">
           <Helmet title="Agendamento Concluído" />
-
           <div className="mx-auto max-w-2xl">
-            {/* Banner de sucesso */}
             <div className="relative rounded-xl overflow-hidden shadow-lg bg-green-700 h-40 mb-6 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl mb-2">✅</div>
@@ -85,7 +132,6 @@ export function ConfirmAppointmentPage() {
               </div>
             </div>
 
-            {/* Mensagem de sucesso */}
             <div className="bg-gray-900 rounded-lg p-6 mb-6">
               <div className="text-left">
                 <div className="bg-gray-800 rounded-lg p-4 mb-4">
@@ -98,7 +144,6 @@ export function ConfirmAppointmentPage() {
                     </span>
                   </div>
 
-                  {/* Informações gerais */}
                   <div className="space-y-2 mb-4 pb-4 border-b border-gray-700">
                     {barber && (
                       <div className="flex justify-between">
@@ -122,7 +167,6 @@ export function ConfirmAppointmentPage() {
                     </div>
                   </div>
 
-                  {/* Lista de serviços */}
                   <div className="mb-4">
                     <h4 className="text-sm font-medium text-gray-400 mb-3">
                       {selectedServices && selectedServices.length > 1
@@ -145,7 +189,6 @@ export function ConfirmAppointmentPage() {
                     </div>
                   </div>
 
-                  {/* Duração total */}
                   <div className="pt-3 border-t border-gray-700">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-gray-400">Duração total:</span>
@@ -177,9 +220,7 @@ export function ConfirmAppointmentPage() {
 
   return (
     <section className="min-h-screen bg-gray-800">
-      {/* COMPONENTE CABEÇALH0 */}
       <Header />
-      {/* Conteúdo principal */}
       <div className="p-4 pb-10 md:px-8">
         <Helmet title="Confirmar Agendamento" />
 
@@ -194,7 +235,6 @@ export function ConfirmAppointmentPage() {
             <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
           </button>
 
-          {/* Banner com imagem de fundo */}
           <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
               alt="Banner"
@@ -208,14 +248,12 @@ export function ConfirmAppointmentPage() {
             </div>
           </div>
 
-          {/* Resumo do agendamento */}
           {selectedServices && selectedServices.length > 0 && (
             <div className="bg-gray-900 rounded-lg p-4 mb-6">
               <h3 className="text-white font-medium mb-4">
                 Resumo do Agendamento
               </h3>
 
-              {/* Informações gerais */}
               <div className="space-y-2 mb-4 pb-4 border-b border-gray-700 text-sm">
                 {barber && (
                   <div className="flex justify-between">
@@ -237,7 +275,6 @@ export function ConfirmAppointmentPage() {
                 </div>
               </div>
 
-              {/* Lista de serviços */}
               <div className="mb-4">
                 <h4 className="text-xs font-medium text-gray-400 mb-3 uppercase">
                   {selectedServices.length > 1
@@ -266,7 +303,6 @@ export function ConfirmAppointmentPage() {
                 </div>
               </div>
 
-              {/* Totais */}
               <div className="space-y-2 pt-4 border-t border-gray-700">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Tempo total:</span>
@@ -286,7 +322,6 @@ export function ConfirmAppointmentPage() {
             </div>
           )}
 
-          {/* Botão de confirmação */}
           <button
             className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
               isProcessing
