@@ -27,7 +27,6 @@ export function ConfirmAppointmentPage() {
     totalDuration,
   } = location.state || {};
 
-  const [selectedPayment, setSelectedPayment] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
 
@@ -52,37 +51,7 @@ export function ConfirmAppointmentPage() {
     });
   };
 
-  const paymentMethods = [
-    {
-      id: "pix",
-      name: "Pix",
-      description: "Pagamento instantâneo",
-      icon: (
-        <img
-          alt="Logo do Pix"
-          className="w-8 h-8 drop-shadow-md"
-          src="/pix.png"
-        />
-      ),
-    },
-
-    {
-      id: "credit",
-      name: "Cartão de Crédito",
-      description: "Parcelamento disponível",
-      icon: "💳",
-    },
-    {
-      id: "debit",
-      name: "Cartão de Débito",
-      description: "Débito em conta",
-      icon: "💳",
-    },
-  ];
-
   const handleConfirmAppointment = async () => {
-    if (!selectedPayment) return;
-
     setIsProcessing(true);
 
     // Simular processamento do pagamento
@@ -317,54 +286,19 @@ export function ConfirmAppointmentPage() {
             </div>
           )}
 
-          {/* Seleção de forma de pagamento */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-white mb-3">
-              Selecione a forma de pagamento
-            </h2>
-            <div className="grid grid-cols-1 gap-3">
-              {paymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  className={`p-4 rounded-lg text-left transition-colors ${
-                    selectedPayment === method.id
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-900 text-gray-300 hover:bg-gray-700"
-                  }`}
-                  type="button"
-                  onClick={() => setSelectedPayment(method.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{method.icon}</span>
-                    <div>
-                      <div className="font-medium">{method.name}</div>
-                      <div className="text-sm opacity-75">
-                        {method.description}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Botão de confirmação */}
-          {selectedPayment && (
-            <button
-              className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
-                isProcessing
-                  ? "bg-gray-600 text-gray-300 cursor-not-allowed"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
-              disabled={isProcessing}
-              type="button"
-              onClick={handleConfirmAppointment}
-            >
-              {isProcessing
-                ? "Processando pagamento..."
-                : "Confirmar Agendamento"}
-            </button>
-          )}
+          <button
+            className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
+              isProcessing
+                ? "bg-gray-600 text-gray-300 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 text-white"
+            }`}
+            disabled={isProcessing}
+            type="button"
+            onClick={handleConfirmAppointment}
+          >
+            {isProcessing ? "Processando pagamento..." : "Realizar pagamento "}
+          </button>
         </div>
       </div>
     </section>

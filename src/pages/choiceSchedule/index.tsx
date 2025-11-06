@@ -511,7 +511,7 @@ export function ChoiceSchedulePage() {
               type="button"
               onClick={handleSchedule}
             >
-              Confirmar com Pagamento
+              Confirmar Agendamento
             </button>
           )}
         </div>
