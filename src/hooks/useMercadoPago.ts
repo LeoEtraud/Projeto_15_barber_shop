@@ -4,23 +4,46 @@ import { initMercadoPago } from "@mercadopago/sdk-react";
 
 import { apiBarber } from "@/services/apiServer";
 
-interface CheckoutData {
-  title: string;
-  quantity: number;
-  unit_price: number;
-  description?: string;
-  payer?: {
+interface PaymentData {
+  transaction_amount: number;
+  description: string;
+  payment_method_id: string;
+  token?: string;
+  card?: {
+    cardNumber: string;
+    cardholderName: string;
+    cardExpirationMonth: string;
+    cardExpirationYear: string;
+    securityCode: string;
+  };
+  installments?: number;
+  payer: {
     email: string;
-    name?: string;
-    surname?: string;
+    identification?: {
+      type: string;
+      number: string;
+    };
   };
   metadata?: Record<string, any>;
 }
 
-interface CheckoutResponse {
-  id: string;
-  init_point: string;
-  sandbox_init_point?: string;
+/**
+ * Resposta da rota POST /mercado-pago/pix
+ * (aquela que você montou no back)
+ */
+interface PixPaymentResponse {
+  id: number;
+  status: string;
+  qr_code?: string;
+  qr_code_base64?: string;
+}
+
+/**
+ * Resposta da rota GET /mercado-pago/pix/:id/status
+ */
+interface PixStatusResponse {
+  status: string;
+  agendamentoId?: string;
 }
 
 const useMercadoPago = () => {
@@ -38,26 +61,19 @@ const useMercadoPago = () => {
     initMercadoPago(publicKey);
   }, []);
 
-  async function createMercadoPagoCheckout(
-    checkoutData: CheckoutData
-  ): Promise<void> {
+  async function processPayment(
+    paymentData: PaymentData
+  ): Promise<PixPaymentResponse> {
     try {
-      const response = await apiBarber.post<CheckoutResponse>(
-        "/mercado-pago/create-checkout", // ou "/api/mercado-pago/create-checkout", dependendo do seu back
-        checkoutData
+      const response = await apiBarber.post<PixPaymentResponse>(
+        // 👇 agora bate na rota correta do back:
+        "/mercado-pago/pix",
+        paymentData
       );
 
-      const data = response.data;
-
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else if (data.sandbox_init_point) {
-        window.location.href = data.sandbox_init_point;
-      } else {
-        throw new Error("URL de checkout não encontrada na resposta");
-      }
+      return response.data;
     } catch (error: any) {
-      console.error("Erro ao criar checkout do Mercado Pago:", error);
+      console.error("Erro ao processar pagamento do Mercado Pago:", error);
 
       const errorMessage =
         error.response?.data?.message ||
@@ -65,12 +81,34 @@ const useMercadoPago = () => {
         error.message ||
         "Erro ao processar pagamento. Tente novamente.";
 
-      alert(errorMessage);
-      throw error;
+      throw new Error(errorMessage);
     }
   }
 
-  return { createMercadoPagoCheckout };
+  async function checkPaymentStatus(
+    paymentId: number
+  ): Promise<PixStatusResponse> {
+    try {
+      const response = await apiBarber.get<PixStatusResponse>(
+        // 👇 mesma rota que você definiu nas rotas:
+        `/mercado-pago/pix/${paymentId}/status`
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.error("Erro ao verificar status do pagamento:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Erro ao verificar status do pagamento.";
+
+      throw new Error(errorMessage);
+    }
+  }
+
+  return { processPayment, checkPaymentStatus };
 };
 
 export default useMercadoPago;

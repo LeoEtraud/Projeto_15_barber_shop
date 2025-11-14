@@ -1,7 +1,6 @@
-// src/pages/ConfirmAppointmentPage.tsx
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 
 import { Header } from "@/components/Header";
@@ -19,7 +18,7 @@ interface LocationState {
 }
 
 export function ConfirmAppointmentPage() {
-  const { createMercadoPagoCheckout } = useMercadoPago();
+  const { processPayment, checkPaymentStatus } = useMercadoPago();
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation() as { state?: LocationState };
@@ -33,7 +32,14 @@ export function ConfirmAppointmentPage() {
   } = location.state || {};
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isCompleted] = useState(false); // você pode ligar isso a uma página de resultado depois
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [pixQrCode, setPixQrCode] = useState<string | null>(null);
+  const [pixCode, setPixCode] = useState<string | null>(null);
+  const [pixPaymentId, setPixPaymentId] = useState<number | null>(null);
+  const [pixStatus, setPixStatus] = useState<string>("pending");
+  const [copied, setCopied] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const totalPrice =
     selectedServices?.reduce(
@@ -54,9 +60,55 @@ export function ConfirmAppointmentPage() {
     });
   };
 
+  // Polling para verificar status do pagamento PIX
+  useEffect(() => {
+    if (pixPaymentId && pixStatus === "pending") {
+      pollingIntervalRef.current = setInterval(async () => {
+        try {
+          const statusResponse = await checkPaymentStatus(pixPaymentId);
+
+          setPixStatus(statusResponse.status);
+
+          if (statusResponse.status === "approved") {
+            setIsCompleted(true);
+            setIsProcessing(false);
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+            }
+          } else if (
+            statusResponse.status === "rejected" ||
+            statusResponse.status === "cancelled"
+          ) {
+            setPaymentError("Pagamento PIX foi rejeitado ou cancelado.");
+            setIsProcessing(false);
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+            }
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status do PIX:", error);
+        }
+      }, 3000); // Verifica a cada 3 segundos
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [pixPaymentId, pixStatus, checkPaymentStatus]);
+
   const handleConfirmAppointment = async () => {
     if (!selectedServices || selectedServices.length === 0) {
       alert("Selecione pelo menos um serviço.");
+
+      return;
+    }
+
+    const firstServiceId = selectedServices[0]?.id;
+
+    if (!firstServiceId) {
+      setPaymentError("Erro ao preparar dados do serviço para o pagamento.");
 
       return;
     }
@@ -69,24 +121,19 @@ export function ConfirmAppointmentPage() {
     }
 
     setIsProcessing(true);
+    setPaymentError(null);
 
     try {
-      const servicesDescription = selectedServices
-        .map((service) => service.nome)
-        .join(", ");
+      const servicesDescription =
+        selectedServices?.map((service) => service.nome).join(", ") || "";
 
-      // Esse shape bate com o seu hook + controller
-      const checkoutData = {
-        title: `Agendamento - ${barber?.nome || "Barbeiro"}`,
-        quantity: 1,
-        unit_price: totalPrice,
-        description: `Serviços: ${servicesDescription} | Data: ${formatDate(
-          selectedDate
-        )} | Horário: ${selectedTime}`,
+      // Preparar dados do pagamento PIX
+      const paymentData = {
+        transaction_amount: totalPrice,
+        description: `Agendamento - ${barber?.nome || "Barbeiro"}: ${servicesDescription}`,
+        payment_method_id: "pix",
         payer: {
-          email: user.user.email,
-          name: user.user.nome?.split(" ")[0] || "",
-          surname: user.user.nome?.split(" ").slice(1).join(" ") || "",
+          email: user?.user?.email || "",
         },
         metadata: {
           barberId: barber?.id,
@@ -94,26 +141,77 @@ export function ConfirmAppointmentPage() {
           selectedDate,
           selectedTime,
           totalDuration,
-          services: selectedServices.map((s) => ({
-            id: s.id,
-            nome: s.nome,
-            preco: s.preco,
-            duracao: s.duracao,
-          })),
-          userId: user.user.id, // se quiser usar depois no webhook
+          firstServiceId,
+          userId: user?.user?.id,
         },
       };
 
-      await createMercadoPagoCheckout(checkoutData);
-      // usuário será redirecionado para o Checkout Pro
-    } catch (error) {
+      const paymentResponse = await processPayment(paymentData);
+
+      // Backend já devolve os campos direto
+      const qrCodeBase64 = paymentResponse.qr_code_base64;
+      const pixCodeString = paymentResponse.qr_code;
+
+      if (qrCodeBase64) {
+        setPixQrCode(qrCodeBase64);
+      }
+
+      if (pixCodeString && typeof pixCodeString === "string") {
+        setPixCode(pixCodeString);
+      }
+
+      if (!qrCodeBase64 && !pixCodeString) {
+        throw new Error(
+          "QR Code ou código PIX não foi gerado. Tente novamente."
+        );
+      }
+
+      setPixPaymentId(paymentResponse.id);
+      setPixStatus(paymentResponse.status || "pending");
+      setIsProcessing(false);
+    } catch (error: any) {
       console.error("Erro ao processar pagamento:", error);
+      setPaymentError(
+        error.message || "Erro ao processar pagamento. Tente novamente."
+      );
       setIsProcessing(false);
     }
   };
 
   const handleBackTohome = () => {
     navigate("/home");
+  };
+
+  const handleCopyPixCode = async () => {
+    if (pixCode) {
+      try {
+        await navigator.clipboard.writeText(pixCode);
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+      } catch (error) {
+        console.error("Erro ao copiar código PIX:", error);
+        // Fallback para navegadores mais antigos
+        const textArea = document.createElement("textarea");
+
+        textArea.value = pixCode;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          setCopied(true);
+          setTimeout(() => {
+            setCopied(false);
+          }, 2000);
+        } catch (err) {
+          console.error("Erro ao copiar:", err);
+        }
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   if (isCompleted) {
@@ -218,6 +316,7 @@ export function ConfirmAppointmentPage() {
     );
   }
 
+  // PÁGINA DE CONFIRMAÇÃO DE AGENDAMENTO
   return (
     <section className="min-h-screen bg-gray-800">
       <Header />
@@ -322,17 +421,123 @@ export function ConfirmAppointmentPage() {
             </div>
           )}
 
+          {/* QR Code PIX */}
+          {(pixQrCode || pixCode) && (
+            <div className="bg-gray-900 rounded-lg p-6 mb-6">
+              <h3 className="text-white font-medium mb-4 text-center">
+                {pixQrCode
+                  ? "Escaneie o QR Code para pagar"
+                  : pixCode
+                    ? "Código PIX gerado"
+                    : "Pagamento PIX"}
+              </h3>
+
+              {paymentError && (
+                <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 mb-4">
+                  <p className="text-red-200 text-sm">{paymentError}</p>
+                </div>
+              )}
+
+              <div className="flex flex-col items-center space-y-4">
+                {pixQrCode && (
+                  <div className="bg-white p-4 rounded-lg">
+                    {pixQrCode.startsWith("data:image") ? (
+                      <img
+                        alt="QR Code PIX"
+                        className="w-64 h-64"
+                        src={pixQrCode}
+                      />
+                    ) : (
+                      <img
+                        alt="QR Code PIX"
+                        className="w-64 h-64"
+                        src={`data:image/png;base64,${pixQrCode}`}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {pixCode && (
+                  <div className="w-full space-y-3">
+                    <div>
+                      <p className="block text-sm text-gray-400 mb-2 text-center">
+                        Código PIX (Copie e cole no app do seu banco)
+                      </p>
+                      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                        <p className="text-white text-sm break-all font-mono">
+                          {pixCode}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                        copied
+                          ? "bg-green-600 text-white"
+                          : "bg-yellow-400 hover:bg-yellow-500 text-gray-900"
+                      }`}
+                      type="button"
+                      onClick={handleCopyPixCode}
+                    >
+                      {copied ? "✓ Código copiado!" : "📋 Copiar código PIX"}
+                    </button>
+                  </div>
+                )}
+
+                <div className="text-center space-y-2">
+                  <p className="text-gray-400 text-sm">
+                    Valor:{" "}
+                    <span className="text-green-400 font-bold">
+                      {formatPrice(totalPrice)}
+                    </span>
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    Status:{" "}
+                    <span
+                      className={`font-medium ${
+                        pixStatus === "approved"
+                          ? "text-green-400"
+                          : pixStatus === "rejected" ||
+                              pixStatus === "cancelled"
+                            ? "text-red-400"
+                            : "text-yellow-400"
+                      }`}
+                    >
+                      {pixStatus === "approved"
+                        ? "Aprovado"
+                        : pixStatus === "rejected"
+                          ? "Rejeitado"
+                          : pixStatus === "cancelled"
+                            ? "Cancelado"
+                            : "Aguardando pagamento"}
+                    </span>
+                  </p>
+                  {pixStatus === "pending" && (
+                    <p className="text-gray-500 text-xs mt-2">
+                      Aguardando confirmação do pagamento...
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
               isProcessing
                 ? "bg-gray-600 text-gray-300 cursor-not-allowed"
                 : "bg-green-600 hover:bg-green-700 text-white"
             }`}
-            disabled={isProcessing}
+            disabled={
+              isProcessing || (pixQrCode !== null && pixStatus === "pending")
+            }
             type="button"
             onClick={handleConfirmAppointment}
           >
-            {isProcessing ? "Processando pagamento..." : "Realizar pagamento "}
+            {isProcessing
+              ? "Processando..."
+              : pixQrCode || pixCode
+                ? "Aguardando pagamento PIX..."
+                : "Gerar pagamento PIX"}
           </button>
         </div>
       </div>
