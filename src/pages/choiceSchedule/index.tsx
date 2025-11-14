@@ -172,76 +172,23 @@ export function ChoiceSchedulePage() {
     const isToday = selectedDate === todayString;
 
     // Filtra os horários ocupados com base nos agendamentos existentes
-    // Extrai a data do campo hora_inicio (DateTime ISO 8601 em UTC) e compara com a data selecionada
-    const occupiedSlots = schedules.filter((schedule) => {
-      // API retorna em UTC (ex: "2025-10-31T18:00:00.000Z")
-      // Se a API retorna horários locais marcados como UTC, usamos UTC diretamente
-      const scheduleStartDate = new Date(schedule.hora_inicio);
+    // Agora tratamos tudo como horário LOCAL do navegador (Fortaleza)
+    const occupiedTimes: { start: number; end: number }[] = schedules
+      .filter((schedule) => {
+        const startDate = new Date(schedule.hora_inicio);
 
-      // Extrai a data UTC para comparação (YYYY-MM-DD)
-      const scheduleUtcDate = `${scheduleStartDate.getUTCFullYear()}-${String(
-        scheduleStartDate.getUTCMonth() + 1
-      ).padStart(2, "0")}-${String(scheduleStartDate.getUTCDate()).padStart(
-        2,
-        "0"
-      )}`;
+        const scheduleLocalDate = `${startDate.getFullYear()}-${String(
+          startDate.getMonth() + 1
+        ).padStart(2, "0")}-${String(startDate.getDate()).padStart(2, "0")}`;
 
-      // Compara a data UTC extraída do DateTime com a data selecionada
-      return scheduleUtcDate === selectedDate;
-    });
-
-    // Mapeia os horários ocupados com hora de início e fim usando DateTime ISO 8601
-    const occupiedTimes: { start: number; end: number }[] = occupiedSlots
-      .map((schedule) => {
-        // hora_inicio e hora_fim vêm em UTC (ISO 8601 com Z)
-        // Usa diretamente os timestamps convertidos para comparar com os timeSlots locais
-        const scheduleStartDate = new Date(schedule.hora_inicio);
-        const scheduleEndDate = new Date(schedule.hora_fim);
-
-        // Extrai a data UTC do DateTime para garantir o dia correto
-        const scheduleUtcDate = `${scheduleStartDate.getUTCFullYear()}-${String(
-          scheduleStartDate.getUTCMonth() + 1
-        ).padStart(2, "0")}-${String(scheduleStartDate.getUTCDate()).padStart(
-          2,
-          "0"
-        )}`;
-
-        // Se a data UTC do schedule não corresponder à data selecionada, retorna null
-        if (scheduleUtcDate !== selectedDate) {
-          return null;
-        }
-
-        // IMPORTANTE: Se a API retorna "2025-10-31T18:00:00.000Z" mas significa 18:00 local,
-        // precisamos extrair as horas UTC diretamente sem conversão
-        // A API pode estar retornando horários locais marcados como UTC
-
-        // Extrai as horas e minutos UTC (sem conversão para local)
-        const scheduleStartHours = scheduleStartDate.getUTCHours();
-        const scheduleStartMinutes = scheduleStartDate.getUTCMinutes();
-        const scheduleEndHours = scheduleEndDate.getUTCHours();
-        const scheduleEndMinutes = scheduleEndDate.getUTCMinutes();
-
-        // Cria horários no mesmo dia selecionado (selectedDate) para comparação
-        // Usa selectedDate e as horas/minutos UTC extraídos diretamente
-        const scheduleStartLocal = new Date(
-          `${selectedDate}T${String(scheduleStartHours).padStart(
-            2,
-            "0"
-          )}:${String(scheduleStartMinutes).padStart(2, "0")}:00`
-        ).getTime();
-        const scheduleEndLocal = new Date(
-          `${selectedDate}T${String(scheduleEndHours).padStart(
-            2,
-            "0"
-          )}:${String(scheduleEndMinutes).padStart(2, "0")}:00`
-        ).getTime();
-
-        return {
-          start: scheduleStartLocal,
-          end: scheduleEndLocal,
-        };
+        return scheduleLocalDate === selectedDate;
       })
-      .filter((item): item is { start: number; end: number } => item !== null);
+      .map((schedule) => {
+        const start = new Date(schedule.hora_inicio).getTime();
+        const end = new Date(schedule.hora_fim).getTime();
+
+        return { start, end };
+      });
 
     // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS PARA O DIA
     // Primeiro período: 09h até 12h30

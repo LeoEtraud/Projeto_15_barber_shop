@@ -32,3 +32,14 @@ export async function GetSchedulesAll() {
     return Promise.reject(error);
   }
 }
+
+// CHAMADA DA API PARA BUSCA DE TODOS OS AGENDAMENTOS
+export async function GetAppointments(id: string) {
+  try {
+    const request = await apiBarber.get(`/get-appointments/${id}`);
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}

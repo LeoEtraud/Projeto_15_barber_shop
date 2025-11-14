@@ -12,6 +12,7 @@ import { ChoiceBarberPage } from "@/pages/choiceBarber";
 import { ChoiceServicePage } from "@/pages/choiceService";
 import { ChoiceSchedulePage } from "@/pages/choiceSchedule";
 import { ConfirmAppointmentPage } from "@/pages/confirmAppointment";
+import { HistoryAppointmentsPage } from "@/pages/historyAppointments";
 
 export function Router() {
   return (
@@ -68,6 +69,15 @@ export function Router() {
           </PrivateRoute>
         }
         path="/confirm-appointment"
+      />
+
+      <Route
+        element={
+          <PrivateRoute>
+            <HistoryAppointmentsPage />
+          </PrivateRoute>
+        }
+        path="/history-appointments"
       />
 
       <Route

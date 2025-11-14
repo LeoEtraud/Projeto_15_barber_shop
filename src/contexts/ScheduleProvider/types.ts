@@ -25,6 +25,25 @@ export interface ISchedules {
   hora_fim: string; // DateTime ISO 8601 (ex: "2025-10-31T19:00:00.000Z")
 }
 
+export interface IAppointments {
+  id: string;
+  data_agendamento: string;
+  hora_inicio: string;
+  hora_fim: string;
+  status: string;
+  valor_pago: number;
+  servico?: {
+    id: string;
+    nome: string;
+    preco: number;
+    duracao: number;
+  };
+  profissional?: {
+    id: string;
+    nome: string;
+  };
+}
+
 export interface IContext {
   barbers: IBarbers[];
   fetchBarbers: () => void;
@@ -32,6 +51,8 @@ export interface IContext {
   fetchServices: () => void;
   schedules: ISchedules[];
   fetchSchedules: () => void;
+  appointments: IAppointments[];
+  fetchAppointments: (id: string) => void;
 }
 
 export interface IScheduleProvider {

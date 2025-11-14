@@ -2,13 +2,19 @@ import { createContext, useState } from "react";
 import { addToast } from "@heroui/react";
 
 import {
+  IAppointments,
   IBarbers,
   IContext,
   IScheduleProvider,
   ISchedules,
   IServices,
 } from "./types";
-import { GetBarbersAll, GetSchedulesAll, GetServicesAll } from "./util";
+import {
+  GetAppointments,
+  GetBarbersAll,
+  GetSchedulesAll,
+  GetServicesAll,
+} from "./util";
 
 export const ScheduleContext = createContext<IContext>({} as IContext);
 
@@ -16,6 +22,7 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
   const [barbers, setBarbers] = useState<IBarbers[]>([]);
   const [services, setServices] = useState<IServices[]>([]);
   const [schedules, setSchedules] = useState<ISchedules[]>([]);
+  const [appointments, setAppointments] = useState<IAppointments[]>([]);
 
   // FUNÇÃO PARA LISTAR TODOS OS BARBEIROS ATIVOS
   async function fetchBarbers() {
@@ -68,6 +75,25 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
     }
   }
 
+  async function fetchAppointments(id: string) {
+    try {
+      const response = await GetAppointments(id);
+
+      setAppointments(response.appointments as IAppointments[]);
+
+      return response || [];
+    } catch (error: any) {
+      console.error("Erro ao buscar agendamentos:", error);
+      addToast({
+        title: "Erro",
+        description: "Falha na listagem dos históricos de Agendamentos!",
+        color: "danger",
+        timeout: 3000,
+      });
+      throw error;
+    }
+  }
+
   return (
     <ScheduleContext.Provider
       value={{
@@ -77,6 +103,8 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
         fetchServices,
         schedules,
         fetchSchedules,
+        appointments,
+        fetchAppointments,
       }}
     >
       {children}

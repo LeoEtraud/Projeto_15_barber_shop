@@ -57,10 +57,7 @@ export function HomePage() {
             <button
               className="flex flex-col items-center gap-4 rounded-lg bg-gray-900 p-6 shadow hover:shadow-md transition-shadow text-center"
               type="button"
-              onClick={() => {
-                // TODO: Implementar página de histórico
-                alert("Funcionalidade em desenvolvimento");
-              }}
+              onClick={() => navigate("/history-appointments")}
             >
               <div className="text-4xl">📅</div>
               <div>
