@@ -60,7 +60,9 @@ export function ConfirmAppointmentPage() {
     });
   };
 
-  // Polling para verificar status do pagamento PIX
+  // ===========================
+  // POLLING DO PAGAMENTO PIX
+  // ===========================
   useEffect(() => {
     if (pixPaymentId && pixStatus === "pending") {
       pollingIntervalRef.current = setInterval(async () => {
@@ -69,26 +71,48 @@ export function ConfirmAppointmentPage() {
 
           setPixStatus(statusResponse.status);
 
+          // Quando está aprovado
           if (statusResponse.status === "approved") {
-            setIsCompleted(true);
-            setIsProcessing(false);
+            if ((statusResponse as any).agendamentoId) {
+              // Fluxo correto: aprovado e agendamento criado
+              setIsCompleted(true);
+              setIsProcessing(false);
+            } else {
+              // Caso raro: aprovado mas o back não criou o agendamento
+              setPaymentError(
+                "Pagamento aprovado, porém o agendamento não foi criado. Tente novamente."
+              );
+              setIsProcessing(false);
+            }
+
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
             }
-          } else if (
+          }
+
+          if (
             statusResponse.status === "rejected" ||
             statusResponse.status === "cancelled"
           ) {
             setPaymentError("Pagamento PIX foi rejeitado ou cancelado.");
             setIsProcessing(false);
+
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
             }
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Erro ao verificar status do PIX:", error);
+          setPaymentError(
+            error?.message || "Erro ao verificar status do pagamento."
+          );
+          setIsProcessing(false);
+
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+          }
         }
-      }, 3000); // Verifica a cada 3 segundos
+      }, 3000);
     }
 
     return () => {
@@ -98,6 +122,9 @@ export function ConfirmAppointmentPage() {
     };
   }, [pixPaymentId, pixStatus, checkPaymentStatus]);
 
+  // ===========================
+  // INICIAR PAGAMENTO PIX
+  // ===========================
   const handleConfirmAppointment = async () => {
     if (!selectedServices || selectedServices.length === 0) {
       alert("Selecione pelo menos um serviço.");
@@ -125,15 +152,14 @@ export function ConfirmAppointmentPage() {
 
     try {
       const servicesDescription =
-        selectedServices?.map((service) => service.nome).join(", ") || "";
+        selectedServices.map((service) => service.nome).join(", ") || "";
 
-      // Preparar dados do pagamento PIX
       const paymentData = {
         transaction_amount: totalPrice,
         description: `Agendamento - ${barber?.nome || "Barbeiro"}: ${servicesDescription}`,
         payment_method_id: "pix",
         payer: {
-          email: user?.user?.email || "",
+          email: user?.user?.email,
         },
         metadata: {
           barberId: barber?.id,
@@ -148,24 +174,17 @@ export function ConfirmAppointmentPage() {
 
       const paymentResponse = await processPayment(paymentData);
 
-      // Backend já devolve os campos direto
       const qrCodeBase64 = paymentResponse.qr_code_base64;
       const pixCodeString = paymentResponse.qr_code;
 
-      if (qrCodeBase64) {
-        setPixQrCode(qrCodeBase64);
-      }
-
-      if (pixCodeString && typeof pixCodeString === "string") {
-        setPixCode(pixCodeString);
-      }
+      if (qrCodeBase64) setPixQrCode(qrCodeBase64);
+      if (pixCodeString) setPixCode(pixCodeString);
 
       if (!qrCodeBase64 && !pixCodeString) {
-        throw new Error(
-          "QR Code ou código PIX não foi gerado. Tente novamente."
-        );
+        throw new Error("QR Code PIX não foi gerado. Tente novamente.");
       }
 
+      // ID DO PAGAMENTO PIX
       setPixPaymentId(paymentResponse.id);
       setPixStatus(paymentResponse.status || "pending");
       setIsProcessing(false);
@@ -178,42 +197,36 @@ export function ConfirmAppointmentPage() {
     }
   };
 
-  const handleBackTohome = () => {
-    navigate("/home");
-  };
-
+  // ===========================
+  // COPIAR CÓDIGO PIX
+  // ===========================
   const handleCopyPixCode = async () => {
-    if (pixCode) {
-      try {
-        await navigator.clipboard.writeText(pixCode);
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, 2000);
-      } catch (error) {
-        console.error("Erro ao copiar código PIX:", error);
-        // Fallback para navegadores mais antigos
-        const textArea = document.createElement("textarea");
+    if (!pixCode) return;
 
-        textArea.value = pixCode;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-          document.execCommand("copy");
-          setCopied(true);
-          setTimeout(() => {
-            setCopied(false);
-          }, 2000);
-        } catch (err) {
-          console.error("Erro ao copiar:", err);
-        }
-        document.body.removeChild(textArea);
-      }
+    try {
+      await navigator.clipboard.writeText(pixCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textarea = document.createElement("textarea");
+
+      textarea.value = pixCode;
+      textarea.style.position = "fixed";
+      textarea.style.left = "-999999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
+  const handleBackTohome = () => navigate("/home");
+
+  // ===========================
+  // TELA DE AGENDAMENTO CONCLUÍDO
+  // ===========================
   if (isCompleted) {
     return (
       <section className="min-h-screen bg-gray-800">
@@ -251,12 +264,14 @@ export function ConfirmAppointmentPage() {
                         </span>
                       </div>
                     )}
+
                     <div className="flex justify-between">
                       <span className="text-gray-400">Data:</span>
                       <span className="text-white font-medium">
                         {formatDate(selectedDate)}
                       </span>
                     </div>
+
                     <div className="flex justify-between">
                       <span className="text-gray-400">Horário:</span>
                       <span className="text-white font-medium">
@@ -271,6 +286,7 @@ export function ConfirmAppointmentPage() {
                         ? "Serviços Contratados:"
                         : "Serviço Contratado:"}
                     </h4>
+
                     <div className="space-y-2">
                       {selectedServices?.map((service) => (
                         <div
@@ -301,6 +317,7 @@ export function ConfirmAppointmentPage() {
                   Pedimos que chegue com antecedência no horário agendado.
                   Obrigado pela preferência! 😉
                 </p>
+
                 <button
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                   type="button"
@@ -316,10 +333,13 @@ export function ConfirmAppointmentPage() {
     );
   }
 
-  // PÁGINA DE CONFIRMAÇÃO DE AGENDAMENTO
+  // ===========================
+  // TELA PRINCIPAL
+  // ===========================
   return (
     <section className="min-h-screen bg-gray-800">
       <Header />
+
       <div className="p-4 pb-10 md:px-8">
         <Helmet title="Confirmar Agendamento" />
 
@@ -347,6 +367,9 @@ export function ConfirmAppointmentPage() {
             </div>
           </div>
 
+          {/* ================================ */}
+          {/*   RESUMO DO AGENDAMENTO          */}
+          {/* ================================ */}
           {selectedServices && selectedServices.length > 0 && (
             <div className="bg-gray-900 rounded-lg p-4 mb-6">
               <h3 className="text-white font-medium mb-4">
@@ -362,12 +385,14 @@ export function ConfirmAppointmentPage() {
                     </span>
                   </div>
                 )}
+
                 <div className="flex justify-between">
                   <span className="text-gray-400">Data:</span>
                   <span className="text-white font-medium">
                     {formatDate(selectedDate)}
                   </span>
                 </div>
+
                 <div className="flex justify-between">
                   <span className="text-gray-400">Horário:</span>
                   <span className="text-white font-medium">{selectedTime}</span>
@@ -380,6 +405,7 @@ export function ConfirmAppointmentPage() {
                     ? "Serviços Contratados:"
                     : "Serviço Contratado:"}
                 </h4>
+
                 <div className="space-y-2">
                   {selectedServices.map((service, index) => (
                     <div
@@ -394,6 +420,7 @@ export function ConfirmAppointmentPage() {
                           {formatPrice(Number(service.preco))}
                         </span>
                       </div>
+
                       <div className="text-xs text-gray-400">
                         Duração: {service.duracao} min
                       </div>
@@ -409,6 +436,7 @@ export function ConfirmAppointmentPage() {
                     {totalDuration} min
                   </span>
                 </div>
+
                 <div className="flex justify-between text-base">
                   <span className="text-white font-semibold">
                     Total a pagar:
@@ -421,7 +449,9 @@ export function ConfirmAppointmentPage() {
             </div>
           )}
 
-          {/* QR Code PIX */}
+          {/* ================================ */}
+          {/*   QR CODE PIX GERADO             */}
+          {/* ================================ */}
           {(pixQrCode || pixCode) && (
             <div className="bg-gray-900 rounded-lg p-6 mb-6">
               <h3 className="text-white font-medium mb-4 text-center">
@@ -439,36 +469,34 @@ export function ConfirmAppointmentPage() {
               )}
 
               <div className="flex flex-col items-center space-y-4">
+                {/* QR CODE */}
                 {pixQrCode && (
                   <div className="bg-white p-4 rounded-lg">
-                    {pixQrCode.startsWith("data:image") ? (
-                      <img
-                        alt="QR Code PIX"
-                        className="w-64 h-64"
-                        src={pixQrCode}
-                      />
-                    ) : (
-                      <img
-                        alt="QR Code PIX"
-                        className="w-64 h-64"
-                        src={`data:image/png;base64,${pixQrCode}`}
-                      />
-                    )}
+                    <img
+                      alt="QR Code PIX"
+                      className="w-64 h-64"
+                      src={
+                        pixQrCode.startsWith("data:image")
+                          ? pixQrCode
+                          : `data:image/png;base64,${pixQrCode}`
+                      }
+                    />
                   </div>
                 )}
 
+                {/* CHAVE PIX */}
                 {pixCode && (
                   <div className="w-full space-y-3">
-                    <div>
-                      <p className="block text-sm text-gray-400 mb-2 text-center">
-                        Código PIX (Copie e cole no app do seu banco)
+                    <p className="block text-sm text-gray-400 mb-2 text-center">
+                      Código PIX (copie e cole no app do banco)
+                    </p>
+
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                      <p className="text-white text-sm break-all font-mono">
+                        {pixCode}
                       </p>
-                      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                        <p className="text-white text-sm break-all font-mono">
-                          {pixCode}
-                        </p>
-                      </div>
                     </div>
+
                     <button
                       className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
                         copied
@@ -490,6 +518,7 @@ export function ConfirmAppointmentPage() {
                       {formatPrice(totalPrice)}
                     </span>
                   </p>
+
                   <p className="text-gray-400 text-sm">
                     Status:{" "}
                     <span
@@ -511,16 +540,14 @@ export function ConfirmAppointmentPage() {
                             : "Aguardando pagamento"}
                     </span>
                   </p>
-                  {pixStatus === "pending" && (
-                    <p className="text-gray-500 text-xs mt-2">
-                      Aguardando confirmação do pagamento...
-                    </p>
-                  )}
                 </div>
               </div>
             </div>
           )}
 
+          {/* ================================ */}
+          {/*   BOTÃO PRINCIPAL                */}
+          {/* ================================ */}
           <button
             className={`w-full font-semibold py-3 px-4 rounded-lg transition-colors ${
               isProcessing
