@@ -13,9 +13,9 @@ export function HistoryAppointmentsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { fetchAppointments, appointments } = useSchedule();
-  const [filter, setFilter] = useState<
-    "TODOS" | "CONFIRMADO" | "PENDENTE" | "CANCELADO"
-  >("TODOS");
+  const [filter, setFilter] = useState<"confirmados" | "realizados">(
+    "confirmados"
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -41,57 +41,91 @@ export function HistoryAppointmentsPage() {
   }, [user?.user?.id]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    if (!dateString) return "Data inválida";
 
-    return date.toLocaleDateString("pt-BR", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
+    try {
+      // Formato esperado: DD/MM/YYYY
+      const parts = dateString.split("/");
+
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        const date = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day)
+        );
+
+        if (Number.isNaN(date.getTime())) {
+          return dateString; // Retorna o formato original se der erro
+        }
+
+        return date.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        });
+      }
+
+      return dateString; // Retorna o formato original
+    } catch {
+      return dateString;
+    }
   };
 
-  const formatTime = (timeString: string) => {
-    const date = new Date(timeString);
+  // Função auxiliar para converter DD/MM/YYYY em Date
+  const parseDate = (dateStr: string): Date => {
+    const parts = dateStr.split("/");
 
-    return date.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    if (parts.length === 3) {
+      return new Date(
+        parseInt(parts[2]),
+        parseInt(parts[1]) - 1,
+        parseInt(parts[0])
+      );
+    }
+
+    return new Date(0);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; color: string }> = {
-      confirmed: { label: "Confirmado", color: "bg-green-600" },
-      pending: { label: "Pendente", color: "bg-yellow-600" },
-      cancelled: { label: "Cancelado", color: "bg-red-600" },
-    };
+  // Função para verificar se um agendamento é futuro
+  const isFutureAppointment = (dateStr: string): boolean => {
+    const appointmentDate = parseDate(dateStr);
+    const today = new Date();
 
-    const statusInfo = statusMap[status.toLowerCase()] || {
-      label: status,
-      color: "bg-gray-600",
-    };
+    // Zera as horas para comparar apenas as datas
+    today.setHours(0, 0, 0, 0);
+    appointmentDate.setHours(0, 0, 0, 0);
 
-    return (
-      <span
-        className={`${statusInfo.color} text-white text-xs px-2 py-1 rounded-full`}
-      >
-        {statusInfo.label}
-      </span>
-    );
+    return appointmentDate >= today;
   };
 
+  // Filtra e ordena os agendamentos
   const filteredAppointments = appointments.filter((appointment) => {
-    if (filter === "TODOS") return true;
+    const isFuture = isFutureAppointment(appointment.data);
 
-    return appointment.status.toLowerCase() === filter;
+    if (filter === "confirmados") {
+      return isFuture;
+    }
+
+    return !isFuture;
   });
 
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    const dateA = new Date(a.data_agendamento).getTime();
-    const dateB = new Date(b.data_agendamento).getTime();
+    try {
+      const dateA = parseDate(a.data).getTime();
+      const dateB = parseDate(b.data).getTime();
 
-    return dateB - dateA; // Mais recentes primeiro
+      // Para agendamentos confirmados, mostra os mais próximos primeiro
+      // Para realizados, mostra os mais recentes primeiro
+      if (filter === "confirmados") {
+        return dateA - dateB;
+      }
+
+      return dateB - dateA;
+    } catch {
+      return 0;
+    }
   });
 
   return (
@@ -99,7 +133,13 @@ export function HistoryAppointmentsPage() {
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">
-        <Helmet title="Histórico de Agendamentos" />
+        <Helmet
+          title={
+            filter === "confirmados"
+              ? "Agendamentos Confirmados"
+              : "Agendamentos Realizados"
+          }
+        />
 
         <div className="mx-auto max-w-4xl">
           {/* Header */}
@@ -123,7 +163,9 @@ export function HistoryAppointmentsPage() {
                   Meus Agendamentos
                 </h1>
                 <p className="text-gray-200">
-                  Veja todos os seus agendamentos realizados
+                  {filter === "confirmados"
+                    ? "Seus agendamentos confirmados"
+                    : "Histórico de agendamentos realizados"}
                 </p>
               </div>
             </div>
@@ -134,47 +176,25 @@ export function HistoryAppointmentsPage() {
             <div className="flex flex-wrap gap-2">
               <button
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filter === "TODOS"
+                  filter === "confirmados"
                     ? "bg-yellow-400 text-gray-900"
                     : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
                 type="button"
-                onClick={() => setFilter("TODOS")}
-              >
-                Todos
-              </button>
-              <button
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filter === "CONFIRMADO"
-                    ? "bg-yellow-400 text-gray-900"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
-                type="button"
-                onClick={() => setFilter("CONFIRMADO")}
+                onClick={() => setFilter("confirmados")}
               >
                 Confirmados
               </button>
               <button
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filter === "PENDENTE"
+                  filter === "realizados"
                     ? "bg-yellow-400 text-gray-900"
                     : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
                 type="button"
-                onClick={() => setFilter("PENDENTE")}
+                onClick={() => setFilter("realizados")}
               >
-                Pendentes
-              </button>
-              <button
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  filter === "CANCELADO"
-                    ? "bg-yellow-400 text-gray-900"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                }`}
-                type="button"
-                onClick={() => setFilter("CANCELADO")}
-              >
-                Cancelados
+                Realizados
               </button>
             </div>
           </div>
@@ -221,129 +241,108 @@ export function HistoryAppointmentsPage() {
             <div className="bg-gray-900 rounded-lg p-8 text-center">
               <div className="text-gray-400 text-6xl mb-4">📅</div>
               <h3 className="text-white text-xl font-semibold mb-2">
-                Nenhum agendamento encontrado
+                {filter === "confirmados"
+                  ? "Nenhum agendamento confirmado"
+                  : "Nenhum agendamento realizado"}
               </h3>
               <p className="text-gray-400 mb-6">
-                {filter === "TODOS"
-                  ? "Você ainda não possui agendamentos."
-                  : `Nenhum agendamento ${filter === "CONFIRMADO" ? "confirmado" : filter === "PENDENTE" ? "pendente" : "cancelado"} encontrado.`}
+                {filter === "confirmados"
+                  ? "Você não possui agendamentos confirmados. Que tal agendar um horário?"
+                  : "Você ainda não possui histórico de agendamentos realizados."}
               </p>
-              <button
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 px-6 py-3 rounded-lg font-semibold"
-                type="button"
-                onClick={() => navigate("/choice-barber")}
-              >
-                Fazer um agendamento
-              </button>
+              {filter === "confirmados" && (
+                <button
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold"
+                  type="button"
+                  onClick={() => navigate("/choice-barber")}
+                >
+                  Fazer um agendamento
+                </button>
+              )}
             </div>
           )}
 
           {/* Lista de agendamentos */}
           {!isLoading && !hasError && sortedAppointments.length > 0 && (
             <div className="space-y-4">
-              {sortedAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="bg-gray-900 rounded-lg p-6 border border-gray-700 hover:border-yellow-400 transition-colors"
-                >
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    {/* Informações principais */}
-                    <div className="flex-1 space-y-3">
-                      {/* Status e Data */}
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {getStatusBadge(appointment.status)}
+              {sortedAppointments.map((appointment, index) => {
+                const isFuture = isFutureAppointment(appointment.data);
+
+                return (
+                  <div
+                    key={appointment.id || `appointment-${index}`}
+                    className="bg-gray-900 rounded-lg p-6 border border-gray-700 hover:border-yellow-400 transition-colors"
+                  >
+                    <div className="flex flex-col gap-4">
+                      {/* Header com Status e Data */}
+                      <div className="flex items-center justify-between pb-3 border-b border-gray-700">
+                        <div className="text-left">
+                          <p className="text-white font-medium">
+                            {formatDate(appointment.data)}
+                          </p>
+                        </div>
+                        <span
+                          className={`${
+                            isFuture ? "bg-green-600" : "bg-blue-600"
+                          } text-white text-sm font-semibold px-4 py-1.5 rounded-full`}
+                        >
+                          {isFuture ? "Confirmado" : "Realizado"}
+                        </span>
+                      </div>
+
+                      {/* Informações do agendamento */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Horário */}
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-sm mb-1">
+                            Horário
+                          </span>
+                          <span className="text-white font-medium text-lg">
+                            {appointment.horario}
+                          </span>
+                        </div>
+
+                        {/* Barbeiro */}
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-sm mb-1">
+                            Barbeiro
+                          </span>
+                          <span className="text-white font-medium text-lg">
+                            {appointment.barbeiro}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Valor */}
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-700">
                         <span className="text-gray-400 text-sm">
-                          {formatDate(appointment.data_agendamento)}
+                          Valor do serviço
+                        </span>
+                        <span className="text-green-400 font-bold text-2xl">
+                          {formatPrice(appointment.valor)}
                         </span>
                       </div>
-
-                      {/* Horário */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400">Horário:</span>
-                        <span className="text-white font-medium">
-                          {formatTime(appointment.hora_inicio)} -{" "}
-                          {formatTime(appointment.hora_fim)}
-                        </span>
-                      </div>
-
-                      {/* Serviço */}
-                      {appointment.servico && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">Serviço:</span>
-                          <span className="text-white font-medium">
-                            {appointment.servico.nome}
-                          </span>
-                          <span className="text-gray-500 text-sm">
-                            ({appointment.servico.duracao} min)
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Profissional */}
-                      {appointment.profissional && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">Barbeiro:</span>
-                          <span className="text-white font-medium">
-                            {appointment.profissional.nome}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Valor */}
-                    <div className="flex flex-col items-end justify-center">
-                      <span className="text-gray-400 text-sm mb-1">Valor</span>
-                      <span className="text-green-400 font-bold text-xl">
-                        {formatPrice(appointment.valor_pago || 0)}
-                      </span>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
-          {/* Estatísticas */}
-          {!isLoading && !hasError && appointments.length > 0 && (
-            <div className="mt-6 bg-gray-900 rounded-lg p-6">
-              <h3 className="text-white font-semibold mb-4">Resumo</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">
-                    {appointments.length}
-                  </div>
-                  <div className="text-gray-400 text-sm">Total</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">
-                    {
-                      appointments.filter(
-                        (a) => a.status.toLowerCase() === "CONFIRMADO"
-                      ).length
-                    }
-                  </div>
-                  <div className="text-gray-400 text-sm">Confirmados</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {
-                      appointments.filter(
-                        (a) => a.status.toLowerCase() === "PENDENTE"
-                      ).length
-                    }
-                  </div>
-                  <div className="text-gray-400 text-sm">Pendentes</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-400">
-                    {
-                      appointments.filter(
-                        (a) => a.status.toLowerCase() === "CANCELADO"
-                      ).length
-                    }
-                  </div>
-                  <div className="text-gray-400 text-sm">Cancelados</div>
-                </div>
+          {/* Contador de agendamentos */}
+          {!isLoading && !hasError && sortedAppointments.length > 0 && (
+            <div className="mt-6 bg-gray-900 rounded-lg p-6 text-center">
+              <h3 className="text-white font-semibold mb-2">
+                {filter === "confirmados"
+                  ? "Total de Agendamentos Confirmados"
+                  : "Total de Agendamentos Realizados"}
+              </h3>
+              <div
+                className={`text-3xl font-bold ${
+                  filter === "confirmados" ? "text-green-400" : "text-blue-400"
+                }`}
+              >
+                {sortedAppointments.length}
               </div>
             </div>
           )}

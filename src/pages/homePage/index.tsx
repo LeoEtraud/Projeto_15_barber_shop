@@ -65,7 +65,7 @@ export function HomePage() {
                   Histórico de Agendamentos
                 </h3>
                 <p className="text-sm text-gray-400">
-                  Veja seus agendamentos anteriores
+                  Veja seus agendamentos confirmados e realizados
                 </p>
               </div>
             </button>

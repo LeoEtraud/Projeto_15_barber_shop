@@ -26,12 +26,17 @@ export interface ISchedules {
 }
 
 export interface IAppointments {
-  id: string;
-  data_agendamento: string;
-  hora_inicio: string;
-  hora_fim: string;
-  status: string;
-  valor_pago: number;
+  id?: string;
+  data: string; // Formato DD/MM/YYYY
+  horario: string; // Formato "HH:MM - HH:MM"
+  valor: number;
+  barbeiro: string;
+  status?: string;
+  // Campos antigos mantidos para compatibilidade
+  data_agendamento?: string;
+  hora_inicio?: string;
+  hora_fim?: string;
+  valor_pago?: number;
   servico?: {
     id: string;
     nome: string;
