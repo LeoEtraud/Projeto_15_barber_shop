@@ -132,15 +132,21 @@ export function ConfirmAppointmentPage() {
       return;
     }
 
-    const firstServiceId = selectedServices[0]?.id;
-
-    if (!firstServiceId) {
-      setPaymentError("Erro ao preparar dados do serviço para o pagamento.");
+    if (!barber?.id) {
+      setPaymentError("Erro: barbeiro não encontrado.");
 
       return;
     }
 
-    if (!user?.user?.email) {
+    if (!selectedDate || !selectedTime || !totalDuration) {
+      setPaymentError(
+        "Data, horário ou duração total do agendamento não foram definidos."
+      );
+
+      return;
+    }
+
+    if (!user?.user?.email || !user?.user?.id) {
       alert("Erro: usuário não autenticado. Faça login novamente.");
       navigate("/");
 
@@ -154,21 +160,30 @@ export function ConfirmAppointmentPage() {
       const servicesDescription =
         selectedServices.map((service) => service.nome).join(", ") || "";
 
+      // 👇 MONTA O ARRAY QUE O BACK-END ESPERA
+      const servicesPayload = selectedServices.map((service) => ({
+        id: service.id,
+        // pode ser string ou number, o back faz Number(...)
+        preco: service.preco,
+        duracao: service.duracao,
+      }));
+
       const paymentData = {
         transaction_amount: totalPrice,
         description: `Agendamento - ${barber?.nome || "Barbeiro"}: ${servicesDescription}`,
         payment_method_id: "pix",
         payer: {
-          email: user?.user?.email,
+          email: user.user.email,
         },
         metadata: {
-          barberId: barber?.id,
-          barberName: barber?.nome,
+          barberId: barber.id,
+          userId: user.user.id,
           selectedDate,
           selectedTime,
           totalDuration,
-          firstServiceId,
-          userId: user?.user?.id,
+          services: servicesPayload,
+          // se quiser pode manter extras, o back ignora:
+          barberName: barber.nome,
         },
       };
 
@@ -184,7 +199,6 @@ export function ConfirmAppointmentPage() {
         throw new Error("QR Code PIX não foi gerado. Tente novamente.");
       }
 
-      // ID DO PAGAMENTO PIX
       setPixPaymentId(paymentResponse.id);
       setPixStatus(paymentResponse.status || "pending");
       setIsProcessing(false);

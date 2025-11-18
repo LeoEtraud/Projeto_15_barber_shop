@@ -75,6 +75,7 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
     }
   }
 
+  // FUNÇÃO PARA BUSCAR OS AGENDAMENTOS DO CLIENTE
   async function fetchAppointments(id: string) {
     try {
       const response = await GetAppointments(id);

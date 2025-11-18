@@ -1,4 +1,3 @@
-// src/hooks/useMercadoPago.ts
 import { useEffect } from "react";
 import { initMercadoPago } from "@mercadopago/sdk-react";
 
