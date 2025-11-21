@@ -159,10 +159,15 @@ export function ResetPassword() {
           setIsCode(true);
         }, 1000);
       }
-    } catch {
+    } catch (error: any) {
+      // Extrai a mensagem de erro do back-end
+      const errorMessage =
+        error?.response?.data?.error ||
+        "Não foi possível enviar o código de recuperação. Por favor, tente novamente.";
+
       addToast({
         title: "Informação",
-        description: "Erro ao enviar o código para seu E-mail!",
+        description: errorMessage,
         color: "danger",
         timeout: 5000,
       });

@@ -184,3 +184,7 @@ Com essa estrutura de banco de dados e fluxo de processos, seu SaaS pode oferece
 - Banco de Dados: MySQL/PostgreSQL
 - Frontend: React, Vite
 - Pagamentos: Stripe, Pix, Cartão de Crédito/Débito
+
+### FUNCIONALIDADES A SEREM IMPLEMENTADAS (20/11/2025)
+
+- Mecanismo de autenticação de usuário através de Login Social (Conta Google).
