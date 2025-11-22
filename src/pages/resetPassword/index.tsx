@@ -58,18 +58,8 @@ export function ResetPassword() {
       return s.slice(0, 3) + "*".repeat(s.length - 5) + s.slice(-2);
     };
 
-    // mascara o domínio (parte depois do @, antes do .)
-    const [dname, ...tldParts] = domain.split(".");
-    const maskDomain = (s: string) => {
-      if (s.length <= 3) return s[0] + "*".repeat(s.length - 1);
-
-      return s.slice(0, 2) + "*".repeat(s.length - 2);
-    };
-
-    const maskedDomain = dname ? maskDomain(dname) : domain;
-    const tld = tldParts.length ? "." + tldParts.join(".") : "";
-
-    return `${maskUser(user)}@${maskedDomain}${tld}`;
+    // retorna o e-mail com usuário mascarado e domínio completo
+    return `${maskUser(user)}@${domain}`;
   }
 
   // Schema para a etapa 1: validação do e-mail
