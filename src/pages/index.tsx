@@ -143,7 +143,7 @@ export function Login() {
                   className="w-auto p-3 rounded-lg text-black focus:outline-none"
                   id="telefone"
                   inputMode="text"
-                  label="E-mail ou Nº de contato"
+                  label="Nº de contato ou E-mail"
                   maxLength={60}
                   size="sm"
                   type="text"

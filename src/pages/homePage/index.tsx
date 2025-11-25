@@ -62,7 +62,7 @@ export function HomePage() {
               <div className="text-4xl">📅</div>
               <div>
                 <h3 className="text-lg font-semibold text-white mb-2">
-                  Histórico de Agendamentos
+                  Meus Agendamentos
                 </h3>
                 <p className="text-sm text-gray-400">
                   Veja seus agendamentos confirmados e realizados

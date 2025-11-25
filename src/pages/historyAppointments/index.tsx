@@ -88,21 +88,37 @@ export function HistoryAppointmentsPage() {
     return new Date(0);
   };
 
-  // Função para verificar se um agendamento é futuro
-  const isFutureAppointment = (dateStr: string): boolean => {
+  // Função auxiliar para converter horário HH:MM em horas e minutos
+  const parseTime = (timeStr: string): { hours: number; minutes: number } => {
+    const parts = timeStr.split(":");
+
+    if (parts.length === 2) {
+      return {
+        hours: parseInt(parts[0]),
+        minutes: parseInt(parts[1]),
+      };
+    }
+
+    return { hours: 0, minutes: 0 };
+  };
+
+  // Função para verificar se um agendamento é futuro (considera data E horário)
+  const isFutureAppointment = (dateStr: string, timeStr: string): boolean => {
     const appointmentDate = parseDate(dateStr);
-    const today = new Date();
+    const { hours, minutes } = parseTime(timeStr);
 
-    // Zera as horas para comparar apenas as datas
-    today.setHours(0, 0, 0, 0);
-    appointmentDate.setHours(0, 0, 0, 0);
+    // Define o horário específico do agendamento
+    appointmentDate.setHours(hours, minutes, 0, 0);
 
-    return appointmentDate >= today;
+    const now = new Date();
+
+    // Retorna true se o agendamento for no futuro (data e hora)
+    return appointmentDate > now;
   };
 
   // Filtra e ordena os agendamentos
   const filteredAppointments = appointments.filter((appointment) => {
-    const isFuture = isFutureAppointment(appointment.data);
+    const isFuture = isFutureAppointment(appointment.data, appointment.horario);
 
     if (filter === "confirmados") {
       return isFuture;
@@ -266,7 +282,10 @@ export function HistoryAppointmentsPage() {
           {!isLoading && !hasError && sortedAppointments.length > 0 && (
             <div className="space-y-4">
               {sortedAppointments.map((appointment, index) => {
-                const isFuture = isFutureAppointment(appointment.data);
+                const isFuture = isFutureAppointment(
+                  appointment.data,
+                  appointment.horario
+                );
 
                 return (
                   <div

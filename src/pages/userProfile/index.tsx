@@ -62,7 +62,36 @@ export function UserProfilePage() {
   const schema_user = yup.object().shape({
     id: yup.string().min(3).required("O Nome é obrigatório"),
     nome: yup.string().min(3).required("O Nome é obrigatório"),
-    email: yup.string().email().required("O E-mail é obrigatório"),
+    email: yup
+      .string()
+      .required("O E-mail é obrigatório")
+      .email("Formato de e-mail inválido")
+      .matches(
+        /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        "E-mail deve seguir o padrão: exemplo@dominio.com"
+      )
+      .test(
+        "email-valido",
+        "E-mail inválido. Use um formato válido como: usuario@exemplo.com",
+        (value) => {
+          if (!value) return false;
+
+          // Validação adicional: verifica se o domínio tem pelo menos 2 caracteres
+          const parts = value.split("@");
+
+          if (parts.length !== 2) return false;
+
+          const [user, domain] = parts;
+
+          if (!user || user.length < 1) return false;
+
+          if (!domain || !domain.includes(".")) return false;
+
+          const domainParts = domain.split(".");
+
+          return domainParts.every((part) => part.length >= 2);
+        }
+      ),
     telefone: yup
       .string()
       .required("O número de contato é obrigatório")
@@ -81,7 +110,7 @@ export function UserProfilePage() {
     control: control_user,
     handleSubmit: handleSubmit_user,
     watch,
-    formState: { isSubmitting: isSubmitting_user },
+    formState: { isSubmitting: isSubmitting_user, errors: errors_user },
   } = useForm<IUser>({
     resolver: yupResolver(schema_user),
     defaultValues,
@@ -93,6 +122,7 @@ export function UserProfilePage() {
   const watchedValues = watch();
 
   // Compara os valores atuais com os valores originais
+
   const hasChanges = useMemo(() => {
     if (!currentUser) return false;
 
@@ -128,7 +158,7 @@ export function UserProfilePage() {
     control,
     handleSubmit,
     reset,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<PasswordForm>({
     resolver: yupResolver(schema),
     defaultValues: { senha_atual: "", nova_senha: "", confirma_nova_senha: "" },
@@ -272,7 +302,9 @@ export function UserProfilePage() {
                           isRequired
                           autoComplete="email"
                           className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          errorMessage={errors_user.email?.message}
                           id="email"
+                          isInvalid={!!errors_user.email}
                           label="E-mail"
                           maxLength={60}
                           size="sm"
@@ -368,7 +400,9 @@ export function UserProfilePage() {
                         <Input
                           isRequired
                           className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          errorMessage={errors.senha_atual?.message}
                           id="senha_atual"
+                          isInvalid={!!errors.senha_atual}
                           label="Senha atual"
                           size="sm"
                           type={isVisible ? "text" : "password"}
@@ -407,7 +441,9 @@ export function UserProfilePage() {
                       <Input
                         isRequired
                         className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        errorMessage={errors.nova_senha?.message}
                         id="nova_senha"
+                        isInvalid={!!errors.nova_senha}
                         label="Nova senha"
                         size="sm"
                         type={isVisibleNew ? "text" : "password"}
@@ -441,7 +477,9 @@ export function UserProfilePage() {
                       <Input
                         isRequired
                         className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        errorMessage={errors.confirma_nova_senha?.message}
                         id="confirma"
+                        isInvalid={!!errors.confirma_nova_senha}
                         label="Confirme a nova senha"
                         size="sm"
                         type={isVisibleConfirm ? "text" : "password"}
