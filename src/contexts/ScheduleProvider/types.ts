@@ -32,6 +32,7 @@ export interface IAppointments {
   valor: number;
   barbeiro: string;
   status?: string;
+  servicos?: string[]; // Array de nomes dos serviços
   // Campos antigos mantidos para compatibilidade
   data_agendamento?: string;
   hora_inicio?: string;

@@ -311,14 +311,32 @@ export function HistoryAppointmentsPage() {
 
                       {/* Informações do agendamento */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Horário */}
+                        {/* Serviço(s) */}
                         <div className="flex flex-col">
                           <span className="text-gray-400 text-sm mb-1">
-                            Horário
+                            {appointment.servicos &&
+                            appointment.servicos.length > 1
+                              ? "Serviços"
+                              : "Serviço"}
                           </span>
-                          <span className="text-white font-medium text-lg">
-                            {appointment.horario}
-                          </span>
+                          <div className="text-white font-medium text-lg">
+                            {appointment.servicos &&
+                            appointment.servicos.length > 0 ? (
+                              appointment.servicos.length === 1 ? (
+                                appointment.servicos[0]
+                              ) : (
+                                <ul className="list-disc list-inside space-y-1">
+                                  {appointment.servicos.map((servico, idx) => (
+                                    <li key={idx}>{servico}</li>
+                                  ))}
+                                </ul>
+                              )
+                            ) : (
+                              <span className="text-gray-500">
+                                Não informado
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Barbeiro */}
@@ -328,6 +346,16 @@ export function HistoryAppointmentsPage() {
                           </span>
                           <span className="text-white font-medium text-lg">
                             {appointment.barbeiro}
+                          </span>
+                        </div>
+
+                        {/* Horário */}
+                        <div className="flex flex-col">
+                          <span className="text-gray-400 text-sm mb-1">
+                            Horário
+                          </span>
+                          <span className="text-white font-medium text-lg">
+                            {appointment.horario}
                           </span>
                         </div>
                       </div>
@@ -348,23 +376,20 @@ export function HistoryAppointmentsPage() {
             </div>
           )}
 
-          {/* Contador de agendamentos */}
-          {!isLoading && !hasError && sortedAppointments.length > 0 && (
-            <div className="mt-6 bg-gray-900 rounded-lg p-6 text-center">
-              <h3 className="text-white font-semibold mb-2">
-                {filter === "confirmados"
-                  ? "Total de Agendamentos Confirmados"
-                  : "Total de Agendamentos Realizados"}
-              </h3>
-              <div
-                className={`text-3xl font-bold ${
-                  filter === "confirmados" ? "text-green-400" : "text-blue-400"
-                }`}
-              >
-                {sortedAppointments.length}
+          {/* Contador de agendamentos - Apenas para Realizados */}
+          {!isLoading &&
+            !hasError &&
+            sortedAppointments.length > 0 &&
+            filter === "realizados" && (
+              <div className="mt-6 bg-gray-900 rounded-lg p-6 text-center">
+                <h3 className="text-white font-semibold mb-2">
+                  Total de Agendamentos Realizados
+                </h3>
+                <div className="text-3xl font-bold text-blue-400">
+                  {sortedAppointments.length}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
 
