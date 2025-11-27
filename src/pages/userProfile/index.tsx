@@ -46,7 +46,12 @@ export function UserProfilePage() {
   const currentUser =
     userData ||
     (user?.user as
-      | { nome: string; email: string; telefone: string }
+      | {
+          nome: string;
+          email: string;
+          telefone: string;
+          data_nascimento?: string;
+        }
       | undefined);
 
   const defaultValues = useMemo<IUser>(
@@ -55,6 +60,7 @@ export function UserProfilePage() {
       nome: currentUser?.nome || "",
       email: currentUser?.email || "",
       telefone: currentUser?.telefone || "",
+      data_nascimento: currentUser?.data_nascimento || "",
     }),
     [currentUser]
   );
@@ -104,12 +110,54 @@ export function UserProfilePage() {
           return digits.length >= 11;
         }
       ),
+    data_nascimento: yup
+      .string()
+      .required("A data de nascimento é obrigatória")
+      .test("data-valida", "Informe uma data válida", (value) => {
+        if (!value) return false;
+
+        const birthDate = new Date(value);
+        const today = new Date();
+
+        // Verifica se a data é válida
+        if (isNaN(birthDate.getTime())) return false;
+
+        // Verifica se não é uma data futura
+        return birthDate <= today;
+      })
+      .test("idade-minima", "Você deve ter pelo menos 13 anos", (value) => {
+        if (!value) return false;
+
+        const birthDate = new Date(value);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        const dayDiff = today.getDate() - birthDate.getDate();
+
+        // Calcula idade exata
+        if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+          return age - 1 >= 13;
+        }
+
+        return age >= 13;
+      })
+      .test("idade-maxima", "Idade inválida", (value) => {
+        if (!value) return false;
+
+        const birthDate = new Date(value);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+
+        // Verifica se não tem mais de 120 anos
+        return age <= 120;
+      }),
   });
 
   const {
     control: control_user,
     handleSubmit: handleSubmit_user,
     watch,
+    reset: reset_user,
     formState: { isSubmitting: isSubmitting_user, errors: errors_user },
   } = useForm<IUser>({
     resolver: yupResolver(schema_user),
@@ -117,6 +165,19 @@ export function UserProfilePage() {
     mode: "onChange",
     reValidateMode: "onChange",
   });
+
+  // Atualiza o formulário quando os dados do usuário mudarem
+  useEffect(() => {
+    if (currentUser) {
+      reset_user({
+        id: user?.user?.id ?? (id as string) ?? "",
+        nome: currentUser.nome || "",
+        email: currentUser.email || "",
+        telefone: currentUser.telefone || "",
+        data_nascimento: currentUser.data_nascimento || "",
+      });
+    }
+  }, [currentUser, reset_user, user?.user?.id, id]);
 
   // Observa os valores do formulário para detectar alterações
   const watchedValues = watch();
@@ -129,15 +190,18 @@ export function UserProfilePage() {
     const currentNome = watchedValues.nome?.trim() || "";
     const currentEmail = watchedValues.email?.trim() || "";
     const currentTelefone = (watchedValues.telefone || "").replace(/\D/g, "");
+    const currentDataNascimento = watchedValues.data_nascimento?.trim() || "";
 
     const originalNome = (currentUser.nome || "").trim();
     const originalEmail = (currentUser.email || "").trim();
     const originalTelefone = (currentUser.telefone || "").replace(/\D/g, "");
+    const originalDataNascimento = (currentUser.data_nascimento || "").trim();
 
     return (
       currentNome !== originalNome ||
       currentEmail !== originalEmail ||
-      currentTelefone !== originalTelefone
+      currentTelefone !== originalTelefone ||
+      currentDataNascimento !== originalDataNascimento
     );
   }, [watchedValues, currentUser]);
 
@@ -309,6 +373,26 @@ export function UserProfilePage() {
                           maxLength={60}
                           size="sm"
                           type="email"
+                          {...field}
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Controller
+                      control={control_user}
+                      name="data_nascimento"
+                      render={({ field }) => (
+                        <Input
+                          isRequired
+                          autoComplete="bday"
+                          className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          errorMessage={errors_user.data_nascimento?.message}
+                          id="data_nascimento"
+                          isInvalid={!!errors_user.data_nascimento}
+                          label="Data de Nascimento"
+                          size="sm"
+                          type="date"
                           {...field}
                         />
                       )}

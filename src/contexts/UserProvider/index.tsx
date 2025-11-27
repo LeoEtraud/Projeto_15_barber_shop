@@ -32,6 +32,7 @@ export const UserProvider = ({ children }: IUserProvider) => {
           nome: userData.nome || "",
           email: userData.email || "",
           telefone: userData.telefone || "",
+          data_nascimento: userData.data_nascimento || "",
         };
 
         setUserdata(data);

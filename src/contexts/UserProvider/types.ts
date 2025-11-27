@@ -3,6 +3,7 @@ export interface IUser {
   nome: string;
   email: string;
   telefone: string;
+  data_nascimento: string;
 }
 
 // ATUALIZAÇÃO DE SENHA DO USUÁRIO
