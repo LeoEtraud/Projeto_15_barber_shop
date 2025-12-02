@@ -11,7 +11,6 @@ import { Button } from "@heroui/react";
 
 import eye_slash from "../assets/eye-slash.svg";
 import eye from "../assets/eye.svg";
-import barberImage from "../assets/barber.png";
 
 import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
@@ -106,123 +105,146 @@ export function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl">
         <Helmet title="Login" />
 
-        <div className="max-w-lg text-center">
-          <Image
-            alt="Logo da barbearia"
-            height={200}
-            src={barberImage}
-            width={200}
-          />
-          <h6 className="mt-2">Balata Barbearia</h6>
+        {/* Header com Logo */}
+        <div className="flex flex-col items-center gap-4 w-full">
+          <div className="relative flex items-center justify-center">
+            <Image
+              alt="Logo Balata Barbearia"
+              className="drop-shadow-lg object-contain"
+              height={200}
+              radius="full"
+              src="/logo_balata.jpeg"
+              width={300}
+            />
+          </div>
         </div>
 
+        {/* Formulário */}
         <form
           autoComplete="on"
-          className="flex flex-col w-80"
+          className="flex flex-col w-80 gap-4"
           onSubmit={handleSubmit(signIn)}
         >
-          <Controller
-            control={control}
-            name="telefone"
-            render={({ field }) => {
-              const hasLettersOrAt = /[A-Za-z@]/.test(field.value || "");
-              const digits = (field.value || "")
-                .replace(/\D/g, "")
-                .slice(0, 11);
-              const displayValue = hasLettersOrAt
-                ? field.value
-                : formatPhone(digits);
-
-              return (
-                <Input
-                  isRequired
-                  autoComplete="username"
-                  className="w-auto p-3 rounded-lg text-black focus:outline-none"
-                  id="telefone"
-                  inputMode="text"
-                  label="Nº de contato ou E-mail"
-                  maxLength={60}
-                  size="sm"
-                  type="text"
-                  {...field}
-                  value={displayValue}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                    const val = e.target.value;
-
-                    if (/[A-Za-z@]/.test(val)) {
-                      field.onChange(val);
-                    } else {
-                      const onlyDigits = val.replace(/\D/g, "").slice(0, 11);
-
-                      field.onChange(formatPhone(onlyDigits));
-                    }
-                  }}
-                />
-              );
-            }}
-            rules={{
-              required: "Informe e-mail ou nº de contato",
-              validate: (value) => {
-                const v = value || "";
-
-                if (/[A-Za-z@]/.test(v)) {
-                  return /.+@.+\..+/.test(v) || "E-mail inválido";
-                }
-                const digits = v.replace(/\D/g, "");
+          {/* Campos de Input com espaçamento reduzido */}
+          <div className="flex flex-col gap-2">
+            <Controller
+              control={control}
+              name="telefone"
+              render={({ field, fieldState }) => {
+                const hasLettersOrAt = /[A-Za-z@]/.test(field.value || "");
+                const digits = (field.value || "")
+                  .replace(/\D/g, "")
+                  .slice(0, 11);
+                const displayValue = hasLettersOrAt
+                  ? field.value
+                  : formatPhone(digits);
 
                 return (
-                  digits.length === 11 || "O nº de contato deve ter 11 dígitos"
+                  <Input
+                    isRequired
+                    autoComplete="username"
+                    className="w-full p-3 rounded-lg text-black focus:outline-none"
+                    description={
+                      hasLettersOrAt
+                        ? "Informe seu e-mail cadastrado"
+                        : "Informe seu número de telefone com DDD"
+                    }
+                    errorMessage={fieldState.error?.message}
+                    id="telefone"
+                    inputMode="text"
+                    isInvalid={!!fieldState.error}
+                    label="E-mail ou Telefone"
+                    maxLength={60}
+                    size="sm"
+                    type="text"
+                    {...field}
+                    value={displayValue}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      const val = e.target.value;
+
+                      if (/[A-Za-z@]/.test(val)) {
+                        field.onChange(val);
+                      } else {
+                        const onlyDigits = val.replace(/\D/g, "").slice(0, 11);
+
+                        field.onChange(formatPhone(onlyDigits));
+                      }
+                    }}
+                  />
                 );
-              },
-            }}
-          />
+              }}
+              rules={{
+                required: "Informe e-mail ou nº de contato",
+                validate: (value) => {
+                  const v = value || "";
 
-          <Controller
-            control={control}
-            name="senha"
-            render={({ field }) => (
-              <Input
-                isRequired
-                autoComplete="current-password"
-                className="w-full p-3 rounded-lg focus:outline-none"
-                endContent={
-                  field.value && (
-                    <button
-                      aria-label="toggle password visibility"
-                      className="focus:outline-none"
-                      type="button"
-                      onClick={toggleVisibility}
-                    >
-                      {isVisible ? (
-                        <Image alt="Ocultar senha" src={eye_slash} width={30} />
-                      ) : (
-                        <Image alt="Mostrar senha" src={eye} width={30} />
-                      )}
-                    </button>
-                  )
-                }
-                id="senha"
-                label="Senha"
-                size="sm"
-                type={isVisible ? "text" : "password"}
-                {...field}
-              />
-            )}
-            rules={{
-              required: "A senha é obrigatória",
-              validate: (value) =>
-                value.length < 6
-                  ? "A senha deve conter no mínimo 6 caracteres."
-                  : true,
-            }}
-          />
+                  if (/[A-Za-z@]/.test(v)) {
+                    return /.+@.+\..+/.test(v) || "E-mail inválido";
+                  }
+                  const digits = v.replace(/\D/g, "");
 
-          <div className="flex items-center mb-6">
+                  return (
+                    digits.length === 11 ||
+                    "O nº de contato deve ter 11 dígitos"
+                  );
+                },
+              }}
+            />
+
+            <Controller
+              control={control}
+              name="senha"
+              render={({ field, fieldState }) => (
+                <Input
+                  isRequired
+                  autoComplete="current-password"
+                  className="w-full p-3 rounded-lg text-black focus:outline-none"
+                  description="Digite sua senha de acesso"
+                  endContent={
+                    field.value && (
+                      <button
+                        aria-label="toggle password visibility"
+                        className="focus:outline-none transition-opacity hover:opacity-70"
+                        type="button"
+                        onClick={toggleVisibility}
+                      >
+                        {isVisible ? (
+                          <Image
+                            alt="Ocultar senha"
+                            src={eye_slash}
+                            width={30}
+                          />
+                        ) : (
+                          <Image alt="Mostrar senha" src={eye} width={30} />
+                        )}
+                      </button>
+                    )
+                  }
+                  errorMessage={fieldState.error?.message}
+                  id="senha"
+                  isInvalid={!!fieldState.error}
+                  label="Senha"
+                  size="sm"
+                  type={isVisible ? "text" : "password"}
+                  {...field}
+                />
+              )}
+              rules={{
+                required: "A senha é obrigatória",
+                validate: (value) =>
+                  value.length < 6
+                    ? "A senha deve conter no mínimo 6 caracteres."
+                    : true,
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-end -mt-2">
             <Link
-              className="text-gray-400 pl-4"
+              className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
               href="../recovery"
               size="sm"
               onPress={show}
@@ -236,28 +258,28 @@ export function Login() {
               color: "primary",
               radius: "full",
               variant: "shadow",
-            })} w-40 mx-auto mt-5 font-extrabold`}
+            })} w-64 mx-auto mt-2 font-extrabold text-base py-6`}
             disabled={isSubmitting}
             isLoading={isSubmitting}
             type="submit"
           >
-            ENTRAR
+            {isSubmitting ? "Entrando..." : "ENTRAR"}
           </Button>
 
-          <div className="flex items-center my-6">
+          <div className="flex items-center my-4">
             <Divider className="flex-1 bg-gray-800" />
-            <span className="mx-4 text-gray-600">Ou</span>
+            <span className="mx-4 text-gray-600 text-sm">Ou</span>
             <Divider className="flex-1 bg-gray-800" />
           </div>
 
           <div className="flex items-center justify-center">
+            <p className="text-gray-400 text-sm mr-2">Não tem uma conta?</p>
             <Link
-              className="text-gray-400"
+              className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
               href="../register"
-              size="sm"
               onPress={show}
             >
-              Criar uma conta
+              Criar conta
             </Link>
           </div>
         </form>

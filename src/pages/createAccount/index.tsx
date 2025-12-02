@@ -96,32 +96,41 @@ export function CreateAccount() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl">
         <Helmet title="Cadastro" />
         <ToastProvider placement={"top-right"} toastOffset={60} />
 
-        <div className="max-h-8 text-center">
-          <h1 className="text-2xl">{"Cadastro de Cliente"}</h1>
+        {/* Header com Título */}
+        <div className="flex flex-col items-center gap-2 w-full">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              Criar conta
+            </h1>
+            <p className="text-gray-400 text-sm md:text-base">
+              Preencha os dados abaixo para se cadastrar
+            </p>
+          </div>
         </div>
 
         <form
           autoComplete="on"
-          className="flex flex-col w-80"
+          className="flex flex-col w-80 gap-4"
           onSubmit={handleSubmit(CreateUser)}
         >
           {/* NOME */}
           <Controller
             control={control}
             name="nome"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Input
                 isRequired
                 autoComplete="name"
-                className={
-                  "w-auto p-3 rounded-lg text-black focus:outline-none"
-                }
+                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                description="Informe seu nome completo"
+                errorMessage={fieldState.error?.message}
                 id="nome"
-                label="Nome"
+                isInvalid={!!fieldState.error}
+                label="Nome completo"
                 maxLength={60}
                 size="sm"
                 type="text"
@@ -143,9 +152,9 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="bday"
-                className={
-                  "w-auto p-3 rounded-lg text-black focus:outline-none"
-                }
+                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                description="Selecione sua data de nascimento"
+                errorMessage={fieldState.error?.message}
                 id="data_nascimento"
                 isInvalid={!!fieldState.error}
                 label="Data de Nascimento"
@@ -167,15 +176,15 @@ export function CreateAccount() {
           <Controller
             control={control}
             name="email"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Input
                 isRequired
                 autoComplete="email"
-                className={
-                  "w-auto p-3 rounded-lg text-black focus:outline-none"
-                }
-                errorMessage="Insira um e-mail válido."
+                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                description="Informe um e-mail válido para login"
+                errorMessage={fieldState.error?.message || "Insira um e-mail válido."}
                 id="email"
+                isInvalid={!!fieldState.error}
                 label="E-mail"
                 maxLength={60}
                 size="sm"
@@ -199,16 +208,15 @@ export function CreateAccount() {
                 <Input
                   isRequired
                   autoComplete="tel"
-                  className={
-                    "w-auto p-3 rounded-lg text-black focus:outline-none"
-                  }
+                  className="w-full p-3 rounded-lg text-black focus:outline-none"
+                  description="Informe seu número com DDD (ex: (98) 99999-9999)"
                   errorMessage={showError ? message : undefined}
                   id="telefone"
                   inputMode="numeric"
                   isInvalid={
                     showError && !!(errors.telefone || fieldState.error)
                   }
-                  label="Nº de contato"
+                  label="Telefone"
                   maxLength={15}
                   size="sm"
                   type="tel"
@@ -226,17 +234,17 @@ export function CreateAccount() {
           <Controller
             control={control}
             name="senha"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <Input
                 isRequired
                 autoComplete="new-password"
-                className="w-full p-3 rounded-lg focus:outline-none"
-                description="A senha deve conter no mínimo 6 caracteres."
+                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                description="Mínimo de 6 caracteres"
                 endContent={
                   field.value && (
                     <button
                       aria-label="toggle password visibility"
-                      className="focus:outline-none"
+                      className="focus:outline-none transition-opacity hover:opacity-70"
                       type="button"
                       onClick={toggleVisibility}
                     >
@@ -248,7 +256,9 @@ export function CreateAccount() {
                     </button>
                   )
                 }
+                errorMessage={fieldState.error?.message}
                 id="senha"
+                isInvalid={!!fieldState.error}
                 label="Senha"
                 size="sm"
                 type={isVisible ? "text" : "password"}
@@ -267,23 +277,30 @@ export function CreateAccount() {
               color: "primary",
               radius: "full",
               variant: "shadow",
-            })} w-52 mx-auto mt-5 font-extrabold`}
+            })} w-64 mx-auto mt-2 font-extrabold text-base py-6`}
             disabled={isSubmitting}
             isLoading={isSubmitting}
             type="submit"
           >
-            CADASTRAR
+            {isSubmitting ? "Cadastrando..." : "CADASTRAR"}
           </Button>
 
           {/* LINK DE PÁGINAS */}
-          <div className="flex items-center my-6">
+          <div className="flex items-center my-4">
             <Divider className="flex-1 bg-gray-800" />
-            <span className="mx-4 text-gray-600">Ou</span>
+            <span className="mx-4 text-gray-600 text-sm">Ou</span>
             <Divider className="flex-1 bg-gray-800" />
           </div>
           <div className="flex items-center justify-center">
-            <Link className="text-gray-400" href="/" size="sm" onPress={show}>
-              Realizar login
+            <p className="text-gray-400 text-sm mr-2">
+              Já tem uma conta?
+            </p>
+            <Link
+              className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
+              href="/"
+              onPress={show}
+            >
+              Fazer login
             </Link>
           </div>
         </form>

@@ -225,30 +225,41 @@ export function ResetPassword() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-6 flex flex-col items-center justify-center gap-10">
+      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl">
         <Helmet title="Recup. Acesso" />
-        <div className="w-80 md:w-full px-4 sm:px-6 md:px-4">
-          <h1 className="text-2xl md:text-3xl lg:text-2xl font-bold text-center">
-            Recuperação de acesso
-          </h1>
-        </div>
+        
+        {/* Header com Título */}
+        {!isSuccess && (
+          <div className="flex flex-col items-center gap-2 w-full">
+            <div className="text-center">
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                {!isCode ? "Recuperar senha" : "Redefinir senha"}
+              </h1>
+              <p className="text-gray-400 text-sm md:text-base">
+                {!isCode
+                  ? "Informe seu e-mail para receber o código de recuperação"
+                  : "Digite o código recebido e defina uma nova senha"}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Etapa 1: Formulário de e-mail */}
         {!isCode && !isSuccess && (
           <form
-            className="flex flex-col w-80"
+            className="flex flex-col w-80 gap-4"
             onSubmit={handleSubmitStep1(onSubmitStep1)}
           >
             <Input
               isRequired
-              className="w-auto p-3 rounded-lg text-black focus:outline-none"
+              className="w-full p-3 rounded-lg text-black focus:outline-none"
+              description="Informe o e-mail cadastrado na sua conta"
               errorMessage="Por favor, insira um e-mail válido."
               id="email"
               label="E-mail"
               size="sm"
               type="text"
               {...registerStep1("email")}
-              description="Informe seu e-mail para redefinição de senha."
             />
 
             <Button
@@ -256,23 +267,29 @@ export function ResetPassword() {
                 color: "primary",
                 radius: "full",
                 variant: "shadow",
-              })} w-40 mx-auto mt-5 font-extrabold`}
+              })} w-64 mx-auto mt-2 font-extrabold text-base py-6`}
               disabled={isSubmittingStep1}
               isLoading={isSubmittingStep1}
               type="submit"
             >
-              ENVIAR
+              {isSubmittingStep1 ? "Enviando..." : "ENVIAR CÓDIGO"}
             </Button>
 
-            <div className="flex items-center my-6">
+            <div className="flex items-center my-4">
               <Divider className="flex-1 bg-gray-800" />
-              <span className="mx-4 text-gray-600">Ou</span>
+              <span className="mx-4 text-gray-600 text-sm">Ou</span>
               <Divider className="flex-1 bg-gray-800" />
             </div>
 
             <div className="flex items-center justify-center">
-              <Link className="text-gray-400" href="/" size="sm">
-                Realizar login
+              <p className="text-gray-400 text-sm mr-2">
+                Lembrou sua senha?
+              </p>
+              <Link
+                className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
+                href="/"
+              >
+                Fazer login
               </Link>
             </div>
           </form>
@@ -281,20 +298,21 @@ export function ResetPassword() {
         {/*ETAPA 2: FORMULÁRIO PARA CÓDIGO E REDEFINIÇÃO DE SENHA*/}
         {isCode && !isSuccess && (
           <form
-            className="flex flex-col w-80"
+            className="flex flex-col w-80 gap-4"
             onSubmit={handleSubmitStep2(onSubmitStep2)}
           >
-            <p
-              aria-live="polite"
-              className="text-xs text-gray-400 px-3 select-none text-center leading-relaxed"
-            >
-              Código enviado para{" "}
-              <span className="text-gray-200 font-medium break-all">
-                {submittedEmail ? maskEmail(submittedEmail) : "seu e-mail"}
-              </span>
-              . Verifique sua caixa de entrada (e também a pasta de spam) e
-              digite-o abaixo.
-            </p>
+            <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+              <p
+                aria-live="polite"
+                className="text-sm text-blue-200 text-center leading-relaxed"
+              >
+                Código enviado para{" "}
+                <span className="text-blue-100 font-semibold break-all">
+                  {submittedEmail ? maskEmail(submittedEmail) : "seu e-mail"}
+                </span>
+                . Verifique sua caixa de entrada e também a pasta de spam.
+              </p>
+            </div>
 
             <div className="w-full flex flex-col items-center gap-2 my-4">
               <Controller
@@ -325,15 +343,16 @@ export function ResetPassword() {
               />
             </div>
 
-            <div className="w-full flex flex-col items-center gap-1">
+            <div className="w-full flex flex-col gap-4">
               <Input
                 isRequired
-                className="w-full p-3 rounded-lg focus:outline-none"
+                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                description="Mínimo de 6 caracteres"
                 endContent={
                   novaSenhaValue && (
                     <button
                       aria-label="toggle password visibility"
-                      className="focus:outline-none"
+                      className="focus:outline-none transition-opacity hover:opacity-70"
                       type="button"
                       onClick={toggleVisibility}
                     >
@@ -354,12 +373,13 @@ export function ResetPassword() {
 
               <Input
                 isRequired
-                className="w-full p-3 rounded-lg focus:outline-none"
+                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                description="Digite a mesma senha para confirmar"
                 endContent={
                   confirmeNovaSenhaValue && (
                     <button
                       aria-label="toggle password visibility"
-                      className="focus:outline-none"
+                      className="focus:outline-none transition-opacity hover:opacity-70"
                       type="button"
                       onClick={toggleVisibilityConfirm}
                     >
@@ -399,25 +419,24 @@ export function ResetPassword() {
                 color: "primary",
                 radius: "full",
                 variant: "shadow",
-              })} w-60 mx-auto mt-5 font-extrabold`}
+              })} w-64 mx-auto mt-2 font-extrabold text-base py-6`}
               disabled={isSubmittingStep2}
               isLoading={isSubmittingStep2}
               type="submit"
             >
-              CADASTRAR NOVA SENHA
+              {isSubmittingStep2 ? "Redefinindo..." : "REDEFINIR SENHA"}
             </Button>
 
-            <div className="flex items-center my-6">
+            <div className="flex items-center my-4">
               <Divider className="flex-1 bg-gray-800" />
-              <span className="mx-4 text-gray-600">Ou</span>
+              <span className="mx-4 text-gray-600 text-sm">Ou</span>
               <Divider className="flex-1 bg-gray-800" />
             </div>
 
             <div className="flex items-center justify-center">
               <Link
-                className="text-gray-400"
+                className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
                 href="/recovery"
-                size="sm"
                 onPress={(e) => {
                   // @ts-ignore caso a tipagem do evento não exponha preventDefault
                   e?.preventDefault?.();
@@ -446,17 +465,32 @@ export function ResetPassword() {
 
         {/* Mensagem de sucesso */}
         {isSuccess && (
-          <div className="text-center flex flex-col items-center justify-center">
-            <h2 className="text-2xl py-10">Senha redefinida com sucesso!</h2>
+          <div className="text-center flex flex-col items-center justify-center gap-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">
+                Senha redefinida com sucesso!
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Você já pode fazer login com sua nova senha
+              </p>
+            </div>
             <Image
-              alt="HeroUI hero Image"
-              className="mx-auto mb-10"
+              alt="Sucesso"
+              className="mx-auto"
               src={checkAnimation}
               width={200}
             />
-            <Link href="/" size="md">
-              Realizar login
-            </Link>
+            <Button
+              className={`${buttonStyles({
+                color: "primary",
+                radius: "full",
+                variant: "shadow",
+              })} w-64 mx-auto font-extrabold text-base py-6`}
+              as="a"
+              href="/"
+            >
+              Fazer login
+            </Button>
           </div>
         )}
       </section>
