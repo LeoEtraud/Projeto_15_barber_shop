@@ -5,30 +5,18 @@ import { useMemo } from "react";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { usePermissions } from "@/hooks/usePermissions";
-import {
-  getFilteredNavigation,
-  navigationItems,
-} from "@/config/navigation";
+import { getFilteredNavigation } from "@/config/navigation";
 
 export function HomePage() {
   const navigate = useNavigate();
-  const {
-    userRole,
-    checkPermission,
-    checkAnyPermission,
-    checkAllPermissions,
-  } = usePermissions();
+  const { userRole, checkAnyPermission, checkAllPermissions } =
+    usePermissions();
 
   // Filtra os itens de navegação baseado nas permissões do usuário
   const filteredItems = useMemo(
     () =>
-      getFilteredNavigation(
-        userRole,
-        checkPermission,
-        checkAnyPermission,
-        checkAllPermissions
-      ),
-    [userRole, checkPermission, checkAnyPermission, checkAllPermissions]
+      getFilteredNavigation(userRole, checkAnyPermission, checkAllPermissions),
+    [userRole, checkAnyPermission, checkAllPermissions]
   );
 
   return (

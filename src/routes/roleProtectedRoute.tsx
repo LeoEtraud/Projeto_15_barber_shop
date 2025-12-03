@@ -43,7 +43,7 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   accessDeniedMessage = "Você não tem permissão para acessar esta página.",
 }) => {
   const { token, checkAuth, user } = useAuth();
-  const { userRole, checkPermission, checkAnyPermission, checkAllPermissions } =
+  const { userRole, checkAnyPermission, checkAllPermissions } =
     usePermissions();
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
@@ -63,6 +63,7 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   useEffect(() => {
     if (!token || !user) {
       setHasAccess(false);
+
       return;
     }
 
@@ -118,4 +119,3 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
 
   return <>{children}</>;
 };
-

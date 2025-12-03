@@ -1,15 +1,16 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect } from "react";
+import { Button } from "@heroui/react";
+
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Button } from "@heroui/react";
 
 /**
  * Dashboard do Profissional (Barbeiro)
- * 
+ *
  * Funcionalidades sugeridas:
  * - Visualizar agendamentos do dia
  * - Histórico de atendimentos
@@ -19,7 +20,7 @@ import { Button } from "@heroui/react";
  */
 export function ProfissionalDashboardPage() {
   const { user } = useAuth();
-  const { isProfissional, checkPermission } = usePermissions();
+  const { isProfissional } = usePermissions();
 
   useEffect(() => {
     if (!isProfissional) {
@@ -53,7 +54,9 @@ export function ProfissionalDashboardPage() {
             </div>
 
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-gray-400 text-sm mb-2">Agendamentos da Semana</h3>
+              <h3 className="text-gray-400 text-sm mb-2">
+                Agendamentos da Semana
+              </h3>
               <p className="text-3xl font-bold text-blue-400">0</p>
             </div>
 
@@ -69,9 +72,7 @@ export function ProfissionalDashboardPage() {
               <h2 className="text-xl font-semibold text-white">
                 Meus Agendamentos
               </h2>
-              <PermissionGate
-                requiredPermissions={["manage_schedules"]}
-              >
+              <PermissionGate requiredPermissions={["manage_schedules"]}>
                 <Button color="primary" size="sm">
                   Gerenciar Horários
                 </Button>
@@ -107,4 +108,3 @@ export function ProfissionalDashboardPage() {
     </section>
   );
 }
-

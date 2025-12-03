@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+
 import { usePermissions } from "@/hooks/usePermissions";
 import { UserRole, Permission } from "@/types/roles";
 
@@ -38,12 +39,8 @@ export function PermissionGate({
   fallback = null,
   hideOnDeny = true,
 }: PermissionGateProps) {
-  const {
-    userRole,
-    checkPermission,
-    checkAnyPermission,
-    checkAllPermissions,
-  } = usePermissions();
+  const { userRole, checkAnyPermission, checkAllPermissions } =
+    usePermissions();
 
   let hasAccess = true;
 
@@ -67,4 +64,3 @@ export function PermissionGate({
 
   return <>{children}</>;
 }
-

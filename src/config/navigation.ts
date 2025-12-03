@@ -100,7 +100,6 @@ export const navigationItems: NavigationItem[] = [
  */
 export function getFilteredNavigation(
   userRole: UserRole,
-  checkPermission: (permission: Permission) => boolean,
   checkAnyPermission: (permissions: Permission[]) => boolean,
   checkAllPermissions: (permissions: Permission[]) => boolean
 ): NavigationItem[] {
@@ -124,4 +123,3 @@ export function getFilteredNavigation(
     return true;
   });
 }
-

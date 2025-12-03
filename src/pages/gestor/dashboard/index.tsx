@@ -1,15 +1,16 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect } from "react";
+import { Button } from "@heroui/react";
+
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
-import { Button } from "@heroui/react";
 
 /**
  * Dashboard do Gestor
- * 
+ *
  * Funcionalidades sugeridas:
  * - Visão geral da barbearia
  * - Gerenciar barbeiros
@@ -20,7 +21,7 @@ import { Button } from "@heroui/react";
  */
 export function GestorDashboardPage() {
   const { user } = useAuth();
-  const { isGestor, checkPermission } = usePermissions();
+  const { isGestor } = usePermissions();
 
   useEffect(() => {
     if (!isGestor) {
@@ -72,9 +73,7 @@ export function GestorDashboardPage() {
           {/* Seções de Gerenciamento */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Gerenciar Barbeiros */}
-            <PermissionGate
-              requiredPermissions={["manage_barbers"]}
-            >
+            <PermissionGate requiredPermissions={["manage_barbers"]}>
               <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">
@@ -87,16 +86,14 @@ export function GestorDashboardPage() {
                 <p className="text-gray-400 text-sm mb-4">
                   Gerencie os profissionais da barbearia
                 </p>
-                <Button color="primary" variant="flat" fullWidth>
+                <Button fullWidth color="primary" variant="flat">
                   Adicionar Barbeiro
                 </Button>
               </div>
             </PermissionGate>
 
             {/* Gerenciar Serviços */}
-            <PermissionGate
-              requiredPermissions={["manage_services"]}
-            >
+            <PermissionGate requiredPermissions={["manage_services"]}>
               <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">
@@ -109,7 +106,7 @@ export function GestorDashboardPage() {
                 <p className="text-gray-400 text-sm mb-4">
                   Gerencie os serviços oferecidos
                 </p>
-                <Button color="primary" variant="flat" fullWidth>
+                <Button fullWidth color="primary" variant="flat">
                   Adicionar Serviço
                 </Button>
               </div>
@@ -117,9 +114,7 @@ export function GestorDashboardPage() {
           </div>
 
           {/* Relatórios */}
-          <PermissionGate
-            requiredPermissions={["view_reports"]}
-          >
+          <PermissionGate requiredPermissions={["view_reports"]}>
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 mb-6">
               <h2 className="text-xl font-semibold text-white mb-4">
                 Relatórios
@@ -159,4 +154,3 @@ export function GestorDashboardPage() {
     </section>
   );
 }
-
