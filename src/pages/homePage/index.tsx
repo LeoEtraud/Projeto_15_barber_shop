@@ -1,11 +1,35 @@
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  getFilteredNavigation,
+  navigationItems,
+} from "@/config/navigation";
 
 export function HomePage() {
   const navigate = useNavigate();
+  const {
+    userRole,
+    checkPermission,
+    checkAnyPermission,
+    checkAllPermissions,
+  } = usePermissions();
+
+  // Filtra os itens de navegação baseado nas permissões do usuário
+  const filteredItems = useMemo(
+    () =>
+      getFilteredNavigation(
+        userRole,
+        checkPermission,
+        checkAnyPermission,
+        checkAllPermissions
+      ),
+    [userRole, checkPermission, checkAnyPermission, checkAllPermissions]
+  );
 
   return (
     <section className="min-h-screen bg-gray-800 flex flex-col">
@@ -16,7 +40,7 @@ export function HomePage() {
       <div className="px-4 py-8 md:px-8 flex-1">
         <Helmet title="home" />
 
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-4xl">
           {/* Banner de boas-vindas */}
           <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
             <img
@@ -34,42 +58,33 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Cards de opções */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {/* Card Realizar Agendamento */}
-            <button
-              className="flex flex-col items-center gap-4 rounded-lg bg-gray-900 p-6 shadow hover:shadow-md transition-shadow text-center"
-              type="button"
-              onClick={() => navigate("/choice-barber")}
-            >
-              <div className="text-4xl">✂️</div>
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Realizar Agendamento
-                </h3>
-                <p className="text-sm text-gray-400">
-                  Agende seu horário com nossos barbeiros
-                </p>
-              </div>
-            </button>
-
-            {/* Card Histórico de Agendamentos */}
-            <button
-              className="flex flex-col items-center gap-4 rounded-lg bg-gray-900 p-6 shadow hover:shadow-md transition-shadow text-center"
-              type="button"
-              onClick={() => navigate("/history-appointments")}
-            >
-              <div className="text-4xl">📅</div>
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  Meus Agendamentos
-                </h3>
-                <p className="text-sm text-gray-400">
-                  Veja seus agendamentos confirmados e realizados
-                </p>
-              </div>
-            </button>
-          </div>
+          {/* Cards de opções - Filtrados por permissões */}
+          {filteredItems.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredItems.map((item) => (
+                <button
+                  key={item.id}
+                  className="flex flex-col items-center gap-4 rounded-lg bg-gray-900 p-6 shadow hover:shadow-md hover:border-yellow-400 border border-gray-700 transition-all text-center"
+                  type="button"
+                  onClick={() => navigate(item.path)}
+                >
+                  <div className="text-4xl">{item.icon}</div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-400">{item.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-gray-900 rounded-lg p-12 text-center border border-gray-700">
+              <p className="text-gray-400 text-lg">
+                Nenhuma página disponível para seu perfil.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

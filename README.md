@@ -191,3 +191,4 @@ Com essa estrutura de banco de dados e fluxo de processos, seu SaaS pode oferece
 - Ajustar o meu front para permitir agendamento de 2 serviços com horários fracionados como das 15:30 às 16:30
 - Refatorar lógica de exibição de horários de agendamentos conforme o tempo dos serviços selecionados
 - Implementar upload de imagens dos usuários utilizando o serviço da AWS S3 de armazenamento na nuvem
+- Corrigir erro apresentado ao enviar código para recuperação de senha ❌

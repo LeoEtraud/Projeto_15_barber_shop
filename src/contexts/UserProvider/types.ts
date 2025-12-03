@@ -1,9 +1,12 @@
+import { UserRole } from "@/types/roles";
+
 export interface IUser {
   id: string;
   nome: string;
   email: string;
   telefone: string;
   data_nascimento: string;
+  role?: UserRole;
 }
 
 // ATUALIZAÇÃO DE SENHA DO USUÁRIO

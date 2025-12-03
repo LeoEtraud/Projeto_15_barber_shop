@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import { addToast } from "@heroui/react";
 
 import { IAuthProvider, IContext, IPayLoad } from "./types";
+import { UserRole } from "@/types/roles";
 
 import { useLoading } from "@/contexts/LoadingProvider";
 
@@ -52,8 +53,19 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
       setUserCookies(data);
       setUser(data);
       setToken(data.token);
+      
+      // Redireciona baseado no role do usuário
+      const userRole = data.user?.role as UserRole | undefined;
+      let redirectPath = "/home";
+      
+      if (userRole === UserRole.GESTOR) {
+        redirectPath = "/gestor/dashboard";
+      } else if (userRole === UserRole.PROFISSIONAL) {
+        redirectPath = "/profissional/dashboard";
+      }
+      
       setTimeout(() => {
-        navigate("/home");
+        navigate(redirectPath);
       }, 300);
     } finally {
     }

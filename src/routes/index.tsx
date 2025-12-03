@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 
 import { PrivateRoute } from "./privateRoute";
+import { RoleProtectedRoute } from "./roleProtectedRoute";
+import { UserRole } from "@/types/roles";
 
 import { UserProfilePage } from "@/pages/userProfile";
 import { NotFound } from "@/pages/notFound";
@@ -13,6 +15,9 @@ import { ChoiceServicePage } from "@/pages/choiceService";
 import { ChoiceSchedulePage } from "@/pages/choiceSchedule";
 import { ConfirmAppointmentPage } from "@/pages/confirmAppointment";
 import { HistoryAppointmentsPage } from "@/pages/historyAppointments";
+import { ProfissionalDashboardPage } from "@/pages/profissional/dashboard";
+import { GestorDashboardPage } from "@/pages/gestor/dashboard";
+import { GestorBarbeirosPage } from "@/pages/gestor/barbeiros";
 
 export function Router() {
   return (
@@ -87,6 +92,44 @@ export function Router() {
           </PrivateRoute>
         }
         path="/user-profile/:id"
+      />
+
+      {/* ROTAS PROTEGIDAS POR ROLE - PROFISSIONAL */}
+      <Route
+        element={
+          <RoleProtectedRoute
+            allowedRoles={[UserRole.PROFISSIONAL, UserRole.GESTOR]}
+            accessDeniedMessage="Apenas profissionais podem acessar esta página."
+          >
+            <ProfissionalDashboardPage />
+          </RoleProtectedRoute>
+        }
+        path="/profissional/dashboard"
+      />
+
+      {/* ROTAS PROTEGIDAS POR ROLE - GESTOR */}
+      <Route
+        element={
+          <RoleProtectedRoute
+            allowedRoles={[UserRole.GESTOR]}
+            accessDeniedMessage="Apenas gestores podem acessar esta página."
+          >
+            <GestorDashboardPage />
+          </RoleProtectedRoute>
+        }
+        path="/gestor/dashboard"
+      />
+      <Route
+        element={
+          <RoleProtectedRoute
+            allowedRoles={[UserRole.GESTOR]}
+            requiredPermissions={["manage_barbers"]}
+            accessDeniedMessage="Você precisa de permissão para gerenciar barbeiros."
+          >
+            <GestorBarbeirosPage />
+          </RoleProtectedRoute>
+        }
+        path="/gestor/barbeiros"
       />
     </Routes>
   );
