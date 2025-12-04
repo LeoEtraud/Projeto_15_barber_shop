@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import {
   UserRole,
@@ -84,4 +85,3 @@ export function usePermissions() {
     isGestor: isRole(UserRole.GESTOR),
   };
 }
-

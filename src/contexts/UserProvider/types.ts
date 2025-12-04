@@ -7,6 +7,7 @@ export interface IUser {
   telefone: string;
   data_nascimento: string;
   role?: UserRole;
+  barbeariaId?: string;
 }
 
 // ATUALIZAÇÃO DE SENHA DO USUÁRIO

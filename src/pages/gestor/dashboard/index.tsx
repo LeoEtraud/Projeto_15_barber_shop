@@ -1,12 +1,17 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect } from "react";
-import { Button } from "@heroui/react";
+import { useEffect, useState } from "react";
+import { Button, addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
+import {
+  getDashboardStats,
+  DashboardStats,
+} from "@/contexts/GestorProvider/util";
+import { formatPrice } from "@/utils/format-price";
 
 /**
  * Dashboard do Gestor
@@ -22,11 +27,57 @@ import { PermissionGate } from "@/components/PermissionGate";
 export function GestorDashboardPage() {
   const { user } = useAuth();
   const { isGestor } = usePermissions();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalClientes: 0,
+    agendamentosHoje: 0,
+    quantidadeProfissionais: 0,
+    receitaMes: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  // Função para buscar dados do dashboard
+  async function fetchDashboardData() {
+    try {
+      setIsLoading(true);
+      setHasError(false);
+
+      // Obtém o ID da barbearia do usuário logado
+      const barbeariaId = user?.user?.barbeariaId;
+
+      if (!barbeariaId) {
+        throw new Error("ID da barbearia não encontrado");
+      }
+
+      const data = await getDashboardStats(barbeariaId);
+
+      setStats(data);
+    } catch (error) {
+      console.error("Erro ao buscar dados do dashboard:", error);
+      setHasError(true);
+      addToast({
+        title: "Erro",
+        description:
+          error instanceof Error && error.message.includes("barbearia")
+            ? "ID da barbearia não encontrado. Verifique seu perfil."
+            : "Falha ao carregar dados do dashboard. Tente novamente.",
+        color: "danger",
+        timeout: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   useEffect(() => {
     if (!isGestor) {
       console.warn("Usuário não é um gestor");
+
+      return;
     }
+
+    // Busca os dados quando o componente montar
+    fetchDashboardData();
   }, [isGestor]);
 
   return (
@@ -51,22 +102,54 @@ export function GestorDashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
               <h3 className="text-gray-400 text-sm mb-2">Total de Clientes</h3>
-              <p className="text-3xl font-bold text-blue-400">0</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+              ) : hasError ? (
+                <p className="text-lg text-red-400">Erro</p>
+              ) : (
+                <p className="text-3xl font-bold text-blue-400">
+                  {stats.totalClientes}
+                </p>
+              )}
             </div>
 
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
               <h3 className="text-gray-400 text-sm mb-2">Agendamentos Hoje</h3>
-              <p className="text-3xl font-bold text-yellow-400">0</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+              ) : hasError ? (
+                <p className="text-lg text-red-400">Erro</p>
+              ) : (
+                <p className="text-3xl font-bold text-yellow-400">
+                  {stats.agendamentosHoje}
+                </p>
+              )}
             </div>
 
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
               <h3 className="text-gray-400 text-sm mb-2">Profissionais</h3>
-              <p className="text-3xl font-bold text-green-400">0</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+              ) : hasError ? (
+                <p className="text-lg text-red-400">Erro</p>
+              ) : (
+                <p className="text-3xl font-bold text-green-400">
+                  {stats.quantidadeProfissionais}
+                </p>
+              )}
             </div>
 
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
               <h3 className="text-gray-400 text-sm mb-2">Receita do Mês</h3>
-              <p className="text-3xl font-bold text-purple-400">R$ 0</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+              ) : hasError ? (
+                <p className="text-lg text-red-400">Erro</p>
+              ) : (
+                <p className="text-3xl font-bold text-purple-400">
+                  {formatPrice(stats.receitaMes)}
+                </p>
+              )}
             </div>
           </div>
 

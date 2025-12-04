@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { usePermissions } from "@/hooks/usePermissions";
+import { UserRole } from "@/types/roles";
 import { getFilteredNavigation } from "@/config/navigation";
 
 export function HomePage() {
@@ -48,7 +49,13 @@ export function HomePage() {
 
           {/* Cards de opções - Filtrados por permissões */}
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div
+              className={`grid gap-4 ${
+                userRole === UserRole.CLIENTE && filteredItems.length === 2
+                  ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
+                  : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+              }`}
+            >
               {filteredItems.map((item) => (
                 <button
                   key={item.id}

@@ -2,8 +2,8 @@ import { Route, Routes } from "react-router-dom";
 
 import { PrivateRoute } from "./privateRoute";
 import { RoleProtectedRoute } from "./roleProtectedRoute";
-import { UserRole } from "@/types/roles";
 
+import { UserRole } from "@/types/roles";
 import { UserProfilePage } from "@/pages/userProfile";
 import { NotFound } from "@/pages/notFound";
 import { Login } from "@/pages";
@@ -98,8 +98,8 @@ export function Router() {
       <Route
         element={
           <RoleProtectedRoute
-            allowedRoles={[UserRole.PROFISSIONAL, UserRole.GESTOR]}
             accessDeniedMessage="Apenas profissionais podem acessar esta página."
+            allowedRoles={[UserRole.PROFISSIONAL, UserRole.GESTOR]}
           >
             <ProfissionalDashboardPage />
           </RoleProtectedRoute>
@@ -111,8 +111,8 @@ export function Router() {
       <Route
         element={
           <RoleProtectedRoute
-            allowedRoles={[UserRole.GESTOR]}
             accessDeniedMessage="Apenas gestores podem acessar esta página."
+            allowedRoles={[UserRole.GESTOR]}
           >
             <GestorDashboardPage />
           </RoleProtectedRoute>
@@ -122,9 +122,9 @@ export function Router() {
       <Route
         element={
           <RoleProtectedRoute
+            accessDeniedMessage="Você precisa de permissão para gerenciar barbeiros."
             allowedRoles={[UserRole.GESTOR]}
             requiredPermissions={["manage_barbers"]}
-            accessDeniedMessage="Você precisa de permissão para gerenciar barbeiros."
           >
             <GestorBarbeirosPage />
           </RoleProtectedRoute>
