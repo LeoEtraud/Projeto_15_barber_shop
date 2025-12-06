@@ -313,8 +313,11 @@ export function ChoiceSchedulePage() {
   };
 
   useEffect(() => {
-    fetchSchedules(); // Carrega os agendamentos ao carregar a página
-  }, []);
+    // Carrega os agendamentos do barbeiro selecionado
+    if (barber?.id) {
+      fetchSchedules(barber.id);
+    }
+  }, [barber?.id]);
 
   return (
     <section className="min-h-screen bg-gray-800">

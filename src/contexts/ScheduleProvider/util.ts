@@ -23,9 +23,13 @@ export async function GetServicesAll() {
 }
 
 // CHAMADA DA API PARA BUSCA DE TODOS AGENDAMENTOS CONFIRMADOS
-export async function GetSchedulesAll() {
+export async function GetSchedulesAll(barbeiroId: string) {
   try {
-    const request = await apiBarber.get("/get-schedules");
+    if (!barbeiroId) {
+      throw new Error("ID do barbeiro é obrigatório");
+    }
+
+    const request = await apiBarber.get(`/get-schedules/${barbeiroId}`);
 
     return request.data;
   } catch (error) {

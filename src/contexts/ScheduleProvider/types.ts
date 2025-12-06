@@ -56,7 +56,7 @@ export interface IContext {
   services: IServices[];
   fetchServices: () => void;
   schedules: ISchedules[];
-  fetchSchedules: () => void;
+  fetchSchedules: (barbeiroId: string) => void;
   appointments: IAppointments[];
   fetchAppointments: (id: string) => void;
 }

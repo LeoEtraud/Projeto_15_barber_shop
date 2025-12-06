@@ -59,15 +59,20 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
   }
 
   // FUNÇÃO PARA BUSCAR AS DATAS E HORÁRIOS DOS AGENDAMENTOS CONFIRMADOS
-  async function fetchSchedules() {
+  async function fetchSchedules(barbeiroId: string) {
     try {
-      const response = await GetSchedulesAll();
+      if (!barbeiroId) {
+        throw new Error("ID do barbeiro é obrigatório");
+      }
+
+      const response = await GetSchedulesAll(barbeiroId);
 
       setSchedules(response.schedules);
-    } catch {
+    } catch (error) {
+      console.error("Erro ao buscar agendamentos:", error);
       addToast({
         title: "Erro",
-        description: "Falha na listagem dos Serviços!",
+        description: "Falha na listagem dos horários disponíveis!",
         color: "danger",
         timeout: 3000,
       });
