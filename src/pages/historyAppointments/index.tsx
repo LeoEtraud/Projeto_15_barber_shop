@@ -88,43 +88,17 @@ export function HistoryAppointmentsPage() {
     return new Date(0);
   };
 
-  // Função auxiliar para converter horário HH:MM em horas e minutos
-  const parseTime = (timeStr: string): { hours: number; minutes: number } => {
-    const parts = timeStr.split(":");
-
-    if (parts.length === 2) {
-      return {
-        hours: parseInt(parts[0]),
-        minutes: parseInt(parts[1]),
-      };
-    }
-
-    return { hours: 0, minutes: 0 };
-  };
-
-  // Função para verificar se um agendamento é futuro (considera data E horário)
-  const isFutureAppointment = (dateStr: string, timeStr: string): boolean => {
-    const appointmentDate = parseDate(dateStr);
-    const { hours, minutes } = parseTime(timeStr);
-
-    // Define o horário específico do agendamento
-    appointmentDate.setHours(hours, minutes, 0, 0);
-
-    const now = new Date();
-
-    // Retorna true se o agendamento for no futuro (data e hora)
-    return appointmentDate > now;
-  };
-
-  // Filtra e ordena os agendamentos
+  // Filtra os agendamentos baseado no status da API
   const filteredAppointments = appointments.filter((appointment) => {
-    const isFuture = isFutureAppointment(appointment.data, appointment.horario);
+    const status = appointment.status?.toUpperCase();
 
     if (filter === "confirmados") {
-      return isFuture;
+      // Mostra agendamentos com status CONFIRMADO
+      return status === "CONFIRMADO";
     }
 
-    return !isFuture;
+    // Mostra agendamentos com status REALIZADO
+    return status === "REALIZADO";
   });
 
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
@@ -282,10 +256,8 @@ export function HistoryAppointmentsPage() {
           {!isLoading && !hasError && sortedAppointments.length > 0 && (
             <div className="space-y-4">
               {sortedAppointments.map((appointment, index) => {
-                const isFuture = isFutureAppointment(
-                  appointment.data,
-                  appointment.horario
-                );
+                const status = appointment.status?.toUpperCase();
+                const isConfirmado = status === "CONFIRMADO";
 
                 return (
                   <div
@@ -302,10 +274,10 @@ export function HistoryAppointmentsPage() {
                         </div>
                         <span
                           className={`${
-                            isFuture ? "bg-green-600" : "bg-blue-600"
+                            isConfirmado ? "bg-green-600" : "bg-blue-600"
                           } text-white text-sm font-semibold px-4 py-1.5 rounded-full`}
                         >
-                          {isFuture ? "Confirmado" : "Realizado"}
+                          {isConfirmado ? "Confirmado" : "Realizado"}
                         </span>
                       </div>
 
