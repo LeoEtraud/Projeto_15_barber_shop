@@ -15,27 +15,34 @@ type LoadingContextValue = {
 };
 
 const LoadingContext = createContext<LoadingContextValue | undefined>(
-  undefined,
+  undefined
 );
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingCount, setLoadingCount] = useState(0);
 
-  const show = useCallback(() => setIsLoading(true), []);
-  const hide = useCallback(() => setIsLoading(false), []);
+  const show = useCallback(() => {
+    setLoadingCount((prev) => prev + 1);
+  }, []);
+
+  const hide = useCallback(() => {
+    setLoadingCount((prev) => Math.max(0, prev - 1));
+  }, []);
 
   const withLoading = useCallback(async <T,>(promise: Promise<T>) => {
-    setIsLoading(true);
+    setLoadingCount((prev) => prev + 1);
     try {
       return await promise;
     } finally {
-      setIsLoading(false);
+      setLoadingCount((prev) => Math.max(0, prev - 1));
     }
   }, []);
 
+  const isLoading = loadingCount > 0;
+
   const value = useMemo(
     () => ({ isLoading, show, hide, withLoading }),
-    [isLoading, show, hide, withLoading],
+    [isLoading, show, hide, withLoading]
   );
 
   return (
