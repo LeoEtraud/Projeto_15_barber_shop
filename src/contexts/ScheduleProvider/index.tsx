@@ -34,6 +34,7 @@ function transformAppointmentFromAPI(appointment: any): IAppointments {
         const day = String(startDate.getDate()).padStart(2, "0");
         const month = String(startDate.getMonth() + 1).padStart(2, "0");
         const year = startDate.getFullYear();
+
         data = `${day}/${month}/${year}`;
 
         const startHours = String(startDate.getHours()).padStart(2, "0");
@@ -45,6 +46,7 @@ function transformAppointmentFromAPI(appointment: any): IAppointments {
           if (!Number.isNaN(endDate.getTime())) {
             const endHours = String(endDate.getHours()).padStart(2, "0");
             const endMinutes = String(endDate.getMinutes()).padStart(2, "0");
+
             horario = `${startHours}:${startMinutes} - ${endHours}:${endMinutes}`;
           } else {
             horario = `${startHours}:${startMinutes}`;
@@ -56,7 +58,10 @@ function transformAppointmentFromAPI(appointment: any): IAppointments {
     }
 
     // Converte valor_pago para number
-    if (appointment.valor_pago !== undefined && appointment.valor_pago !== null) {
+    if (
+      appointment.valor_pago !== undefined &&
+      appointment.valor_pago !== null
+    ) {
       const parsedValue =
         typeof appointment.valor_pago === "string"
           ? parseFloat(appointment.valor_pago)
@@ -69,6 +74,7 @@ function transformAppointmentFromAPI(appointment: any): IAppointments {
 
     // Extrai os nomes dos serviços
     const servicos: string[] = [];
+
     if (appointment.servicos && Array.isArray(appointment.servicos)) {
       appointment.servicos.forEach((item: any) => {
         if (item?.servico?.nome) {
@@ -124,8 +130,9 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       return await withLoading(
         (async () => {
           const response = await GetBarbersAll();
+
           setBarbers(response.barbers);
-        })(),
+        })()
       );
     } catch {
       addToast({
@@ -143,8 +150,9 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       return await withLoading(
         (async () => {
           const response = await GetServicesAll();
+
           setServices(response.services);
-        })(),
+        })()
       );
     } catch {
       addToast({
@@ -166,8 +174,9 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       return await withLoading(
         (async () => {
           const response = await GetSchedulesAll(barbeiroId);
+
           setSchedules(response.schedules);
-        })(),
+        })()
       );
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
@@ -184,7 +193,9 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
   async function fetchAppointments(id: string) {
     try {
       const response = await withLoading(GetAppointments(id));
+
       setAppointments(response.appointments as IAppointments[]);
+
       return response || [];
     } catch (error: any) {
       console.error("Erro ao buscar agendamentos:", error);
@@ -202,16 +213,14 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
   async function fetchAppointmentsByProfessional(profissionalId: string) {
     try {
       const response = await withLoading(
-        GetAppointmentsByProfessional(profissionalId),
+        GetAppointmentsByProfessional(profissionalId)
       );
 
       // Verifica se a resposta tem a estrutura esperada
       if (!response || !response.appointments) {
-        console.warn(
-          "Resposta da API não tem a estrutura esperada:",
-          response,
-        );
+        console.warn("Resposta da API não tem a estrutura esperada:", response);
         setProfessionalAppointments([]);
+
         return response || [];
       }
 
@@ -224,28 +233,28 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
             console.error(
               "Erro ao transformar agendamento individual:",
               error,
-              appointment,
+              appointment
             );
 
             return null;
           }
-        },
+        }
       );
 
       // Filtra agendamentos nulos (que deram erro na transformação)
       const validAppointments = transformedAppointments.filter(
-        (appointment) => appointment !== null,
-      ) as IAppointments[];
+        (appointment: IAppointments) => appointment !== null
+      );
 
       setProfessionalAppointments(validAppointments);
+
       return response || [];
     } catch (error: any) {
       console.error("Erro ao buscar agendamentos do profissional:", error);
       setProfessionalAppointments([]);
       addToast({
         title: "Erro",
-        description:
-          "Falha na listagem dos agendamentos do profissional!",
+        description: "Falha na listagem dos agendamentos do profissional!",
         color: "danger",
         timeout: 3000,
       });
