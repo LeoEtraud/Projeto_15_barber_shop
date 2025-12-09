@@ -192,3 +192,4 @@ Com essa estrutura de banco de dados e fluxo de processos, seu SaaS pode oferece
 - Refatorar lógica de exibição de horários de agendamentos conforme o tempo dos serviços selecionados
 - Implementar upload de imagens dos usuários utilizando o serviço da AWS S3 de armazenamento na nuvem
 - Corrigir erro apresentado ao enviar código para recuperação de senha ❌
+- Implementar para que o profissional (Barbeiro) confirme o atendimento do agendamento após o serviço.

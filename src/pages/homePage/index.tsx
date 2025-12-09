@@ -15,9 +15,24 @@ export function HomePage() {
 
   // Filtra os itens de navegação baseado nas permissões do usuário
   const filteredItems = useMemo(
-    () =>
-      getFilteredNavigation(userRole, checkAnyPermission, checkAllPermissions),
-    [userRole, checkAnyPermission, checkAllPermissions]
+    () => {
+      try {
+        if (!userRole) {
+          return [];
+        }
+
+        return getFilteredNavigation(
+          userRole,
+          checkAnyPermission,
+          checkAllPermissions
+        );
+      } catch (error) {
+        console.error("Erro ao filtrar navegação:", error);
+        return [];
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [userRole]
   );
 
   return (

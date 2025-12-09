@@ -30,14 +30,17 @@ export interface IAppointments {
   data: string; // Formato DD/MM/YYYY
   horario: string; // Formato "HH:MM - HH:MM"
   valor: number;
-  barbeiro: string;
+  barbeiro?: string;
+  cliente?: {
+    nome: string;
+  };
   status?: string;
   servicos?: string[]; // Array de nomes dos serviços
   // Campos antigos mantidos para compatibilidade
   data_agendamento?: string;
   hora_inicio?: string;
   hora_fim?: string;
-  valor_pago?: number;
+  valor_pago?: number | string;
   servico?: {
     id: string;
     nome: string;
@@ -59,6 +62,8 @@ export interface IContext {
   fetchSchedules: (barbeiroId: string) => void;
   appointments: IAppointments[];
   fetchAppointments: (id: string) => void;
+  professionalAppointments: IAppointments[];
+  fetchAppointmentsByProfessional: (profissionalId: string) => void;
 }
 
 export interface IScheduleProvider {

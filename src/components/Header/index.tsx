@@ -45,31 +45,41 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Dropdown placement="bottom-end">
-          <DropdownTrigger>
-            <button className="rounded-full focus:outline-none">
-              <Avatar isBordered className="w-9 h-9 text-md" color="default">
-                {getUserInitials(user?.user.nome ?? "")}
-              </Avatar>
-            </button>
-          </DropdownTrigger>
-          <DropdownMenu
-            aria-label="Menu do usuário"
-            onAction={(key) => {
-              if (key === "profile") {
-                if (user?.user?.id) {
-                  navigate(`/user-profile/${user.user.id}`);
+        {user?.user ? (
+          <Dropdown placement="bottom-end">
+            <DropdownTrigger>
+              <button className="rounded-full focus:outline-none">
+                <Avatar
+                  isBordered
+                  className="w-9 h-9 text-md"
+                  color="default"
+                >
+                  {getUserInitials(user.user.nome ?? "")}
+                </Avatar>
+              </button>
+            </DropdownTrigger>
+            <DropdownMenu
+              aria-label="Menu do usuário"
+              onAction={(key) => {
+                if (key === "profile") {
+                  if (user?.user?.id) {
+                    navigate(`/user-profile/${user.user.id}`);
+                  }
                 }
-              }
-              if (key === "logout") logout();
-            }}
-          >
-            <DropdownItem key="profile">Perfil</DropdownItem>
-            <DropdownItem key="logout" className="text-danger" color="danger">
-              Sair
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+                if (key === "logout") logout();
+              }}
+            >
+              <DropdownItem key="profile">Perfil</DropdownItem>
+              <DropdownItem key="logout" className="text-danger" color="danger">
+                Sair
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        ) : (
+          <Avatar isBordered className="w-9 h-9 text-md" color="default">
+            U
+          </Avatar>
+        )}
       </div>
     </header>
   );
