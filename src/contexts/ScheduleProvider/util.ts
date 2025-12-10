@@ -64,3 +64,23 @@ export async function GetAppointmentsByProfessional(profissionalId: string) {
     return Promise.reject(error);
   }
 }
+
+// CHAMADA DA API PARA CONFIRMAR ATENDIMENTO
+export async function ConfirmAppointment(appointmentId: string) {
+  try {
+    if (!appointmentId) {
+      throw new Error("ID do agendamento é obrigatório");
+    }
+
+    const request = await apiBarber.patch(
+      `/confirm-appointment/${appointmentId}`,
+      {
+        status: "REALIZADO",
+      }
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}

@@ -8,14 +8,16 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  addToast,
 } from "@heroui/react";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
-import { PermissionGate } from "@/components/PermissionGate";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
+import { ConfirmAppointment } from "@/contexts/ScheduleProvider/util";
+import { useLoading } from "@/contexts/LoadingProvider";
 
 /**
  * Dashboard do Profissional (Barbeiro)
@@ -32,10 +34,12 @@ export function ProfissionalDashboardPage() {
   const { isProfissional } = usePermissions();
   const { fetchAppointmentsByProfessional, professionalAppointments } =
     useSchedule();
+  const { withLoading } = useLoading();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Obtém o profissionalId do user (pode estar em user?.user?.profissionalId ou user?.user?.id)
   const profissionalId = (user?.user as any)?.profissionalId || user?.user?.id;
@@ -204,6 +208,50 @@ export function ProfissionalDashboardPage() {
     }
   };
 
+  // Verifica se a data e horário do agendamento já passaram
+  const isAppointmentPast = (appointment: any): boolean => {
+    try {
+      // Prioriza hora_inicio se disponível (mais confiável)
+      if (appointment.hora_inicio) {
+        const appointmentDate = new Date(appointment.hora_inicio);
+        const now = new Date();
+
+        return appointmentDate.getTime() <= now.getTime();
+      }
+
+      // Se não tiver hora_inicio, tenta combinar data e horário
+      if (appointment.data && appointment.horario) {
+        const parts = appointment.data.split("/");
+
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          // Pega a primeira hora do horário (ex: "14:00 - 14:30" -> "14:00")
+          const timePart = appointment.horario.split(" - ")[0];
+          const [hours, minutes] = timePart.split(":").map(Number);
+
+          const appointmentDate = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+            hours || 0,
+            minutes || 0
+          );
+
+          if (!Number.isNaN(appointmentDate.getTime())) {
+            const now = new Date();
+
+            return appointmentDate.getTime() <= now.getTime();
+          }
+        }
+      }
+
+      // Se não conseguir determinar, retorna false (não habilita o botão)
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   const formatDate = (dateString: string, shortFormat = false) => {
     if (!dateString) return "Data inválida";
 
@@ -259,12 +307,53 @@ export function ProfissionalDashboardPage() {
   };
 
   const handleConfirmModal = async () => {
-    // Aqui você pode adicionar a lógica para confirmar o atendimento
-    // Por exemplo, chamar uma API para atualizar o status do agendamento
-    // TODO: Implementar chamada à API para confirmar atendimento
-    // Exemplo: await confirmAppointment(selectedAppointment.id);
-    onClose();
-    setSelectedAppointment(null);
+    if (!selectedAppointment.id) {
+      addToast({
+        title: "Erro",
+        description: "ID do agendamento não encontrado",
+        color: "danger",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    setIsConfirming(true);
+
+    try {
+      await withLoading(
+        (async () => {
+          await ConfirmAppointment(selectedAppointment.id);
+
+          addToast({
+            title: "Sucesso",
+            description: "Atendimento realizado com sucesso!",
+            color: "success",
+            timeout: 3000,
+          });
+
+          // Recarrega os agendamentos após confirmar
+          if (profissionalId) {
+            await fetchAppointmentsByProfessional(profissionalId);
+          }
+
+          onClose();
+          setSelectedAppointment(null);
+        })()
+      );
+    } catch (error: any) {
+      addToast({
+        title: "Erro",
+        description:
+          error?.response?.data?.error ||
+          error?.message ||
+          "Erro ao confirmar atendimento. Tente novamente.",
+        color: "danger",
+        timeout: 5000,
+      });
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   return (
@@ -315,13 +404,13 @@ export function ProfissionalDashboardPage() {
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-white">
-                Meus Agendamentos Confirmados
+                Meus Atendimentos Confirmados
               </h2>
-              <PermissionGate requiredPermissions={["manage_schedules"]}>
+              {/* <PermissionGate requiredPermissions={["manage_schedules"]}>
                 <Button color="primary" size="sm">
                   Gerenciar Horários
                 </Button>
-              </PermissionGate>
+              </PermissionGate> */}
             </div>
 
             {/* Loading */}
@@ -365,10 +454,10 @@ export function ProfissionalDashboardPage() {
               <div className="bg-gray-800 rounded-lg p-8 text-center">
                 <div className="text-gray-400 text-6xl mb-4">📅</div>
                 <h3 className="text-white text-xl font-semibold mb-2">
-                  Nenhum agendamento confirmado
+                  Nenhum atendimento confirmado
                 </h3>
                 <p className="text-gray-400">
-                  Você não possui agendamentos confirmados no momento.
+                  Você não possui atendimentos confirmados no momento.
                 </p>
               </div>
             )}
@@ -436,15 +525,14 @@ export function ProfissionalDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Status e Botão */}
+                      {/* Botão */}
                       <div className="flex flex-col items-end sm:items-start gap-2 flex-shrink-0">
-                        <span className="bg-green-600 text-white text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
-                          Confirmado
-                        </span>
                         <Button
                           className="text-xs"
                           color="primary"
+                          isDisabled={!isAppointmentPast(appointment)}
                           size="sm"
+                          type="button"
                           onClick={() => handleConfirmAppointment(appointment)}
                         >
                           Confirmar atendimento
@@ -480,59 +568,103 @@ export function ProfissionalDashboardPage() {
       <Footer />
 
       {/* Modal de Confirmação de Atendimento */}
-      <Modal isOpen={isOpen} size="md" onClose={onClose}>
+      <Modal
+        classNames={{
+          base: "bg-gray-900 border border-gray-700",
+          header: "bg-gray-900 border-b border-gray-700",
+          body: "bg-gray-900",
+          footer: "bg-gray-900 border-t border-gray-700",
+        }}
+        isOpen={isOpen}
+        size="md"
+        onClose={onClose}
+      >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-xl font-bold text-white">
+              <ModalHeader className="flex flex-col gap-1 bg-gray-900">
+                <h2 className="text-xl font-bold text-yellow-400">
                   Confirmar Atendimento
                 </h2>
               </ModalHeader>
-              <ModalBody>
-                {selectedAppointment && (
+              <ModalBody className="bg-gray-900">
+                {selectedAppointment ? (
                   <div className="space-y-4">
-                    <div>
-                      <p className="text-gray-400 text-sm mb-1">Cliente</p>
-                      <p className="text-white font-semibold">
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                      <p className="text-gray-400 text-xs mb-2 uppercase tracking-wide">
+                        Cliente
+                      </p>
+                      <p className="text-white font-semibold text-base">
                         {selectedAppointment.cliente?.nome || "Não informado"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-gray-400 text-sm mb-1">
-                        Data e Horário
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                      <p className="text-gray-400 text-xs mb-2 uppercase tracking-wide">
+                        Data
                       </p>
-                      <p className="text-white font-semibold">
+                      <p className="text-white font-semibold text-base mb-2">
                         {selectedAppointment.data
                           ? formatDate(selectedAppointment.data, false)
                           : "Data não informada"}
-                        {" - "}
-                        {selectedAppointment.horario || "Horário não informado"}
                       </p>
+                      {selectedAppointment.horario && (
+                        <>
+                          <p className="text-gray-400 text-xs mb-2 uppercase tracking-wide">
+                            Horário
+                          </p>
+                          <p className="text-yellow-400 font-semibold text-base">
+                            {selectedAppointment.horario}
+                          </p>
+                        </>
+                      )}
                     </div>
-                    <div>
-                      <p className="text-gray-400 text-sm mb-1">Serviço(s)</p>
-                      <p className="text-white font-semibold">
+                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                      <p className="text-gray-400 text-xs mb-2 uppercase tracking-wide">
+                        Serviço(s)
+                      </p>
+                      <p className="text-white font-semibold text-base">
                         {selectedAppointment.servicos &&
                         selectedAppointment.servicos.length > 0
                           ? selectedAppointment.servicos.join(", ")
                           : "Serviço não informado"}
                       </p>
                     </div>
-                    <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-lg p-3 mt-4">
-                      <p className="text-yellow-400 text-sm font-semibold">
-                        ⚠️ Tem certeza que deseja confirmar este atendimento?
+                    <div className="bg-yellow-400/10 border border-yellow-400/30 rounded-lg p-4 mt-4">
+                      <p className="text-yellow-400 text-sm font-semibold flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>
+                          Tem certeza que deseja confirmar este atendimento?
+                        </span>
                       </p>
                     </div>
                   </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-400">Carregando informações...</p>
+                  </div>
                 )}
               </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Cancelar
+              <ModalFooter className="bg-gray-900">
+                <Button
+                  className="bg-yellow-400 text-gray-900 font-semibold hover:bg-yellow-500 disabled:bg-gray-600 disabled:text-gray-400"
+                  color="primary"
+                  isDisabled={
+                    !selectedAppointment ||
+                    !isAppointmentPast(selectedAppointment) ||
+                    isConfirming
+                  }
+                  isLoading={isConfirming}
+                  onPress={handleConfirmModal}
+                >
+                  {isConfirming ? "Confirmando..." : "Confirmar Atendimento"}
                 </Button>
-                <Button color="primary" onPress={handleConfirmModal}>
-                  Confirmar Atendimento
+                <Button
+                  color="danger"
+                  isDisabled={isConfirming}
+                  variant="light"
+                  onPress={onClose}
+                >
+                  Cancelar
                 </Button>
               </ModalFooter>
             </>
