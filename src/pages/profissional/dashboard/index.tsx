@@ -208,6 +208,112 @@ export function ProfissionalDashboardPage() {
     }
   };
 
+  // Verifica se o atendimento está em andamento (horário atual entre hora_inicio e hora_fim)
+  const isAppointmentInProgress = (appointment: any): boolean => {
+    try {
+      const now = new Date();
+
+      // Prioriza hora_inicio e hora_fim se disponíveis (mais confiável)
+      if (appointment.hora_inicio && appointment.hora_fim) {
+        const startDate = new Date(appointment.hora_inicio);
+        const endDate = new Date(appointment.hora_fim);
+
+        return (
+          startDate.getTime() <= now.getTime() &&
+          now.getTime() <= endDate.getTime()
+        );
+      }
+
+      // Se não tiver hora_inicio e hora_fim, tenta combinar data e horário
+      if (appointment.data && appointment.horario) {
+        const parts = appointment.data.split("/");
+
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          const timeParts = appointment.horario.split(" - ");
+
+          if (timeParts.length === 2) {
+            const [startHours, startMinutes] = timeParts[0]
+              .split(":")
+              .map(Number);
+            const [endHours, endMinutes] = timeParts[1].split(":").map(Number);
+
+            const startDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(day),
+              startHours || 0,
+              startMinutes || 0
+            );
+            const endDate = new Date(
+              parseInt(year),
+              parseInt(month) - 1,
+              parseInt(day),
+              endHours || 0,
+              endMinutes || 0
+            );
+
+            if (
+              !Number.isNaN(startDate.getTime()) &&
+              !Number.isNaN(endDate.getTime())
+            ) {
+              return (
+                startDate.getTime() <= now.getTime() &&
+                now.getTime() <= endDate.getTime()
+              );
+            }
+          }
+        }
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  // Verifica se o agendamento ainda não começou (é futuro)
+  const isAppointmentFuture = (appointment: any): boolean => {
+    try {
+      const now = new Date();
+
+      // Prioriza hora_inicio se disponível (mais confiável)
+      if (appointment.hora_inicio) {
+        const startDate = new Date(appointment.hora_inicio);
+
+        return startDate.getTime() > now.getTime();
+      }
+
+      // Se não tiver hora_inicio, tenta combinar data e horário
+      if (appointment.data && appointment.horario) {
+        const parts = appointment.data.split("/");
+
+        if (parts.length === 3) {
+          const [day, month, year] = parts;
+          // Pega a primeira hora do horário (ex: "14:00 - 14:30" -> "14:00")
+          const timePart = appointment.horario.split(" - ")[0];
+          const [hours, minutes] = timePart.split(":").map(Number);
+
+          const startDate = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+            hours || 0,
+            minutes || 0
+          );
+
+          if (!Number.isNaN(startDate.getTime())) {
+            return startDate.getTime() > now.getTime();
+          }
+        }
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
   // Verifica se a data e horário do agendamento já passaram
   const isAppointmentPast = (appointment: any): boolean => {
     try {
@@ -465,82 +571,156 @@ export function ProfissionalDashboardPage() {
             {/* Lista de agendamentos */}
             {!isLoading && !hasError && confirmedAppointments.length > 0 && (
               <div className="grid grid-cols-1 gap-3">
-                {confirmedAppointments.map((appointment, index) => (
-                  <div
-                    key={appointment.id || `appointment-${index}`}
-                    className={`bg-gray-800 rounded-lg p-4 border transition-colors relative ${
-                      index === 0
-                        ? "border-yellow-400 hover:border-yellow-300 shadow-lg shadow-yellow-400/20"
-                        : "border-gray-700 hover:border-yellow-400"
-                    }`}
-                  >
-                    {/* Etiqueta "Próximo atendimento" no primeiro card */}
-                    {index === 0 && (
-                      <div className="absolute -top-3 left-4 bg-yellow-400 text-gray-900 text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                        Próximo atendimento
-                      </div>
-                    )}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                      {/* Data e Horário - Destaque Principal */}
-                      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div className="flex-shrink-0 text-center sm:text-left">
-                          <p className="text-yellow-400 font-bold text-lg sm:text-xl">
-                            {appointment.data ? (
-                              <>
-                                {/* Mobile: formato DD/MM/YYYY */}
-                                <span className="sm:hidden">
-                                  {formatDate(appointment.data, true)}
-                                </span>
-                                {/* Desktop: formato por extenso */}
-                                <span className="hidden sm:inline">
-                                  {formatDate(appointment.data, false)}
-                                </span>
-                              </>
-                            ) : (
-                              "Data não informada"
-                            )}
-                          </p>
-                          <p className="text-white font-semibold text-base sm:text-lg mt-1">
-                            {appointment.horario || "Horário não informado"}
-                          </p>
+                {confirmedAppointments.map((appointment, index) => {
+                  const inProgress = isAppointmentInProgress(appointment);
+                  const isFuture = isAppointmentFuture(appointment);
+
+                  // Encontra o primeiro agendamento futuro que não está em andamento
+                  const firstFutureIndex = confirmedAppointments.findIndex(
+                    (apt) =>
+                      isAppointmentFuture(apt) && !isAppointmentInProgress(apt)
+                  );
+                  const isNextAppointment =
+                    firstFutureIndex === index && isFuture && !inProgress;
+
+                  return (
+                    <div
+                      key={appointment.id || `appointment-${index}`}
+                      className={`bg-gray-800 rounded-lg p-3 sm:p-4 border transition-colors relative ${
+                        inProgress
+                          ? "border-green-500 hover:border-green-400 shadow-lg shadow-green-500/20"
+                          : isNextAppointment
+                            ? "border-yellow-400 hover:border-yellow-300 shadow-lg shadow-yellow-400/20"
+                            : "border-gray-700 hover:border-yellow-400"
+                      }`}
+                    >
+                      {/* Etiqueta "Atendimento em andamento" ou "Próximo atendimento" */}
+                      {inProgress ? (
+                        <div className="absolute -top-2.5 left-3 sm:left-4 bg-green-500 text-white text-xs sm:text-sm font-bold px-3 sm:px-3 py-0.5 sm:py-0.5 rounded-full shadow-md">
+                          Atendimento em andamento
+                        </div>
+                      ) : (
+                        isNextAppointment && (
+                          <div className="absolute -top-2.5 left-3 sm:left-4 bg-yellow-400 text-gray-900 text-xs sm:text-sm font-bold px-3 sm:px-3 py-0.5 sm:py-0.5 rounded-full shadow-md">
+                            Próximo atendimento
+                          </div>
+                        )
+                      )}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 pt-1 sm:pt-0">
+                        {/* Mobile: Layout horizontal com data/horário à esquerda e serviço à direita */}
+                        <div className="flex flex-col sm:hidden gap-2.5 flex-1 min-w-0">
+                          <div className="flex items-start gap-1">
+                            {/* Data e Horário - Esquerda */}
+                            <div className="flex-shrink-0">
+                              <p className="text-yellow-400 font-bold text-base">
+                                {appointment.data
+                                  ? formatDate(appointment.data, true)
+                                  : "Data não informada"}
+                              </p>
+                              <p className="text-white font-semibold text-sm mt-1">
+                                {appointment.horario || "Horário não informado"}
+                              </p>
+                            </div>
+
+                            {/* Serviço - Direita */}
+                            <div className="flex-1 min-w-0 border-l border-gray-700 pl-3">
+                              <p className="text-gray-400 text-xs mb-1">
+                                Serviço
+                              </p>
+                              <p className="text-white font-semibold text-sm">
+                                {appointment.servicos &&
+                                appointment.servicos.length > 0
+                                  ? appointment.servicos.join(", ")
+                                  : "Serviço não informado"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Cliente - Abaixo da data/horário e serviço */}
+                          {appointment.cliente?.nome && (
+                            <div className="pt-1 border-t border-gray-700">
+                              <p className="text-white text-xs">
+                                <span className="text-gray-400">Cliente: </span>
+                                {appointment.cliente.nome}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Botão Mobile */}
+                          <div className="mt-1">
+                            <Button
+                              className="w-full text-xs"
+                              color="primary"
+                              isDisabled={!isAppointmentPast(appointment)}
+                              size="sm"
+                              type="button"
+                              onClick={() =>
+                                handleConfirmAppointment(appointment)
+                              }
+                            >
+                              Confirmar atendimento
+                            </Button>
+                          </div>
                         </div>
 
-                        {/* Tipo de Serviço - Destaque Secundário */}
-                        <div className="flex-1 min-w-0 border-l border-gray-700 pl-3 sm:pl-4">
-                          <p className="text-gray-400 text-xs sm:text-sm mb-1">
-                            Serviço
-                          </p>
-                          <p className="text-white font-semibold text-sm sm:text-base truncate">
-                            {appointment.servicos &&
-                            appointment.servicos.length > 0
-                              ? appointment.servicos.join(", ")
-                              : "Serviço não informado"}
-                          </p>
-                          {/* Cliente - Menor destaque */}
+                        {/* Desktop: Layout horizontal original */}
+                        <div className="hidden sm:flex flex-col gap-3 flex-1 min-w-0">
+                          <div className="flex items-center gap-4">
+                            <div className="flex-shrink-0 text-left">
+                              <p className="text-yellow-400 font-bold text-xl">
+                                {appointment.data
+                                  ? formatDate(appointment.data, false)
+                                  : "Data não informada"}
+                              </p>
+                              <p className="text-white font-semibold text-lg mt-1">
+                                {appointment.horario || "Horário não informado"}
+                              </p>
+                            </div>
+
+                            {/* Tipo de Serviço - Destaque Secundário */}
+                            <div className="flex-1 min-w-0 border-l border-gray-700 pl-4">
+                              <p className="text-gray-400 text-sm mb-1">
+                                Serviço
+                              </p>
+                              <p className="text-white font-semibold text-base truncate">
+                                {appointment.servicos &&
+                                appointment.servicos.length > 0
+                                  ? appointment.servicos.join(", ")
+                                  : "Serviço não informado"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Cliente - Abaixo da data/horário e serviço */}
                           {appointment.cliente?.nome && (
-                            <p className="text-gray-500 text-xs mt-1 truncate">
-                              Cliente: {appointment.cliente.nome}
-                            </p>
+                            <div className="pt-2 border-t border-gray-700">
+                              <p className="text-white text-xs truncate">
+                                <span className="text-gray-400">Cliente: </span>
+                                {appointment.cliente.nome}
+                              </p>
+                            </div>
                           )}
                         </div>
-                      </div>
 
-                      {/* Botão */}
-                      <div className="flex flex-col items-end sm:items-start gap-2 flex-shrink-0">
-                        <Button
-                          className="text-xs"
-                          color="primary"
-                          isDisabled={!isAppointmentPast(appointment)}
-                          size="sm"
-                          type="button"
-                          onClick={() => handleConfirmAppointment(appointment)}
-                        >
-                          Confirmar atendimento
-                        </Button>
+                        {/* Botão Desktop */}
+                        <div className="hidden sm:flex flex-col items-start gap-2 flex-shrink-0">
+                          <Button
+                            className="text-xs"
+                            color="primary"
+                            isDisabled={!isAppointmentPast(appointment)}
+                            size="sm"
+                            type="button"
+                            onClick={() =>
+                              handleConfirmAppointment(appointment)
+                            }
+                          >
+                            Confirmar atendimento
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

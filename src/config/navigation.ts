@@ -49,7 +49,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "dashboard-profissional",
     title: "Dashboard",
-    description: "Visualize seus agendamentos e estatísticas",
+    description: "Visualize seus atendimentos e estatísticas",
     icon: "📊",
     path: "/profissional/dashboard",
     allowedRoles: [UserRole.PROFISSIONAL, UserRole.GESTOR],

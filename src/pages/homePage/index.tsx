@@ -28,6 +28,7 @@ export function HomePage() {
         );
       } catch (error) {
         console.error("Erro ao filtrar navegação:", error);
+
         return [];
       }
     },
