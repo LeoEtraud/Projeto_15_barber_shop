@@ -1,7 +1,9 @@
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { FunnelIcon } from "@heroicons/react/24/outline";
+import { Button, Input } from "@heroui/react";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -18,6 +20,10 @@ export function HistoryAppointmentsPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
+  const [filterService, setFilterService] = useState("");
 
   useEffect(() => {
     const loadAppointments = async () => {
@@ -109,35 +115,153 @@ export function HistoryAppointmentsPage() {
     return new Date(0);
   };
 
-  // Filtra os agendamentos baseado no status da API
-  const filteredAppointments = appointments.filter((appointment) => {
-    const status = appointment.status?.toUpperCase();
+  // Função auxiliar para comparar apenas a data (sem hora) de um agendamento
+  const getAppointmentDateOnly = (appointment: any): Date => {
+    const appointmentDate = getAppointmentDate(appointment);
+    const dateOnly = new Date(
+      appointmentDate.getFullYear(),
+      appointmentDate.getMonth(),
+      appointmentDate.getDate()
+    );
 
-    if (filter === "confirmados") {
-      // Mostra agendamentos com status CONFIRMADO
-      return status === "CONFIRMADO";
+    return dateOnly;
+  };
+
+  // Lista de serviços disponíveis para filtro (ordenada: Corte de cabelo, Barba, depois os demais)
+  const availableServices = useMemo(() => {
+    const servicesSet = new Set<string>();
+
+    appointments.forEach((appointment) => {
+      if (appointment.servicos && Array.isArray(appointment.servicos)) {
+        appointment.servicos.forEach((service) => {
+          if (service) {
+            servicesSet.add(service);
+          }
+        });
+      }
+    });
+
+    const servicesArray = Array.from(servicesSet);
+    const orderedServices: string[] = [];
+
+    // Adiciona "Corte de cabelo" primeiro se existir
+    if (servicesArray.includes("Corte de cabelo")) {
+      orderedServices.push("Corte de cabelo");
     }
 
-    // Mostra agendamentos com status REALIZADO
-    return status === "REALIZADO";
-  });
+    // Adiciona "Barba" em segundo se existir
+    if (servicesArray.includes("Barba")) {
+      orderedServices.push("Barba");
+    }
 
-  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    try {
-      const dateA = getAppointmentDate(a).getTime();
-      const dateB = getAppointmentDate(b).getTime();
+    // Adiciona os demais serviços (exceto os já adicionados)
+    servicesArray.forEach((service) => {
+      if (service !== "Corte de cabelo" && service !== "Barba") {
+        orderedServices.push(service);
+      }
+    });
 
-      // Para agendamentos confirmados, mostra os mais próximos primeiro
-      // Para realizados, mostra os mais recentes primeiro
-      if (filter === "confirmados") {
-        return dateA - dateB;
+    return orderedServices;
+  }, [appointments]);
+
+  // Filtra os agendamentos baseado no status da API
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((appointment) => {
+      const status = appointment.status?.toUpperCase();
+
+      // Filtro por status
+      if (filter === "confirmados" && status !== "CONFIRMADO") {
+        return false;
+      }
+      if (filter === "realizados" && status !== "REALIZADO") {
+        return false;
       }
 
-      return dateB - dateA;
-    } catch {
-      return 0;
-    }
-  });
+      // Aplica filtros adicionais apenas na aba de realizados
+      if (filter === "realizados") {
+        // Filtro por serviço
+        if (filterService) {
+          const hasService =
+            appointment.servicos &&
+            appointment.servicos.some((service) =>
+              service.toLowerCase().includes(filterService.toLowerCase())
+            );
+
+          if (!hasService) {
+            return false;
+          }
+        }
+
+        // Filtro por data inicial e final
+        if (filterStartDate || filterEndDate) {
+          const appointmentDateOnly = getAppointmentDateOnly(appointment);
+          const appointmentYear = appointmentDateOnly.getFullYear();
+          const appointmentMonth = appointmentDateOnly.getMonth();
+          const appointmentDay = appointmentDateOnly.getDate();
+
+          if (filterStartDate) {
+            // filterStartDate vem no formato YYYY-MM-DD do input
+            const startDateParts = filterStartDate.split("-");
+            const startYear = parseInt(startDateParts[0]);
+            const startMonth = parseInt(startDateParts[1]) - 1;
+            const startDay = parseInt(startDateParts[2]);
+
+            // Compara ano, mês e dia separadamente
+            if (
+              appointmentYear < startYear ||
+              (appointmentYear === startYear &&
+                appointmentMonth < startMonth) ||
+              (appointmentYear === startYear &&
+                appointmentMonth === startMonth &&
+                appointmentDay < startDay)
+            ) {
+              return false;
+            }
+          }
+
+          if (filterEndDate) {
+            // filterEndDate vem no formato YYYY-MM-DD do input
+            const endDateParts = filterEndDate.split("-");
+            const endYear = parseInt(endDateParts[0]);
+            const endMonth = parseInt(endDateParts[1]) - 1;
+            const endDay = parseInt(endDateParts[2]);
+
+            // Compara ano, mês e dia separadamente
+            if (
+              appointmentYear > endYear ||
+              (appointmentYear === endYear && appointmentMonth > endMonth) ||
+              (appointmentYear === endYear &&
+                appointmentMonth === endMonth &&
+                appointmentDay > endDay)
+            ) {
+              return false;
+            }
+          }
+        }
+      }
+
+      return true;
+    });
+  }, [appointments, filter, filterService, filterStartDate, filterEndDate]);
+
+  const sortedAppointments = useMemo(() => {
+    return [...filteredAppointments].sort((a, b) => {
+      try {
+        const dateA = getAppointmentDate(a).getTime();
+        const dateB = getAppointmentDate(b).getTime();
+
+        // Para agendamentos confirmados, mostra os mais próximos primeiro
+        // Para realizados, mostra os mais recentes primeiro
+        if (filter === "confirmados") {
+          return dateA - dateB;
+        }
+
+        return dateB - dateA;
+      } catch {
+        return 0;
+      }
+    });
+  }, [filteredAppointments, filter]);
 
   return (
     <section className="min-h-screen bg-gray-800 flex flex-col">
@@ -184,7 +308,7 @@ export function HistoryAppointmentsPage() {
 
           {/* Filtros */}
           <div className="bg-gray-900 rounded-lg p-4 mb-6">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   filter === "confirmados"
@@ -192,7 +316,13 @@ export function HistoryAppointmentsPage() {
                     : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
                 type="button"
-                onClick={() => setFilter("confirmados")}
+                onClick={() => {
+                  setFilter("confirmados");
+                  setShowFilters(false);
+                  setFilterService("");
+                  setFilterStartDate("");
+                  setFilterEndDate("");
+                }}
               >
                 Confirmados
               </button>
@@ -207,7 +337,110 @@ export function HistoryAppointmentsPage() {
               >
                 Realizados
               </button>
+              {filter === "realizados" && (
+                <div className="ml-auto">
+                  <Button
+                    className="bg-slate-500/20 hover:bg-slate-500/30 border border-slate-500/50 text-slate-300"
+                    size="sm"
+                    variant="flat"
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <FunnelIcon className="w-4 h-4 mr-2" />
+                    {showFilters ? "Ocultar" : "Filtros"}
+                  </Button>
+                </div>
+              )}
             </div>
+
+            {/* Filtros de Pesquisa - Apenas na aba de Realizados */}
+            {showFilters && filter === "realizados" && (
+              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-4 mt-4 border-2 border-yellow-400/30 shadow-lg">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                      htmlFor="filter-start-date"
+                    >
+                      Data Inicial
+                    </label>
+                    <Input
+                      className="w-full"
+                      classNames={{
+                        input: "text-white",
+                        inputWrapper: "bg-gray-900 border-gray-700",
+                      }}
+                      id="filter-start-date"
+                      placeholder="Selecione uma data"
+                      size="md"
+                      type="date"
+                      value={filterStartDate}
+                      onChange={(e) => setFilterStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                      htmlFor="filter-end-date"
+                    >
+                      Data Final
+                    </label>
+                    <Input
+                      className="w-full"
+                      classNames={{
+                        input: "text-white",
+                        inputWrapper: "bg-gray-900 border-gray-700",
+                      }}
+                      id="filter-end-date"
+                      placeholder="Selecione uma data"
+                      size="md"
+                      type="date"
+                      value={filterEndDate}
+                      onChange={(e) => setFilterEndDate(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm font-medium text-gray-300 mb-2"
+                      htmlFor="filter-service"
+                    >
+                      Tipo de Serviço
+                    </label>
+                    <select
+                      className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all"
+                      id="filter-service"
+                      value={filterService}
+                      onChange={(e) => setFilterService(e.target.value)}
+                    >
+                      <option value="">Todos os serviços</option>
+                      {availableServices.map((service) => (
+                        <option key={service} value={service}>
+                          {service}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {(filterService || filterStartDate || filterEndDate) && (
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button
+                      className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300"
+                      size="sm"
+                      variant="flat"
+                      onClick={() => {
+                        setFilterService("");
+                        setFilterStartDate("");
+                        setFilterEndDate("");
+                      }}
+                    >
+                      Limpar Filtros
+                    </Button>
+                    <span className="text-gray-400 text-sm">
+                      {sortedAppointments.length} resultado(s) encontrado(s)
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Loading */}
