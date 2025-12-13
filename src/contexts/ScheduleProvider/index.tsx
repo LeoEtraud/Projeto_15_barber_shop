@@ -194,11 +194,47 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
     try {
       const response = await withLoading(GetAppointments(id));
 
-      setAppointments(response.appointments as IAppointments[]);
+      // Verifica se a resposta tem a estrutura esperada
+      if (!response || !response.appointments) {
+        console.warn("Resposta da API não tem a estrutura esperada:", response);
+        setAppointments([]);
+
+        return response || [];
+      }
+
+      // Transforma os agendamentos do formato da API para o formato esperado
+      const transformedAppointments = response.appointments.map(
+        (appointment: any) => {
+          try {
+            const transformed = transformAppointmentFromAPI(appointment);
+            // Adiciona o nome do profissional se disponível
+            if (appointment.profissional?.nome) {
+              transformed.barbeiro = appointment.profissional.nome;
+            }
+            return transformed;
+          } catch (error) {
+            console.error(
+              "Erro ao transformar agendamento individual:",
+              error,
+              appointment
+            );
+
+            return null;
+          }
+        }
+      );
+
+      // Filtra agendamentos nulos (que deram erro na transformação)
+      const validAppointments = transformedAppointments.filter(
+        (appointment: IAppointments) => appointment !== null
+      );
+
+      setAppointments(validAppointments);
 
       return response || [];
     } catch (error: any) {
       console.error("Erro ao buscar agendamentos:", error);
+      setAppointments([]);
       addToast({
         title: "Erro",
         description: "Falha na listagem dos históricos de Agendamentos!",

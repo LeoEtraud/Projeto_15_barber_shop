@@ -75,6 +75,8 @@ export function HistoryAppointmentsPage() {
 
   // Função auxiliar para converter DD/MM/YYYY em Date
   const parseDate = (dateStr: string): Date => {
+    if (!dateStr) return new Date(0);
+
     const parts = dateStr.split("/");
 
     if (parts.length === 3) {
@@ -83,6 +85,25 @@ export function HistoryAppointmentsPage() {
         parseInt(parts[1]) - 1,
         parseInt(parts[0])
       );
+    }
+
+    return new Date(0);
+  };
+
+  // Função auxiliar para obter a data de um agendamento para ordenação
+  const getAppointmentDate = (appointment: any): Date => {
+    // Prioriza hora_inicio se disponível (mais preciso)
+    if (appointment.hora_inicio) {
+      const date = new Date(appointment.hora_inicio);
+
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Fallback para o campo data formatado
+    if (appointment.data) {
+      return parseDate(appointment.data);
     }
 
     return new Date(0);
@@ -103,8 +124,8 @@ export function HistoryAppointmentsPage() {
 
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
     try {
-      const dateA = parseDate(a.data).getTime();
-      const dateB = parseDate(b.data).getTime();
+      const dateA = getAppointmentDate(a).getTime();
+      const dateB = getAppointmentDate(b).getTime();
 
       // Para agendamentos confirmados, mostra os mais próximos primeiro
       // Para realizados, mostra os mais recentes primeiro
@@ -317,7 +338,9 @@ export function HistoryAppointmentsPage() {
                             Barbeiro
                           </span>
                           <span className="text-white font-medium text-lg">
-                            {appointment.barbeiro}
+                            {appointment.barbeiro ||
+                              appointment.profissional?.nome ||
+                              "Não informado"}
                           </span>
                         </div>
 
