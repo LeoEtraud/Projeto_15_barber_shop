@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { Button, addToast } from "@heroui/react";
+import { useNavigate } from "react-router-dom";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -27,6 +28,7 @@ import { formatPrice } from "@/utils/format-price";
 export function GestorDashboardPage() {
   const { user } = useAuth();
   const { isGestor } = usePermissions();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalClientes: 0,
     agendamentosHoje: 0,
@@ -87,14 +89,18 @@ export function GestorDashboardPage() {
       <div className="px-4 py-8 md:px-8 flex-1">
         <Helmet title="Dashboard - Gestor" />
 
-        <div className="mx-auto max-w-7xl">
+        <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-white mb-2">
               Dashboard do Gestor
             </h1>
-            <p className="text-gray-400">
-              Bem-vindo, {user?.user?.nome || "Gestor"}
+            <p className="text-white">
+              Bem-vindo,{" "}
+              <span className="text-yellow-400 font-bold">
+                {user?.user?.nome}
+                {"!"}
+              </span>
             </p>
           </div>
 
@@ -160,18 +166,19 @@ export function GestorDashboardPage() {
               <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-white">
-                    Gerenciar Barbeiros
+                    Gerenciar Profissionais
                   </h2>
-                  <Button color="primary" size="sm">
+                  <Button
+                    color="primary"
+                    size="sm"
+                    onPress={() => navigate("/gestor/barbeiros")}
+                  >
                     Ver Todos
                   </Button>
                 </div>
                 <p className="text-gray-400 text-sm mb-4">
                   Gerencie os profissionais da barbearia
                 </p>
-                <Button fullWidth color="primary" variant="flat">
-                  Adicionar Barbeiro
-                </Button>
               </div>
             </PermissionGate>
 
@@ -182,16 +189,17 @@ export function GestorDashboardPage() {
                   <h2 className="text-xl font-semibold text-white">
                     Gerenciar Serviços
                   </h2>
-                  <Button color="primary" size="sm">
+                  <Button
+                    color="primary"
+                    size="sm"
+                    onPress={() => navigate("/gestor/servicos")}
+                  >
                     Ver Todos
                   </Button>
                 </div>
                 <p className="text-gray-400 text-sm mb-4">
                   Gerencie os serviços oferecidos
                 </p>
-                <Button fullWidth color="primary" variant="flat">
-                  Adicionar Serviço
-                </Button>
               </div>
             </PermissionGate>
           </div>

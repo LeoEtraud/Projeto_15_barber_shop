@@ -18,6 +18,7 @@ import { HistoryAppointmentsPage } from "@/pages/historyAppointments";
 import { ProfissionalDashboardPage } from "@/pages/profissional/dashboard";
 import { GestorDashboardPage } from "@/pages/gestor/dashboard";
 import { GestorBarbeirosPage } from "@/pages/gestor/barbeiros";
+import { GestorServicosPage } from "@/pages/gestor/servicos";
 
 export function Router() {
   return (
@@ -130,6 +131,18 @@ export function Router() {
           </RoleProtectedRoute>
         }
         path="/gestor/barbeiros"
+      />
+      <Route
+        element={
+          <RoleProtectedRoute
+            accessDeniedMessage="Você precisa de permissão para gerenciar serviços."
+            allowedRoles={[UserRole.GESTOR]}
+            requiredPermissions={["manage_services"]}
+          >
+            <GestorServicosPage />
+          </RoleProtectedRoute>
+        }
+        path="/gestor/servicos"
       />
     </Routes>
   );
