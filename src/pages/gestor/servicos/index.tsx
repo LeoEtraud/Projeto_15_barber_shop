@@ -19,10 +19,10 @@ import * as yup from "yup";
 import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
+import { Resolver } from "react-hook-form";
 
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
@@ -42,9 +42,15 @@ interface ServiceFormData {
 }
 
 const schema = yup.object().shape({
-  nome: yup.string().min(2, "Nome deve ter no mínimo 2 caracteres").required("Nome é obrigatório"),
+  nome: yup
+    .string()
+    .min(2, "Nome deve ter no mínimo 2 caracteres")
+    .required("Nome é obrigatório"),
   preco: yup.string().required("Preço é obrigatório"),
-  duracao: yup.number().min(1, "Duração deve ser no mínimo 1 minuto").required("Duração é obrigatória"),
+  duracao: yup
+    .number()
+    .min(1, "Duração deve ser no mínimo 1 minuto")
+    .required("Duração é obrigatória"),
   imagem: yup.string().url("URL inválida").optional(),
 });
 
@@ -60,7 +66,6 @@ const schema = yup.object().shape({
  */
 export function GestorServicosPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { isGestor } = usePermissions();
   const { services, fetchServices } = useSchedule();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -69,7 +74,9 @@ export function GestorServicosPage() {
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
   } = useDisclosure();
-  const [selectedService, setSelectedService] = useState<IServices | null>(null);
+  const [selectedService, setSelectedService] = useState<IServices | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -78,7 +85,7 @@ export function GestorServicosPage() {
     reset,
     formState: { errors },
   } = useForm<ServiceFormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as unknown as Resolver<ServiceFormData>,
     defaultValues: {
       nome: "",
       preco: "",
@@ -241,14 +248,14 @@ export function GestorServicosPage() {
             {/* Imagem de fundo */}
             <div className="absolute inset-0">
               <img
-                src="/image-1.png"
                 alt="Serviços"
                 className="w-full h-full object-cover object-right-center opacity-15"
+                src="/image-1.png"
               />
               {/* Overlay sutil */}
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-rose-500/90"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-rose-500/90" />
             </div>
-            
+
             {/* Conteúdo */}
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
@@ -280,9 +287,7 @@ export function GestorServicosPage() {
             <>
               {/* Título da Categoria */}
               <div className="mb-4">
-                <h2 className="text-xl font-semibold text-white">
-                  Serviços
-                </h2>
+                <h2 className="text-xl font-semibold text-white">Serviços</h2>
                 <p className="text-gray-400 text-sm mt-1">
                   {services.length}{" "}
                   {services.length === 1
@@ -294,7 +299,9 @@ export function GestorServicosPage() {
               {/* Grid de Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {services.map((service) => {
-                  const precoNum = parseFloat(service.preco?.replace(",", ".") || "0");
+                  const precoNum = parseFloat(
+                    service.preco?.replace(",", ".") || "0"
+                  );
 
                   return (
                     <Card
@@ -306,9 +313,9 @@ export function GestorServicosPage() {
                           {/* Imagem do Serviço */}
                           {service.imagem ? (
                             <img
-                              src={service.imagem}
                               alt={service.nome}
                               className="w-12 h-12 rounded-lg object-cover border-2 border-gray-700 flex-shrink-0"
+                              src={service.imagem}
                             />
                           ) : (
                             <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-lg font-bold border-2 border-gray-700 flex-shrink-0">
@@ -338,7 +345,9 @@ export function GestorServicosPage() {
                         </div>
 
                         <div className="flex gap-2 mt-3">
-                          <PermissionGate requiredPermissions={["manage_services"]}>
+                          <PermissionGate
+                            requiredPermissions={["manage_services"]}
+                          >
                             <Button
                               fullWidth
                               className="text-white"
@@ -353,7 +362,9 @@ export function GestorServicosPage() {
                               Editar
                             </Button>
                           </PermissionGate>
-                          <PermissionGate requiredPermissions={["manage_services"]}>
+                          <PermissionGate
+                            requiredPermissions={["manage_services"]}
+                          >
                             <Button
                               fullWidth
                               className="text-white"
@@ -384,8 +395,8 @@ export function GestorServicosPage() {
               <PermissionGate requiredPermissions={["manage_services"]}>
                 <Button
                   color="primary"
-                  onPress={() => handleOpenModal()}
                   startContent={<PlusIcon className="w-5 h-5" />}
+                  onPress={() => handleOpenModal()}
                 >
                   Adicionar Primeiro Serviço
                 </Button>
@@ -397,15 +408,15 @@ export function GestorServicosPage() {
 
       {/* Modal de Cadastro/Edição */}
       <Modal
-        isOpen={isOpen}
-        onClose={handleCloseModal}
-        size="2xl"
         classNames={{
           base: "bg-gray-900 border border-gray-700",
           header: "bg-gray-900 border-b border-gray-700",
           body: "bg-gray-900",
           footer: "bg-gray-900 border-t border-gray-700",
         }}
+        isOpen={isOpen}
+        size="2xl"
+        onClose={handleCloseModal}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
@@ -422,17 +433,17 @@ export function GestorServicosPage() {
                   render={({ field }) => (
                     <Input
                       {...field}
-                      label="Nome do Serviço"
-                      placeholder="Ex: Corte masculino, Barba, etc."
                       isRequired
-                      isInvalid={!!errors.nome}
-                      errorMessage={errors.nome?.message}
                       classNames={{
                         base: "w-full md:col-span-2",
                         input: "text-white",
                         label: "text-gray-300",
                         inputWrapper: "bg-gray-800 border-gray-700",
                       }}
+                      errorMessage={errors.nome?.message}
+                      isInvalid={!!errors.nome}
+                      label="Nome do Serviço"
+                      placeholder="Ex: Corte masculino, Barba, etc."
                     />
                   )}
                 />
@@ -443,20 +454,18 @@ export function GestorServicosPage() {
                   render={({ field }) => (
                     <Input
                       {...field}
-                      label="Preço"
-                      placeholder="0,00"
                       isRequired
-                      isInvalid={!!errors.preco}
-                      errorMessage={errors.preco?.message}
-                      startContent={
-                        <span className="text-gray-400">R$</span>
-                      }
                       classNames={{
                         base: "w-full",
                         input: "text-white",
                         label: "text-gray-300",
                         inputWrapper: "bg-gray-800 border-gray-700",
                       }}
+                      errorMessage={errors.preco?.message}
+                      isInvalid={!!errors.preco}
+                      label="Preço"
+                      placeholder="0,00"
+                      startContent={<span className="text-gray-400">R$</span>}
                     />
                   )}
                 />
@@ -467,22 +476,23 @@ export function GestorServicosPage() {
                   render={({ field }) => (
                     <Input
                       {...field}
-                      label="Duração (minutos)"
-                      placeholder="30"
-                      type="number"
                       isRequired
-                      isInvalid={!!errors.duracao}
-                      errorMessage={errors.duracao?.message}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                      endContent={
-                        <span className="text-gray-400">min</span>
-                      }
                       classNames={{
                         base: "w-full",
                         input: "text-white",
                         label: "text-gray-300",
                         inputWrapper: "bg-gray-800 border-gray-700",
                       }}
+                      endContent={<span className="text-gray-400">min</span>}
+                      errorMessage={errors.duracao?.message}
+                      isInvalid={!!errors.duracao}
+                      label="Duração (minutos)"
+                      placeholder="30"
+                      type="number"
+                      value={field.value?.toString() || ""}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value) || 0)
+                      }
                     />
                   )}
                 />
@@ -493,17 +503,17 @@ export function GestorServicosPage() {
                   render={({ field }) => (
                     <Input
                       {...field}
-                      label="URL da Imagem (opcional)"
-                      placeholder="https://exemplo.com/imagem.jpg"
-                      type="url"
-                      isInvalid={!!errors.imagem}
-                      errorMessage={errors.imagem?.message}
                       classNames={{
                         base: "w-full md:col-span-2",
                         input: "text-white",
                         label: "text-gray-300",
                         inputWrapper: "bg-gray-800 border-gray-700",
                       }}
+                      errorMessage={errors.imagem?.message}
+                      isInvalid={!!errors.imagem}
+                      label="URL da Imagem (opcional)"
+                      placeholder="https://exemplo.com/imagem.jpg"
+                      type="url"
                     />
                   )}
                 />
@@ -512,17 +522,13 @@ export function GestorServicosPage() {
             <ModalFooter>
               <Button
                 color="danger"
+                isDisabled={isSubmitting}
                 variant="light"
                 onPress={handleCloseModal}
-                isDisabled={isSubmitting}
               >
                 Cancelar
               </Button>
-              <Button
-                color="primary"
-                type="submit"
-                isLoading={isSubmitting}
-              >
+              <Button color="primary" isLoading={isSubmitting} type="submit">
                 {selectedService ? "Atualizar" : "Cadastrar"}
               </Button>
             </ModalFooter>
@@ -532,14 +538,14 @@ export function GestorServicosPage() {
 
       {/* Modal de Confirmação de Exclusão */}
       <Modal
-        isOpen={isDeleteOpen}
-        onClose={onDeleteClose}
         classNames={{
           base: "bg-gray-900 border border-gray-700",
           header: "bg-gray-900 border-b border-gray-700",
           body: "bg-gray-900",
           footer: "bg-gray-900 border-t border-gray-700",
         }}
+        isOpen={isDeleteOpen}
+        onClose={onDeleteClose}
       >
         <ModalContent>
           <ModalHeader>
@@ -557,16 +563,16 @@ export function GestorServicosPage() {
           <ModalFooter>
             <Button
               color="default"
+              isDisabled={isSubmitting}
               variant="light"
               onPress={onDeleteClose}
-              isDisabled={isSubmitting}
             >
               Cancelar
             </Button>
             <Button
               color="danger"
-              onPress={handleDelete}
               isLoading={isSubmitting}
+              onPress={handleDelete}
             >
               Excluir
             </Button>
@@ -578,4 +584,3 @@ export function GestorServicosPage() {
     </section>
   );
 }
-
