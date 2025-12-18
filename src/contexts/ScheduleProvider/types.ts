@@ -4,13 +4,26 @@ export interface IBarbers {
   telefone: string;
   email: string;
   data_nascimento: string;
-  especialidade: string;
+  funcao: string;
   avatar?: string;
   qtd_atendimentos: number;
   nota_avaliacao: number;
   status: string;
 }
 
+export interface IProfessionals {
+  id: string;
+  barbeariaId: string;
+  nome: string;
+  telefone: string;
+  email: string;
+  data_nascimento: string;
+  funcao: string;
+  avatar?: string;
+  qtd_atendimentos: number;
+  nota_avaliacao: number;
+  status: string;
+}
 export interface IServices {
   id: string;
   nome: string;
@@ -56,6 +69,8 @@ export interface IAppointments {
 export interface IContext {
   barbers: IBarbers[];
   fetchBarbers: () => void;
+  professionals: IProfessionals[];
+  fetchProfessionals: () => void;
   services: IServices[];
   fetchServices: () => void;
   schedules: ISchedules[];

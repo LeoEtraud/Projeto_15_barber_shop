@@ -5,6 +5,7 @@ import {
   IAppointments,
   IBarbers,
   IContext,
+  IProfessionals,
   IScheduleProvider,
   ISchedules,
   IServices,
@@ -13,6 +14,7 @@ import {
   GetAppointments,
   GetAppointmentsByProfessional,
   GetBarbersAll,
+  GetProfessionalsAll,
   GetSchedulesAll,
   GetServicesAll,
 } from "./util";
@@ -117,6 +119,7 @@ export const ScheduleContext = createContext<IContext>({} as IContext);
 export const ScheduleProvider = ({ children }: IScheduleProvider) => {
   const { withLoading } = useLoading();
   const [barbers, setBarbers] = useState<IBarbers[]>([]);
+  const [professionals, setProfessionals] = useState<IProfessionals[]>([]);
   const [services, setServices] = useState<IServices[]>([]);
   const [schedules, setSchedules] = useState<ISchedules[]>([]);
   const [appointments, setAppointments] = useState<IAppointments[]>([]);
@@ -138,6 +141,44 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       addToast({
         title: "Erro",
         description: "Falha na listagem dos Barbeiros!",
+        color: "danger",
+        timeout: 3000,
+      });
+    }
+  }
+
+  // FUNÇÃO PARA LISTAR TODOS OS PROFISSIONAIS
+
+  async function fetchProfessionals() {
+    try {
+      return await withLoading(
+        (async () => {
+          const response = await GetProfessionalsAll();
+
+          // Transforma os dados da API para o formato esperado
+          const transformedProfessionals: IProfessionals[] = (
+            response.professionalAll || []
+          ).map((professional: any) => ({
+            id: professional.id,
+            barbeariaId: professional.id_barbearia,
+            nome: professional.nome,
+            telefone: professional.telefone,
+            email: professional.usuario?.email || "",
+            data_nascimento: professional.data_nascimento,
+            funcao: professional.funcao,
+            avatar: professional.avatar,
+            qtd_atendimentos: professional.qtd_atendimentos || 0,
+            nota_avaliacao: professional.nota_avaliacao || 0,
+            status: professional.status,
+          }));
+
+          setProfessionals(transformedProfessionals);
+        })()
+      );
+    } catch {
+      addToast({
+        title: "Erro",
+        description: "Falha na listagem dos Profissionais!",
         color: "danger",
         timeout: 3000,
       });
@@ -207,10 +248,12 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
         (appointment: any) => {
           try {
             const transformed = transformAppointmentFromAPI(appointment);
+
             // Adiciona o nome do profissional se disponível
             if (appointment.profissional?.nome) {
               transformed.barbeiro = appointment.profissional.nome;
             }
+
             return transformed;
           } catch (error) {
             console.error(
@@ -303,6 +346,8 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       value={{
         barbers,
         fetchBarbers,
+        professionals,
+        fetchProfessionals,
         services,
         fetchServices,
         schedules,

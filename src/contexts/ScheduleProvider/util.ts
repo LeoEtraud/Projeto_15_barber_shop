@@ -11,6 +11,17 @@ export async function GetBarbersAll() {
   }
 }
 
+// CHAMADA DA API PARA BUSCA DE TODOS OS PROFISSIONAIS
+export async function GetProfessionalsAll() {
+  try {
+    const request = await apiBarber.get("/get-professional-all");
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
 // CHAMADA DA API PARA BUSCA DE TODOS OS SERVIÇOS
 export async function GetServicesAll() {
   try {
@@ -85,32 +96,34 @@ export async function ConfirmAppointment(appointmentId: string) {
   }
 }
 
-// CHAMADA DA API PARA CRIAR BARBEIRO
-export async function CreateBarber(data: {
+// CHAMADA DA API PARA CRIAR PROFISSIONAL
+export async function CreateProfessional(data: {
   nome: string;
   email: string;
   telefone: string;
   data_nascimento: string;
-  especialidade?: string;
+  funcao?: string;
   avatar?: string;
+  barbeariaId?: string;
 }) {
   try {
-    const request = await apiBarber.post("/create-barber", data);
+    const request = await apiBarber.post("/create-professional", data);
+
     return request.data;
   } catch (error) {
     return Promise.reject(error);
   }
 }
 
-// CHAMADA DA API PARA ATUALIZAR BARBEIRO
-export async function UpdateBarber(
+// CHAMADA DA API PARA ATUALIZAR PROFISSIONAL
+export async function UpdateProfessional(
   barberId: string,
   data: {
     nome?: string;
     email?: string;
     telefone?: string;
     data_nascimento?: string;
-    especialidade?: string;
+    funcao?: string;
     avatar?: string;
     status?: string;
   }
@@ -120,21 +133,28 @@ export async function UpdateBarber(
       throw new Error("ID do barbeiro é obrigatório");
     }
 
-    const request = await apiBarber.patch(`/update-barber/${barberId}`, data);
+    const request = await apiBarber.patch(
+      `/update-professional/${barberId}`,
+      data
+    );
+
     return request.data;
   } catch (error) {
     return Promise.reject(error);
   }
 }
 
-// CHAMADA DA API PARA EXCLUIR BARBEIRO
-export async function DeleteBarber(barberId: string) {
+// CHAMADA DA API PARA EXCLUIR PROFISSIONAL
+export async function DeleteProfessional(professionalId: string) {
   try {
-    if (!barberId) {
-      throw new Error("ID do barbeiro é obrigatório");
+    if (!professionalId) {
+      throw new Error("ID do profissional é obrigatório");
     }
 
-    const request = await apiBarber.delete(`/delete-barber/${barberId}`);
+    const request = await apiBarber.delete(
+      `/delete-professional/${professionalId}`
+    );
+
     return request.data;
   } catch (error) {
     return Promise.reject(error);
@@ -150,6 +170,7 @@ export async function CreateService(data: {
 }) {
   try {
     const request = await apiBarber.post("/create-service", data);
+
     return request.data;
   } catch (error) {
     return Promise.reject(error);
@@ -173,6 +194,7 @@ export async function UpdateService(
     }
 
     const request = await apiBarber.patch(`/update-service/${serviceId}`, data);
+
     return request.data;
   } catch (error) {
     return Promise.reject(error);
@@ -187,6 +209,7 @@ export async function DeleteService(serviceId: string) {
     }
 
     const request = await apiBarber.delete(`/delete-service/${serviceId}`);
+
     return request.data;
   } catch (error) {
     return Promise.reject(error);

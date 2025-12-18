@@ -12,6 +12,7 @@ import {
   useDisclosure,
   Input,
   addToast,
+  Switch,
 } from "@heroui/react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -25,13 +26,14 @@ import { Footer } from "@/components/Footer";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGate } from "@/components/PermissionGate";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
+import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import {
-  CreateBarber,
-  UpdateBarber,
-  DeleteBarber,
+  CreateProfessional,
+  UpdateProfessional,
+  DeleteProfessional,
 } from "@/contexts/ScheduleProvider/util";
-import { formatPhone } from "@/utils/format-Cpf-Phone";
-import { IBarbers } from "@/contexts/ScheduleProvider/types";
+import { formatPhone, formatDate } from "@/utils/format-Cpf-Phone";
+import { IBarbers, IProfessionals } from "@/contexts/ScheduleProvider/types";
 
 interface BarberFormData {
   nome: string;
@@ -42,24 +44,174 @@ interface BarberFormData {
 }
 
 const FUNCOES = [
-  { value: "Barbeiro", label: "Barbeiro" },
-  { value: "Atendente", label: "Atendente" },
   {
-    value: "Auxiliar de Serviços Gerais",
-    label: "Auxiliar de Serviços",
+    value: "Barbeiros",
+    label: "Barbeiros",
+    selectLabel: "Barbeiro",
+    apiValue: "Barbeiro",
+  },
+  {
+    value: "Atendentes",
+    label: "Atendentes",
+    selectLabel: "Atendente",
+    apiValue: "Atendente",
   },
 ] as const;
 
 type FuncaoType = (typeof FUNCOES)[number]["value"];
 
+// Função para mapear valor da aba para valor da API
+function getApiValue(tabValue: FuncaoType): string {
+  const funcao = FUNCOES.find((f) => f.value === tabValue);
+
+  return funcao?.apiValue || tabValue;
+}
+
+// Função para verificar se a funcao corresponde à aba selecionada
+function matchesFuncao(
+  funcao: string | undefined,
+  tabValue: FuncaoType
+): boolean {
+  if (!funcao) return false;
+
+  const apiValue = getApiValue(tabValue);
+
+  // Aceita tanto o valor da API quanto o valor da aba
+  return funcao === apiValue || funcao === tabValue;
+}
+
+// Função para converter data de DD/MM/AAAA para YYYY-MM-DD
+function convertDateToAPI(dateStr: string): string {
+  if (!dateStr) return "";
+
+  const digits = dateStr.replace(/\D/g, "");
+
+  if (digits.length !== 8) return dateStr;
+
+  const day = digits.substring(0, 2);
+  const month = digits.substring(2, 4);
+  const year = digits.substring(4, 8);
+
+  return `${year}-${month}-${day}`;
+}
+
+// Função para converter data de YYYY-MM-DD para DD/MM/AAAA
+function convertDateFromAPI(dateStr: string): string {
+  if (!dateStr) return "";
+
+  if (dateStr.includes("/")) return dateStr; // Já está formatado
+
+  const parts = dateStr.split("-");
+
+  if (parts.length !== 3) return dateStr;
+
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 const schema = yup.object().shape({
   nome: yup
     .string()
+    .trim()
     .min(3, "Nome completo deve ter no mínimo 3 caracteres")
+    .max(100, "Nome completo deve ter no máximo 100 caracteres")
+    .matches(/^[a-zA-ZÀ-ÿ\s]+$/, "Nome deve conter apenas letras e espaços")
+    .test(
+      "nome-completo",
+      "Nome deve conter pelo menos nome e sobrenome",
+      (value) => {
+        if (!value) return false;
+
+        const parts = value.trim().split(/\s+/);
+
+        return parts.length >= 2;
+      }
+    )
     .required("Nome completo é obrigatório"),
-  email: yup.string().email("Email inválido").required("Email é obrigatório"),
-  telefone: yup.string().required("Telefone é obrigatório"),
-  data_nascimento: yup.string().required("Data de nascimento é obrigatória"),
+  email: yup
+    .string()
+    .trim()
+    .email("Email inválido")
+    .max(60, "Email deve ter no máximo 60 caracteres")
+    .matches(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      "Email inválido"
+    )
+    .required("Email é obrigatório"),
+  telefone: yup
+    .string()
+    .required("Telefone é obrigatório")
+    .test(
+      "telefone-valido",
+      "Telefone deve conter exatamente 11 dígitos",
+      (value) => {
+        const digits = (value || "").replace(/\D/g, "");
+
+        return digits.length === 11;
+      }
+    )
+    .test("telefone-formato", "Telefone inválido", (value) => {
+      const digits = (value || "").replace(/\D/g, "");
+
+      if (digits.length !== 11) return false;
+
+      // Valida DDD (deve ser entre 11 e 99)
+      const ddd = parseInt(digits.substring(0, 2), 10);
+
+      return ddd >= 11 && ddd <= 99;
+    }),
+  data_nascimento: yup
+    .string()
+    .required("Data de nascimento é obrigatória")
+    .test("data-valida", "Data de nascimento inválida", (value) => {
+      if (!value) return false;
+
+      const digits = value.replace(/\D/g, "");
+
+      if (digits.length !== 8) return false;
+
+      const day = parseInt(digits.substring(0, 2), 10);
+      const month = parseInt(digits.substring(2, 4), 10);
+      const year = parseInt(digits.substring(4, 8), 10);
+
+      if (day < 1 || day > 31) return false;
+      if (month < 1 || month > 12) return false;
+
+      const currentYear = new Date().getFullYear();
+
+      if (year < 1900 || year > currentYear) return false;
+
+      const date = new Date(year, month - 1, day);
+
+      return (
+        date.getDate() === day &&
+        date.getMonth() === month - 1 &&
+        date.getFullYear() === year
+      );
+    })
+    .test("idade-minima", "Idade mínima de 18 anos é necessária", (value) => {
+      if (!value) return false;
+
+      const digits = value.replace(/\D/g, "");
+
+      if (digits.length !== 8) return false;
+
+      const year = parseInt(digits.substring(4, 8), 10);
+      const month = parseInt(digits.substring(2, 4), 10) - 1;
+      const day = parseInt(digits.substring(0, 2), 10);
+      const birthDate = new Date(year, month, day);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+
+      return age >= 18;
+    }),
   funcao: yup
     .string()
     .oneOf([...FUNCOES.map((f) => f.value), ""], "Função inválida")
@@ -81,6 +233,20 @@ function getInitials(nomeCompleto: string) {
   return `${first}${last}`;
 }
 
+// FUNÇÃO PARA OBTER APENAS NOME E SOBRENOME
+function getNomeSobrenome(nomeCompleto: string): string {
+  const nomes = nomeCompleto?.trim().split(" ").filter((n) => n.length > 0) || [];
+
+  if (nomes.length === 0) return "";
+
+  if (nomes.length === 1) {
+    return nomes[0];
+  }
+
+  // Retorna o primeiro nome e o último sobrenome
+  return `${nomes[0]} ${nomes[nomes.length - 1]}`;
+}
+
 /**
  * Página de Gerenciamento de Barbeiros - Apenas para Gestores
  *
@@ -93,17 +259,23 @@ function getInitials(nomeCompleto: string) {
  */
 export function GestorBarbeirosPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { isGestor } = usePermissions();
-  const { barbers, fetchBarbers } = useSchedule();
+  const { professionals, fetchProfessionals } = useSchedule();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: isDeleteOpen,
     onOpen: onDeleteOpen,
     onClose: onDeleteClose,
   } = useDisclosure();
-  const [selectedBarber, setSelectedBarber] = useState<IBarbers | null>(null);
+  const [selectedBarber, setSelectedBarber] = useState<
+    IBarbers | IProfessionals | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<FuncaoType>("Barbeiro");
+  const [selectedTab, setSelectedTab] = useState<FuncaoType>("Barbeiros");
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isActive, setIsActive] = useState(true);
 
   const {
     control,
@@ -124,24 +296,83 @@ export function GestorBarbeirosPage() {
   // FUNÇÃO PARA FETCHAR OS BARBEIROS
   useEffect(() => {
     if (isGestor) {
-      fetchBarbers();
+      fetchProfessionals();
     }
   }, [isGestor]);
 
-  // FUNÇÃO PARA ABRIR O MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL
-  const handleOpenModal = (barber?: IBarbers) => {
-    if (barber) {
-      setSelectedBarber(barber);
+  // FUNÇÃO PARA CONVERTER ARQUIVO EM BASE64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
 
-      const funcaoValue = barber.especialidade as FuncaoType | "";
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+        } else {
+          reject(new Error("Erro ao converter arquivo"));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Erro ao ler arquivo"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // FUNÇÃO PARA OBTER URL DO AVATAR
+  const getAvatarUrl = (avatar: string | undefined): string | null => {
+    if (!avatar) return null;
+
+    // Se o avatar já é base64, retorna diretamente
+    if (avatar.startsWith("data:image")) {
+      return avatar;
+    }
+
+    const apiUrl = import.meta.env.VITE_API;
+
+    if (!apiUrl) return null;
+
+    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+  };
+
+  // FUNÇÃO PARA ABRIR O MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL
+  const handleOpenModal = (barber?: IBarbers | IProfessionals) => {
+    if (barber) {
+      setSelectedBarber(barber as IBarbers);
+
+      // Mapeia o valor da API para o valor da UI
+      let funcaoValue: FuncaoType | "" = "";
+
+      if (barber.funcao) {
+        const funcao = FUNCOES.find((f) => f.apiValue === barber.funcao);
+
+        funcaoValue = funcao?.value || (barber.funcao as FuncaoType) || "";
+      }
 
       reset({
         nome: barber.nome || "",
         email: barber.email || "",
         telefone: barber.telefone || "",
-        data_nascimento: barber.data_nascimento || "",
+        data_nascimento: convertDateFromAPI(barber.data_nascimento || ""),
         funcao: funcaoValue || "",
       });
+
+      // Define preview da imagem existente
+      if (barber.avatar) {
+        const avatarUrl = getAvatarUrl(barber.avatar);
+
+        setImagePreview(avatarUrl);
+      } else {
+        setImagePreview(null);
+      }
+
+      // Define o status
+      const statusActive =
+        barber.status === "ATIVO" || barber.status === "ativo";
+
+      setIsActive(statusActive);
     } else {
       setSelectedBarber(null);
       reset({
@@ -151,14 +382,73 @@ export function GestorBarbeirosPage() {
         data_nascimento: "",
         funcao: "" as "",
       });
+      setImagePreview(null);
+      setIsActive(true); // Por padrão, novo profissional é ativo
     }
+    setImageFile(null);
     onOpen();
   };
 
   const handleCloseModal = () => {
     setSelectedBarber(null);
+    setImagePreview(null);
+    setImageFile(null);
+    setIsActive(true);
     reset();
     onClose();
+  };
+
+  // FUNÇÃO PARA HANDLEAR O UPLOAD DE IMAGEM
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    // Valida tipo de arquivo
+    if (!file.type.startsWith("image/")) {
+      addToast({
+        title: "Erro",
+        description: "Por favor, selecione apenas arquivos de imagem.",
+        color: "danger",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    // Valida tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      addToast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB.",
+        color: "danger",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    try {
+      // Cria preview
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setImagePreview(event.target.result as string);
+        }
+      };
+
+      reader.readAsDataURL(file);
+      setImageFile(file);
+    } catch (error) {
+      console.error("Erro ao processar imagem:", error);
+      addToast({
+        title: "Erro",
+        description: "Erro ao processar a imagem. Tente novamente.",
+        color: "danger",
+        timeout: 3000,
+      });
+    }
   };
 
   // FUNÇÃO PARA SUBMETER O FORMULÁRIO DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL
@@ -178,15 +468,25 @@ export function GestorBarbeirosPage() {
       setIsSubmitting(true);
 
       const funcaoValue = data.funcao as FuncaoType;
+      const apiFuncaoValue = getApiValue(funcaoValue);
+
+      // Converte imagem para base64 se houver arquivo selecionado
+      let avatarBase64: string | undefined;
+
+      if (imageFile) {
+        avatarBase64 = await convertFileToBase64(imageFile);
+      }
 
       if (selectedBarber) {
         // Editar profissional
-        await UpdateBarber(selectedBarber.id, {
+        await UpdateProfessional(selectedBarber.id, {
           nome: data.nome.trim(),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
           data_nascimento: data.data_nascimento,
-          especialidade: funcaoValue,
+          funcao: apiFuncaoValue,
+          avatar: avatarBase64,
+          status: isActive ? "ATIVO" : "INATIVO",
         });
 
         addToast({
@@ -197,12 +497,29 @@ export function GestorBarbeirosPage() {
         });
       } else {
         // Criar profissional
-        await CreateBarber({
+        const barbeariaId = user?.user?.barbeariaId;
+
+        if (!barbeariaId) {
+          setIsSubmitting(false);
+          addToast({
+            title: "Erro",
+            description:
+              "ID da barbearia não encontrado. Verifique seu perfil.",
+            color: "danger",
+            timeout: 3000,
+          });
+
+          return;
+        }
+
+        await CreateProfessional({
           nome: data.nome.trim(),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
-          data_nascimento: data.data_nascimento,
-          especialidade: funcaoValue,
+          data_nascimento: convertDateToAPI(data.data_nascimento),
+          funcao: apiFuncaoValue,
+          avatar: avatarBase64,
+          barbeariaId: barbeariaId,
         });
 
         addToast({
@@ -213,7 +530,7 @@ export function GestorBarbeirosPage() {
         });
       }
 
-      await fetchBarbers();
+      await fetchProfessionals();
       handleCloseModal();
     } catch (error) {
       console.error("Erro ao salvar profissional:", error);
@@ -236,7 +553,7 @@ export function GestorBarbeirosPage() {
 
     try {
       setIsSubmitting(true);
-      await DeleteBarber(selectedBarber.id);
+      await DeleteProfessional(selectedBarber.id);
 
       addToast({
         title: "Sucesso",
@@ -245,7 +562,7 @@ export function GestorBarbeirosPage() {
         timeout: 3000,
       });
 
-      await fetchBarbers();
+      await fetchProfessionals();
       onDeleteClose();
       setSelectedBarber(null);
     } catch (error) {
@@ -352,15 +669,15 @@ export function GestorBarbeirosPage() {
 
           {/* Lista de Profissionais Filtrados */}
           {(() => {
-            const filteredBarbers = barbers.filter(
-              (barber) => barber.especialidade === selectedTab
+            const filteredBarbers = professionals.filter((barber) =>
+              matchesFuncao(barber.funcao, selectedTab)
             );
 
             if (filteredBarbers.length === 0) {
               return (
                 <div className="bg-gray-900 rounded-lg p-12 text-center border border-gray-700">
                   <p className="text-gray-400 text-lg mb-4">
-                    {`Nenhum ${selectedTab.toLowerCase()} cadastrado`}
+                    {`Nenhum ${selectedTab.toLowerCase()} cadastrado`},
                   </p>
                   <PermissionGate requiredPermissions={["manage_barbers"]}>
                     <Button
@@ -400,60 +717,57 @@ export function GestorBarbeirosPage() {
                     return (
                       <Card
                         key={barber.id}
-                        className="bg-gray-900 border border-gray-700 hover:border-teal-500 transition-all duration-300 shadow-md hover:shadow-lg"
+                        className="bg-gray-900 border border-gray-700 hover:border-teal-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
                       >
+                        {/* Badge de Status */}
+                        <div
+                          className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${
+                            isActive
+                              ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                              : "bg-red-500/20 text-red-400 border border-red-500/30"
+                          }`}
+                        >
+                          {isActive ? "Ativo" : "Inativo"}
+                        </div>
+
                         <CardBody className="p-3">
                           <div className="flex items-start gap-3 mb-3">
                             {/* Avatar */}
                             {barber.avatar ? (
                               <img
                                 alt={barber.nome}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
-                                src={`${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar || "")}`}
+                                className="w-16 h-16 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
+                                src={
+                                  barber.avatar.startsWith("data:image")
+                                    ? barber.avatar
+                                    : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar || "")}`
+                                }
                                 onError={(e) => {
                                   e.currentTarget.src = "/img-barber-icon.png";
                                 }}
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-sm font-bold border-2 border-gray-700 flex-shrink-0">
+                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-base font-bold border-2 border-gray-700 flex-shrink-0">
                                 {getInitials(barber.nome)}
                               </div>
                             )}
 
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2 mb-1">
+                              <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
-                                  <h3 className="text-base font-semibold text-white mb-0.5 truncate">
-                                    {barber.nome}
+                                  <h3 className="text-base font-semibold text-white truncate">
+                                    {getNomeSobrenome(barber.nome)}
                                   </h3>
-                                  <p className="text-gray-400 text-xs truncate">
+                                  {barber.funcao && (
+                                    <p className="text-gray-500 text-xs mt-0.5">
+                                      {barber.funcao}
+                                    </p>
+                                  )}
+                                  <p className="text-gray-400 text-xs truncate mt-0.5">
                                     {barber.email}
                                   </p>
                                 </div>
-                                {/* Status Indicator */}
-                                <div className="flex items-center gap-1.5 flex-shrink-0">
-                                  <div
-                                    className={`w-2 h-2 rounded-full ${
-                                      isActive ? "bg-green-500" : "bg-red-500"
-                                    }`}
-                                  />
-                                  <span
-                                    className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                                      isActive
-                                        ? "bg-green-500/20 text-green-400"
-                                        : "bg-red-500/20 text-red-400"
-                                    }`}
-                                  >
-                                    {isActive ? "Ativo" : "Inativo"}
-                                  </span>
-                                </div>
                               </div>
-
-                              {barber.especialidade && (
-                                <p className="text-gray-500 text-xs mb-2">
-                                  {barber.especialidade}
-                                </p>
-                              )}
                             </div>
                           </div>
 
@@ -464,7 +778,7 @@ export function GestorBarbeirosPage() {
                               <Button
                                 fullWidth
                                 className="text-white"
-                                color="success"
+                                color="primary"
                                 size="sm"
                                 startContent={
                                   <PencilIcon className="w-4 h-4 text-white" />
@@ -509,9 +823,12 @@ export function GestorBarbeirosPage() {
       <Modal
         classNames={{
           base: "bg-gray-900 border border-gray-700",
-          header: "bg-gray-900 border-b border-gray-700",
-          body: "bg-gray-900",
+          header:
+            "bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 border-b border-teal-500/30",
+          body: "bg-gray-900 py-6",
           footer: "bg-gray-900 border-t border-gray-700",
+          closeButton:
+            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isOpen}
         size="2xl"
@@ -527,7 +844,80 @@ export function GestorBarbeirosPage() {
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <ModalBody>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Upload de Imagem */}
+              <div className="flex flex-col items-center justify-center mb-6">
+                <div className="relative">
+                  {/* Preview da Imagem */}
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        alt="Preview do avatar"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-lg"
+                        src={imagePreview}
+                      />
+                      <button
+                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                        type="button"
+                        onClick={() => {
+                          setImagePreview(null);
+                          setImageFile(null);
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-32 h-32 rounded-full bg-gray-700 border-4 border-gray-600 flex items-center justify-center">
+                      <svg
+                        className="w-16 h-16 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botão de Upload */}
+                <label
+                  className="mt-4 cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white  rounded-lg transition-colors"
+                  htmlFor="avatar-upload"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M12 4v16m8-8H4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                    />
+                  </svg>
+                  {imagePreview ? "Alterar Imagem" : "Adicionar Imagem"}
+                </label>
+                <input
+                  accept="image/*"
+                  className="hidden"
+                  id="avatar-upload"
+                  type="file"
+                  onChange={handleImageChange}
+                />
+                <p className="text-xs text-gray-400 mt-2">
+                  Formatos: JPG, PNG, GIF (máx. 5MB)
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Controller
                   control={control}
                   name="nome"
@@ -537,14 +927,26 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full md:col-span-2",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
                       label="Nome Completo"
+                      maxLength={100}
                       placeholder="Digite o nome completo"
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // Permite apenas letras, espaços e caracteres acentuados
+                        const sanitized = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
+
+                        // Limita a 100 caracteres
+                        const limited = sanitized.substring(0, 100);
+
+                        field.onChange(limited);
+                      }}
                     />
                   )}
                 />
@@ -558,15 +960,26 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.email?.message}
                       isInvalid={!!errors.email}
                       label="Email"
+                      maxLength={60}
                       placeholder="Digite o email"
                       type="email"
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        // Remove espaços e limita a 60 caracteres
+                        const sanitized = value
+                          .replace(/\s/g, "")
+                          .substring(0, 60);
+
+                        field.onChange(sanitized);
+                      }}
                     />
                   )}
                 />
@@ -580,18 +993,24 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.telefone?.message}
                       isInvalid={!!errors.telefone}
                       label="Telefone"
+                      maxLength={15}
                       placeholder="(00) 00000-0000"
                       value={formatPhone(field.value || "")}
-                      onChange={(e) =>
-                        field.onChange(formatPhone(e.target.value))
-                      }
+                      onChange={(e) => {
+                        const formatted = formatPhone(e.target.value);
+
+                        // Limita a 15 caracteres (formato: (00) 00000-0000)
+                        const limited = formatted.substring(0, 15);
+
+                        field.onChange(limited);
+                      }}
                     />
                   )}
                 />
@@ -605,14 +1024,28 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.data_nascimento?.message}
                       isInvalid={!!errors.data_nascimento}
                       label="Data de Nascimento"
-                      type="date"
+                      maxLength={10}
+                      placeholder="DD/MM/AAAA"
+                      value={field.value ? formatDate(field.value) : ""}
+                      onChange={(e) => {
+                        // Remove tudo que não é número
+                        const digitsOnly = e.target.value.replace(/\D/g, "");
+
+                        // Limita a 8 dígitos
+                        const limited = digitsOnly.substring(0, 8);
+
+                        // Formata como DD/MM/AAAA
+                        const formatted = formatDate(limited);
+
+                        field.onChange(formatted);
+                      }}
                     />
                   )}
                 />
@@ -625,13 +1058,13 @@ export function GestorBarbeirosPage() {
                       <select
                         {...field}
                         required
-                        className="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
+                        className="w-full p-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         id="funcao-select"
                       >
                         <option value="">Selecione uma função</option>
                         {FUNCOES.map((funcao) => (
                           <option key={funcao.value} value={funcao.value}>
-                            {funcao.label}
+                            {funcao.selectLabel}
                           </option>
                         ))}
                       </select>
@@ -645,18 +1078,40 @@ export function GestorBarbeirosPage() {
                 />
               </div>
             </ModalBody>
-            <ModalFooter>
-              <Button
-                color="danger"
-                isDisabled={isSubmitting}
-                variant="light"
-                onPress={handleCloseModal}
-              >
-                Cancelar
-              </Button>
-              <Button color="primary" isLoading={isSubmitting} type="submit">
-                {selectedBarber ? "Atualizar" : "Cadastrar"}
-              </Button>
+            <ModalFooter className="justify-between items-center">
+              {selectedBarber ? (
+                <div className="flex items-center gap-3">
+                  <Switch
+                    color={isActive ? "success" : "danger"}
+                    isSelected={isActive}
+                    size="sm"
+                    onValueChange={setIsActive}
+                  >
+                    <span
+                      className={`text-sm font-medium ${
+                        isActive ? "text-green-400" : "text-red-400"
+                      }`}
+                    >
+                      {isActive ? "Ativo" : "Inativo"}
+                    </span>
+                  </Switch>
+                </div>
+              ) : (
+                <div />
+              )}
+              <div className="flex gap-2">
+                <Button
+                  color="danger"
+                  isDisabled={isSubmitting}
+                  variant="light"
+                  onPress={handleCloseModal}
+                >
+                  Cancelar
+                </Button>
+                <Button color="primary" isLoading={isSubmitting} type="submit">
+                  {selectedBarber ? "Atualizar" : "Cadastrar"}
+                </Button>
+              </div>
             </ModalFooter>
           </form>
         </ModalContent>
@@ -666,9 +1121,12 @@ export function GestorBarbeirosPage() {
       <Modal
         classNames={{
           base: "bg-gray-900 border border-gray-700",
-          header: "bg-gray-900 border-b border-gray-700",
+          header:
+            "bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 border-b border-teal-500/30",
           body: "bg-gray-900",
           footer: "bg-gray-900 border-t border-gray-700",
+          closeButton:
+            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
