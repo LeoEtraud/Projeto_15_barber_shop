@@ -215,3 +215,93 @@ export async function DeleteService(serviceId: string) {
     return Promise.reject(error);
   }
 }
+
+// CHAMADA DA API PARA BUSCAR HORÁRIOS DE FUNCIONAMENTO
+export async function GetHorariosFuncionamento(barbeariaId: string) {
+  try {
+    if (!barbeariaId) {
+      throw new Error("ID da barbearia é obrigatório");
+    }
+
+    const request = await apiBarber.get(
+      `/get-horarios-funcionamento/${barbeariaId}`
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA DA API PARA CRIAR HORÁRIO DE FUNCIONAMENTO
+export async function CreateHorarioFuncionamento(data: {
+  id_barbearia: string;
+  dia_da_semana: string;
+  dia?: number;
+  mes?: number;
+  ano?: number;
+  horario_abertura: string;
+  horario_fechamento: string;
+  tem_almoco: boolean;
+  horario_almoco_inicio?: string;
+  horario_almoco_fim?: string;
+  is_feriado: boolean;
+  profissionais_ids?: string[];
+}) {
+  try {
+    const request = await apiBarber.post("/create-horario-funcionamento", data);
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA DA API PARA ATUALIZAR HORÁRIO DE FUNCIONAMENTO
+export async function UpdateHorarioFuncionamento(
+  horarioId: string,
+  data: {
+    dia?: number;
+    mes?: number;
+    ano?: number;
+    horario_abertura?: string;
+    horario_fechamento?: string;
+    tem_almoco?: boolean;
+    horario_almoco_inicio?: string;
+    horario_almoco_fim?: string;
+    is_feriado?: boolean;
+    profissionais_ids?: string[];
+  }
+) {
+  try {
+    if (!horarioId) {
+      throw new Error("ID do horário é obrigatório");
+    }
+
+    const request = await apiBarber.patch(
+      `/update-horario-funcionamento/${horarioId}`,
+      data
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA DA API PARA EXCLUIR HORÁRIO DE FUNCIONAMENTO
+export async function DeleteHorarioFuncionamento(horarioId: string) {
+  try {
+    if (!horarioId) {
+      throw new Error("ID do horário é obrigatório");
+    }
+
+    const request = await apiBarber.delete(
+      `/delete-horario-funcionamento/${horarioId}`
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}

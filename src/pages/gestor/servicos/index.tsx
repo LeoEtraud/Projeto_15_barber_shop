@@ -306,7 +306,7 @@ export function GestorServicosPage() {
                   return (
                     <Card
                       key={service.id}
-                      className="bg-gray-900 border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md hover:shadow-lg"
+                      className="bg-gray-900 border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
                     >
                       <CardBody className="p-3">
                         <div className="flex items-start gap-3 mb-3">
@@ -351,7 +351,7 @@ export function GestorServicosPage() {
                             <Button
                               fullWidth
                               className="text-white"
-                              color="success"
+                              color="primary"
                               size="sm"
                               startContent={
                                 <PencilIcon className="w-4 h-4 text-white" />
@@ -410,9 +410,12 @@ export function GestorServicosPage() {
       <Modal
         classNames={{
           base: "bg-gray-900 border border-gray-700",
-          header: "bg-gray-900 border-b border-gray-700",
-          body: "bg-gray-900",
+          header:
+            "bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 border-b border-orange-500/30",
+          body: "bg-gray-900 py-6",
           footer: "bg-gray-900 border-t border-gray-700",
+          closeButton:
+            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isOpen}
         size="2xl"
@@ -426,7 +429,7 @@ export function GestorServicosPage() {
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <ModalBody>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Controller
                   control={control}
                   name="nome"
@@ -436,9 +439,9 @@ export function GestorServicosPage() {
                       isRequired
                       classNames={{
                         base: "w-full md:col-span-2",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
@@ -457,9 +460,9 @@ export function GestorServicosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.preco?.message}
                       isInvalid={!!errors.preco}
@@ -479,9 +482,9 @@ export function GestorServicosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       endContent={<span className="text-gray-400">min</span>}
                       errorMessage={errors.duracao?.message}
@@ -505,9 +508,9 @@ export function GestorServicosPage() {
                       {...field}
                       classNames={{
                         base: "w-full md:col-span-2",
-                        input: "text-white",
-                        label: "text-gray-300",
-                        inputWrapper: "bg-gray-800 border-gray-700",
+                        input: "text-gray-900",
+                        label: "text-gray-700",
+                        inputWrapper: "bg-white border-gray-300",
                       }}
                       errorMessage={errors.imagem?.message}
                       isInvalid={!!errors.imagem}
@@ -540,9 +543,12 @@ export function GestorServicosPage() {
       <Modal
         classNames={{
           base: "bg-gray-900 border border-gray-700",
-          header: "bg-gray-900 border-b border-gray-700",
+          header:
+            "bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 border-b border-orange-500/30",
           body: "bg-gray-900",
           footer: "bg-gray-900 border-t border-gray-700",
+          closeButton:
+            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}

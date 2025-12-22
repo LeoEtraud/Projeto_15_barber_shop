@@ -81,6 +81,22 @@ export interface IContext {
   fetchAppointmentsByProfessional: (profissionalId: string) => void;
 }
 
+export interface IHorarioFuncionamento {
+  id: string;
+  id_barbearia: string;
+  dia_da_semana: string;
+  dia?: number;
+  mes?: number;
+  ano?: number;
+  horario_abertura: string;
+  horario_fechamento: string;
+  tem_almoco: boolean;
+  horario_almoco_inicio?: string;
+  horario_almoco_fim?: string;
+  is_feriado: boolean;
+  profissionais?: IProfessionals[];
+}
+
 export interface IScheduleProvider {
   children: JSX.Element;
 }

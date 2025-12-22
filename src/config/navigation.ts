@@ -93,6 +93,15 @@ export const navigationItems: NavigationItem[] = [
     allowedRoles: [UserRole.GESTOR],
     requiredPermissions: ["view_all_appointments"],
   },
+  {
+    id: "gerenciar-horarios",
+    title: "Gerenciar Horários",
+    description: "Configure os horários de funcionamento da barbearia",
+    icon: "🕐",
+    path: "/gestor/horarios",
+    allowedRoles: [UserRole.GESTOR],
+    requiredPermissions: ["manage_schedules"],
+  },
 ];
 
 /**

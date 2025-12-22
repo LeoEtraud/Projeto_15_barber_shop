@@ -19,6 +19,7 @@ import { ProfissionalDashboardPage } from "@/pages/profissional/dashboard";
 import { GestorDashboardPage } from "@/pages/gestor/dashboard";
 import { GestorBarbeirosPage } from "@/pages/gestor/barbeiros";
 import { GestorServicosPage } from "@/pages/gestor/servicos";
+import { GestorHorariosPage } from "@/pages/gestor/horarios";
 
 export function Router() {
   return (
@@ -143,6 +144,18 @@ export function Router() {
           </RoleProtectedRoute>
         }
         path="/gestor/servicos"
+      />
+      <Route
+        element={
+          <RoleProtectedRoute
+            accessDeniedMessage="Você precisa de permissão para gerenciar horários."
+            allowedRoles={[UserRole.GESTOR]}
+            requiredPermissions={["manage_schedules"]}
+          >
+            <GestorHorariosPage />
+          </RoleProtectedRoute>
+        }
+        path="/gestor/horarios"
       />
     </Routes>
   );

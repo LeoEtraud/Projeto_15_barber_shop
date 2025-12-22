@@ -202,6 +202,27 @@ export function GestorDashboardPage() {
                 </p>
               </div>
             </PermissionGate>
+
+            {/* Gerenciar Horários */}
+            <PermissionGate requiredPermissions={["manage_schedules"]}>
+              <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-white">
+                    Gerenciar Horários
+                  </h2>
+                  <Button
+                    color="primary"
+                    size="sm"
+                    onPress={() => navigate("/gestor/horarios")}
+                  >
+                    Configurar
+                  </Button>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">
+                  Configure os horários de funcionamento da barbearia
+                </p>
+              </div>
+            </PermissionGate>
           </div>
 
           {/* Relatórios */}
