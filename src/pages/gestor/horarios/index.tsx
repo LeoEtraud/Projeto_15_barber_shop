@@ -10,7 +10,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Input,
   addToast,
   Switch,
 } from "@heroui/react";
@@ -23,7 +22,6 @@ import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { usePermissions } from "@/hooks/usePermissions";
-import { PermissionGate } from "@/components/PermissionGate";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import {
@@ -31,10 +29,7 @@ import {
   CreateHorarioFuncionamento,
   UpdateHorarioFuncionamento,
 } from "@/contexts/ScheduleProvider/util";
-import {
-  IHorarioFuncionamento,
-  IProfessionals,
-} from "@/contexts/ScheduleProvider/types";
+import { IHorarioFuncionamento } from "@/contexts/ScheduleProvider/types";
 
 interface HorarioFormData {
   horario_abertura: string;
@@ -64,6 +59,7 @@ function gerarOpcoesHorario(): string[] {
     for (let minuto = 0; minuto < 60; minuto += 30) {
       const horaStr = String(hora).padStart(2, "0");
       const minutoStr = String(minuto).padStart(2, "0");
+
       horarios.push(`${horaStr}:${minutoStr}`);
     }
   }
@@ -72,10 +68,14 @@ function gerarOpcoesHorario(): string[] {
 }
 
 // Função para calcular a data de um dia da semana específico
-function calcularDataDoDia(diaSemana: string): { dia: number; mes: number; ano: number } {
+function calcularDataDoDia(diaSemana: string): {
+  dia: number;
+  mes: number;
+  ano: number;
+} {
   const hoje = new Date();
   const diaAtual = hoje.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
-  
+
   // Mapeia o dia da semana para número
   const diasMap: Record<string, number> = {
     DOMINGO: 0,
@@ -88,19 +88,20 @@ function calcularDataDoDia(diaSemana: string): { dia: number; mes: number; ano: 
   };
 
   const diaTarget = diasMap[diaSemana] ?? 1;
-  
+
   // Calcula a diferença de dias
   let diff = diaTarget - diaAtual;
-  
+
   // Se o dia já passou esta semana, mostra a próxima semana
   if (diff < 0) {
     diff += 7;
   }
-  
+
   // Cria a data do dia específico
   const dataDoDia = new Date(hoje);
+
   dataDoDia.setDate(hoje.getDate() + diff);
-  
+
   return {
     dia: dataDoDia.getDate(),
     mes: dataDoDia.getMonth() + 1,
@@ -182,6 +183,7 @@ function calcularHorariosDisponiveis(
 
   // Divide pela duração do serviço e multiplica pela quantidade de barbeiros
   const slotsPorBarbeiro = Math.floor(tempoDisponivel / duracaoServico);
+
   return slotsPorBarbeiro * quantidadeBarbeiros;
 }
 
@@ -209,10 +211,11 @@ const schema = yup.object().shape({
         return minutosFechamento > minutosAbertura;
       }
     ),
-  tem_almoco: yup.boolean(),
+  tem_almoco: yup.boolean().required(),
   horario_almoco_inicio: yup.string().when("tem_almoco", {
     is: true,
-    then: (schema) => schema.required("Horário de início do almoço é obrigatório"),
+    then: (schema) =>
+      schema.required("Horário de início do almoço é obrigatório"),
     otherwise: (schema) => schema.notRequired(),
   }),
   horario_almoco_fim: yup.string().when("tem_almoco", {
@@ -241,10 +244,11 @@ const schema = yup.object().shape({
         ),
     otherwise: (schema) => schema.notRequired(),
   }),
-  is_feriado: yup.boolean(),
+  is_feriado: yup.boolean().required(),
   profissionais_ids: yup
     .array()
-    .of(yup.string())
+    .of(yup.string().required())
+    .required()
     .test(
       "profissionais-requeridos",
       "Selecione pelo menos um barbeiro (exceto se for feriado)",
@@ -312,18 +316,19 @@ export function GestorHorariosPage() {
   const profissionaisIds = watch("profissionais_ids");
 
   // Calcular horários disponíveis em tempo real
-  const quantidadeBarbeiros = isFeriado ? 0 : (profissionaisIds?.length || 0);
-  const horariosDisponiveis = quantidadeBarbeiros === 0 
-    ? 0 
-    : calcularHorariosDisponiveis(
-        horarioAbertura || "",
-        horarioFechamento || "",
-        temAlmoco || false,
-        horarioAlmocoInicio,
-        horarioAlmocoFim,
-        30,
-        quantidadeBarbeiros
-      );
+  const quantidadeBarbeiros = isFeriado ? 0 : profissionaisIds?.length || 0;
+  const horariosDisponiveis =
+    quantidadeBarbeiros === 0
+      ? 0
+      : calcularHorariosDisponiveis(
+          horarioAbertura || "",
+          horarioFechamento || "",
+          temAlmoco || false,
+          horarioAlmocoInicio,
+          horarioAlmocoFim,
+          30,
+          quantidadeBarbeiros
+        );
 
   // Função para buscar horários de funcionamento
   const fetchHorarios = async () => {
@@ -336,6 +341,7 @@ export function GestorHorariosPage() {
       }
 
       const response = await GetHorariosFuncionamento(barbeariaId);
+
       setHorarios(response.horarios || []);
     } catch (error) {
       console.error("Erro ao buscar horários:", error);
@@ -415,6 +421,7 @@ export function GestorHorariosPage() {
           color: "danger",
           timeout: 3000,
         });
+
         return;
       }
 
@@ -425,6 +432,7 @@ export function GestorHorariosPage() {
           color: "danger",
           timeout: 3000,
         });
+
         return;
       }
 
@@ -434,8 +442,12 @@ export function GestorHorariosPage() {
         horario_abertura: data.horario_abertura,
         horario_fechamento: data.horario_fechamento,
         tem_almoco: data.tem_almoco,
-        horario_almoco_inicio: data.tem_almoco ? data.horario_almoco_inicio : undefined,
-        horario_almoco_fim: data.tem_almoco ? data.horario_almoco_fim : undefined,
+        horario_almoco_inicio: data.tem_almoco
+          ? data.horario_almoco_inicio
+          : undefined,
+        horario_almoco_fim: data.tem_almoco
+          ? data.horario_almoco_fim
+          : undefined,
         is_feriado: data.is_feriado,
         profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
       };
@@ -548,19 +560,21 @@ export function GestorHorariosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {DIAS_SEMANA.map((dia) => {
                 const horario = getHorarioByDia(dia.value);
-                const quantidadeBarbeirosCard = horario?.profissionais?.length || 0;
-                const horariosDisponiveisCard = horario && !horario.is_feriado && quantidadeBarbeirosCard > 0
-                  ? calcularHorariosDisponiveis(
-                      horario.horario_abertura,
-                      horario.horario_fechamento,
-                      horario.tem_almoco,
-                      horario.horario_almoco_inicio,
-                      horario.horario_almoco_fim,
-                      30,
-                      quantidadeBarbeirosCard
-                    )
-                  : 0;
-                
+                const quantidadeBarbeirosCard =
+                  horario?.profissionais?.length || 0;
+                const horariosDisponiveisCard =
+                  horario && !horario.is_feriado && quantidadeBarbeirosCard > 0
+                    ? calcularHorariosDisponiveis(
+                        horario.horario_abertura,
+                        horario.horario_fechamento,
+                        horario.tem_almoco,
+                        horario.horario_almoco_inicio,
+                        horario.horario_almoco_fim,
+                        30,
+                        quantidadeBarbeirosCard
+                      )
+                    : 0;
+
                 // Calcula a data do dia da semana automaticamente
                 const dataDoDia = calcularDataDoDia(dia.value);
 
@@ -586,10 +600,10 @@ export function GestorHorariosPage() {
                           )}
                         </div>
                         <Button
-                          size="sm"
-                          variant="flat"
                           color="primary"
+                          size="sm"
                           startContent={<PencilIcon className="w-4 h-4" />}
+                          variant="flat"
                           onPress={() => handleOpenModal(dia.value)}
                         >
                           {horario ? "Editar" : "Configurar"}
@@ -611,7 +625,6 @@ export function GestorHorariosPage() {
                       {horario ? (
                         <>
                           <div className="space-y-2 text-sm">
-
                             <div>
                               <span className="text-gray-400">Horário: </span>
                               <span className="text-white font-medium">
@@ -639,7 +652,9 @@ export function GestorHorariosPage() {
                                 Horários disponíveis:{" "}
                               </span>
                               <span className="text-green-400 font-semibold">
-                                {horario.is_feriado ? 0 : horariosDisponiveisCard}
+                                {horario.is_feriado
+                                  ? 0
+                                  : horariosDisponiveisCard}
                               </span>
                             </div>
 
@@ -687,9 +702,9 @@ export function GestorHorariosPage() {
             "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isOpen}
+        scrollBehavior="inside"
         size="2xl"
         onClose={handleCloseModal}
-        scrollBehavior="inside"
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
@@ -717,7 +732,9 @@ export function GestorHorariosPage() {
                     </span>
                     <span className="text-gray-400 text-sm">
                       (considerando 30 min por serviço
-                      {quantidadeBarbeiros > 0 && ` e ${quantidadeBarbeiros} ${quantidadeBarbeiros === 1 ? 'barbeiro' : 'barbeiros'}`})
+                      {quantidadeBarbeiros > 0 &&
+                        ` e ${quantidadeBarbeiros} ${quantidadeBarbeiros === 1 ? "barbeiro" : "barbeiros"}`}
+                      )
                     </span>
                   </div>
                 </div>
@@ -730,12 +747,16 @@ export function GestorHorariosPage() {
                   name="horario_abertura"
                   render={({ field }) => (
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label
+                        className="block text-sm font-medium text-gray-300 mb-2"
+                        htmlFor="horario_abertura"
+                      >
                         Horário de Abertura
                       </label>
                       <select
                         {...field}
                         className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="horario_abertura"
                       >
                         {opcoesHorario.map((horario) => (
                           <option key={horario} value={horario}>
@@ -758,12 +779,16 @@ export function GestorHorariosPage() {
                   name="horario_fechamento"
                   render={({ field }) => (
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label
+                        className="block text-sm font-medium text-gray-300 mb-2"
+                        htmlFor="horario_fechamento"
+                      >
                         Horário de Fechamento
                       </label>
                       <select
                         {...field}
                         className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        id="horario_fechamento"
                       >
                         {opcoesHorario.map((horario) => (
                           <option key={horario} value={horario}>
@@ -788,7 +813,10 @@ export function GestorHorariosPage() {
                 render={({ field }) => (
                   <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
+                      <label
+                        className="block text-sm font-medium text-gray-300 mb-1"
+                        htmlFor="tem_almoco"
+                      >
                         Tem Intervalo de Almoço
                       </label>
                       <p className="text-xs text-gray-400">
@@ -796,9 +824,10 @@ export function GestorHorariosPage() {
                       </p>
                     </div>
                     <Switch
+                      color="primary"
+                      id="tem_almoco"
                       isSelected={field.value}
                       onValueChange={field.onChange}
-                      color="primary"
                     />
                   </div>
                 )}
@@ -812,12 +841,16 @@ export function GestorHorariosPage() {
                     name="horario_almoco_inicio"
                     render={({ field }) => (
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label
+                          className="block text-sm font-medium text-gray-300 mb-2"
+                          htmlFor="horario_almoco_inicio"
+                        >
                           Início do Almoço
                         </label>
                         <select
                           {...field}
                           className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          id="horario_almoco_inicio"
                         >
                           {opcoesHorario.map((horario) => (
                             <option key={horario} value={horario}>
@@ -839,12 +872,16 @@ export function GestorHorariosPage() {
                     name="horario_almoco_fim"
                     render={({ field }) => (
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label
+                          className="block text-sm font-medium text-gray-300 mb-2"
+                          htmlFor="horario_almoco_fim"
+                        >
                           Fim do Almoço
                         </label>
                         <select
                           {...field}
                           className="w-full p-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          id="horario_almoco_fim"
                         >
                           {opcoesHorario.map((horario) => (
                             <option key={horario} value={horario}>
@@ -870,17 +907,21 @@ export function GestorHorariosPage() {
                 render={({ field }) => (
                   <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">
-                        Dia é Feriado
+                      <label
+                        className="block text-sm font-medium text-gray-300 mb-1"
+                        htmlFor="is_feriado_switch"
+                      >
+                        Não terá atendimento
                       </label>
                       <p className="text-xs text-gray-400">
                         Marque se este dia não terá atendimento
                       </p>
                     </div>
                     <Switch
+                      color="danger"
+                      id="is_feriado_switch"
                       isSelected={field.value}
                       onValueChange={field.onChange}
-                      color="danger"
                     />
                   </div>
                 )}
@@ -889,9 +930,9 @@ export function GestorHorariosPage() {
               {/* Seleção de Barbeiros */}
               {!isFeriado && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                  <h3 className="block text-sm font-medium text-gray-300 mb-3">
                     Barbeiros que trabalham neste dia
-                  </label>
+                  </h3>
                   {barbeirosAtivos.length === 0 ? (
                     <p className="text-gray-400 text-sm">
                       Nenhum barbeiro ativo cadastrado
@@ -912,19 +953,25 @@ export function GestorHorariosPage() {
                                   className="flex items-center gap-3 p-3 hover:bg-gray-700 rounded cursor-pointer transition-colors"
                                 >
                                   <input
-                                    type="checkbox"
                                     checked={field.value?.includes(barbeiro.id)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 flex-shrink-0"
+                                    type="checkbox"
                                     onChange={(e) => {
                                       const currentIds = field.value || [];
+
                                       if (e.target.checked) {
-                                        field.onChange([...currentIds, barbeiro.id]);
+                                        field.onChange([
+                                          ...currentIds,
+                                          barbeiro.id,
+                                        ]);
                                       } else {
                                         field.onChange(
-                                          currentIds.filter((id) => id !== barbeiro.id)
+                                          currentIds.filter(
+                                            (id) => id !== barbeiro.id
+                                          )
                                         );
                                       }
                                     }}
-                                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 flex-shrink-0"
                                   />
                                   {/* Avatar do Barbeiro */}
                                   {avatarUrl ? (
@@ -934,7 +981,9 @@ export function GestorHorariosPage() {
                                       src={avatarUrl}
                                       onError={(e) => {
                                         e.currentTarget.style.display = "none";
-                                        e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                        e.currentTarget.nextElementSibling?.classList.remove(
+                                          "hidden"
+                                        );
                                       }}
                                     />
                                   ) : null}
@@ -985,4 +1034,3 @@ export function GestorHorariosPage() {
     </section>
   );
 }
-

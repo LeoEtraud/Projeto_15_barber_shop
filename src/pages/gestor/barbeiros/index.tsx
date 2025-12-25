@@ -56,6 +56,12 @@ const FUNCOES = [
     selectLabel: "Atendente",
     apiValue: "Atendente",
   },
+  {
+    value: "Gestores",
+    label: "Gestores",
+    selectLabel: "Gestor",
+    apiValue: "Gestor",
+  },
 ] as const;
 
 type FuncaoType = (typeof FUNCOES)[number]["value"];
@@ -235,7 +241,11 @@ function getInitials(nomeCompleto: string) {
 
 // FUNÇÃO PARA OBTER APENAS NOME E SOBRENOME
 function getNomeSobrenome(nomeCompleto: string): string {
-  const nomes = nomeCompleto?.trim().split(" ").filter((n) => n.length > 0) || [];
+  const nomes =
+    nomeCompleto
+      ?.trim()
+      .split(" ")
+      .filter((n) => n.length > 0) || [];
 
   if (nomes.length === 0) return "";
 
@@ -248,14 +258,14 @@ function getNomeSobrenome(nomeCompleto: string): string {
 }
 
 /**
- * Página de Gerenciamento de Barbeiros - Apenas para Gestores
+ * Página de Gerenciamento de Profissionais - Apenas para Gestores
  *
  * Funcionalidades:
- * - Listar barbeiros
- * - Adicionar novo barbeiro
- * - Editar barbeiro
- * - Excluir barbeiro
- * - Ativar/Desativar barbeiro
+ * - Listar profissionais (Barbeiros, Atendentes e Gestores)
+ * - Adicionar novo profissional
+ * - Editar profissional
+ * - Excluir profissional
+ * - Ativar/Desativar profissional
  */
 export function GestorBarbeirosPage() {
   const navigate = useNavigate();
@@ -547,7 +557,7 @@ export function GestorBarbeirosPage() {
     }
   };
 
-  // FUNÇÃO PARA EXCLUIR UM BARBEIRO
+  // FUNÇÃO PARA EXCLUIR UM PROFISSIONAL
   const handleDelete = async () => {
     if (!selectedBarber) return;
 
@@ -557,7 +567,7 @@ export function GestorBarbeirosPage() {
 
       addToast({
         title: "Sucesso",
-        description: "Barbeiro excluído com sucesso!",
+        description: "Profissional excluído com sucesso!",
         color: "success",
         timeout: 3000,
       });
@@ -566,10 +576,10 @@ export function GestorBarbeirosPage() {
       onDeleteClose();
       setSelectedBarber(null);
     } catch (error) {
-      console.error("Erro ao excluir barbeiro:", error);
+      console.error("Erro ao excluir profissional:", error);
       addToast({
         title: "Erro",
-        description: "Falha ao excluir barbeiro. Tente novamente.",
+        description: "Falha ao excluir profissional. Tente novamente.",
         color: "danger",
         timeout: 5000,
       });
@@ -1137,7 +1147,7 @@ export function GestorBarbeirosPage() {
           </ModalHeader>
           <ModalBody>
             <p className="text-gray-300">
-              Tem certeza que deseja excluir o barbeiro{" "}
+              Tem certeza que deseja excluir o profissional{" "}
               <span className="font-semibold text-white">
                 {selectedBarber?.nome}
               </span>
