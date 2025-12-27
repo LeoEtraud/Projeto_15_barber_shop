@@ -67,40 +67,71 @@ function gerarOpcoesHorario(): string[] {
   return horarios;
 }
 
+// Função para calcular a segunda-feira da semana atual ou próxima
+function calcularSegundaFeiraSemana(
+  semana: "atual" | "proxima" = "atual"
+): Date {
+  const hoje = new Date();
+  const diaAtual = hoje.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+
+  let diasParaSegunda = 0;
+
+  if (semana === "proxima") {
+    // Para próxima semana, sempre calcula a segunda-feira da próxima semana
+    if (diaAtual === 0) {
+      // Se for domingo, próxima segunda é em 8 dias
+      diasParaSegunda = 8;
+    } else {
+      // Para outros dias, calcula quantos dias faltam para a próxima segunda
+      diasParaSegunda = 8 - diaAtual;
+    }
+  } else {
+    // Para semana atual
+    if (diaAtual === 0) {
+      // Se for domingo, mostra a próxima segunda (1 dia)
+      diasParaSegunda = 1;
+    } else {
+      // Se for segunda a sábado, calcula quantos dias atrás está a segunda-feira da semana atual
+      diasParaSegunda = 1 - diaAtual;
+    }
+  }
+
+  const segundaFeira = new Date(hoje);
+
+  segundaFeira.setDate(hoje.getDate() + diasParaSegunda);
+  segundaFeira.setHours(0, 0, 0, 0); // Zera horas para evitar problemas de timezone
+
+  return segundaFeira;
+}
+
 // Função para calcular a data de um dia da semana específico
-function calcularDataDoDia(diaSemana: string): {
+function calcularDataDoDia(
+  diaSemana: string,
+  semana: "atual" | "proxima" = "atual"
+): {
   dia: number;
   mes: number;
   ano: number;
 } {
-  const hoje = new Date();
-  const diaAtual = hoje.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  const segundaFeira = calcularSegundaFeiraSemana(semana);
 
-  // Mapeia o dia da semana para número
+  // Mapeia o dia da semana para número (0 = segunda, 1 = terça, ..., 6 = domingo)
   const diasMap: Record<string, number> = {
-    DOMINGO: 0,
-    SEGUNDA: 1,
-    TERCA: 2,
-    QUARTA: 3,
-    QUINTA: 4,
-    SEXTA: 5,
-    SABADO: 6,
+    SEGUNDA: 0,
+    TERCA: 1,
+    QUARTA: 2,
+    QUINTA: 3,
+    SEXTA: 4,
+    SABADO: 5,
+    DOMINGO: 6,
   };
 
-  const diaTarget = diasMap[diaSemana] ?? 1;
+  const diaOffset = diasMap[diaSemana] ?? 0;
 
-  // Calcula a diferença de dias
-  let diff = diaTarget - diaAtual;
+  // Cria a data do dia específico a partir da segunda-feira
+  const dataDoDia = new Date(segundaFeira);
 
-  // Se o dia já passou esta semana, mostra a próxima semana
-  if (diff < 0) {
-    diff += 7;
-  }
-
-  // Cria a data do dia específico
-  const dataDoDia = new Date(hoje);
-
-  dataDoDia.setDate(hoje.getDate() + diff);
+  dataDoDia.setDate(segundaFeira.getDate() + diaOffset);
 
   return {
     dia: dataDoDia.getDate(),
@@ -286,6 +317,14 @@ export function GestorHorariosPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estado para controlar qual semana está sendo visualizada
+  // Se hoje for domingo, inicia com "proxima", caso contrário "atual"
+  const hoje = new Date();
+  const diaAtual = hoje.getDay();
+  const [semanaSelecionada, setSemanaSelecionada] = useState<
+    "atual" | "proxima"
+  >(diaAtual === 0 ? "proxima" : "atual");
+
   const opcoesHorario = gerarOpcoesHorario();
 
   const {
@@ -297,11 +336,11 @@ export function GestorHorariosPage() {
   } = useForm<HorarioFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      horario_abertura: "08:00",
-      horario_fechamento: "18:00",
-      tem_almoco: false,
-      horario_almoco_inicio: "12:00",
-      horario_almoco_fim: "13:30",
+      horario_abertura: "09:00",
+      horario_fechamento: "19:30",
+      tem_almoco: true,
+      horario_almoco_inicio: "12:30",
+      horario_almoco_fim: "14:00",
       is_feriado: false,
       profissionais_ids: [],
     },
@@ -368,6 +407,42 @@ export function GestorHorariosPage() {
     return horarios.find((h) => h.dia_da_semana === dia);
   };
 
+  // Função para obter valores padrão baseado no dia da semana
+  const getValoresPadrao = (dia: string) => {
+    // Filtrar apenas barbeiros ativos
+    const barbeirosAtivosIds = professionals
+      .filter(
+        (p) =>
+          (p.status === "ATIVO" || p.status === "ativo") &&
+          (p.funcao === "Barbeiro" || p.funcao === "Barbeiros")
+      )
+      .map((p) => p.id);
+
+    // Domingo é fechado por padrão
+    if (dia === "DOMINGO") {
+      return {
+        horario_abertura: "09:00",
+        horario_fechamento: "19:30",
+        tem_almoco: false,
+        horario_almoco_inicio: "12:30",
+        horario_almoco_fim: "14:00",
+        is_feriado: true,
+        profissionais_ids: [],
+      };
+    }
+
+    // Segunda a sábado: aberto com horários padrão, intervalo de almoço e todos os barbeiros ativos
+    return {
+      horario_abertura: "09:00",
+      horario_fechamento: "19:30",
+      tem_almoco: true,
+      horario_almoco_inicio: "12:30",
+      horario_almoco_fim: "14:00",
+      is_feriado: false,
+      profissionais_ids: barbeirosAtivosIds,
+    };
+  };
+
   // Função para abrir modal de edição
   const handleOpenModal = (dia: string) => {
     setSelectedDia(dia);
@@ -376,27 +451,21 @@ export function GestorHorariosPage() {
     if (horarioExistente) {
       setSelectedHorario(horarioExistente);
       reset({
-        horario_abertura: horarioExistente.horario_abertura || "08:00",
-        horario_fechamento: horarioExistente.horario_fechamento || "18:00",
-        tem_almoco: horarioExistente.tem_almoco || false,
+        horario_abertura: horarioExistente.horario_abertura || "09:00",
+        horario_fechamento: horarioExistente.horario_fechamento || "19:30",
+        tem_almoco: horarioExistente.tem_almoco ?? true,
         horario_almoco_inicio:
-          horarioExistente.horario_almoco_inicio || "12:00",
-        horario_almoco_fim: horarioExistente.horario_almoco_fim || "13:30",
+          horarioExistente.horario_almoco_inicio || "12:30",
+        horario_almoco_fim: horarioExistente.horario_almoco_fim || "14:00",
         is_feriado: horarioExistente.is_feriado || false,
         profissionais_ids:
           horarioExistente.profissionais?.map((p) => p.id) || [],
       });
     } else {
       setSelectedHorario(null);
-      reset({
-        horario_abertura: "08:00",
-        horario_fechamento: "18:00",
-        tem_almoco: false,
-        horario_almoco_inicio: "12:00",
-        horario_almoco_fim: "13:30",
-        is_feriado: false,
-        profissionais_ids: [],
-      });
+      const valoresPadrao = getValoresPadrao(dia);
+
+      reset(valoresPadrao);
     }
     onOpen();
   };
@@ -551,6 +620,34 @@ export function GestorHorariosPage() {
             </div>
           </div>
 
+          {/* Abas de Seleção de Semana */}
+          <div className="bg-gray-900 rounded-lg p-2 mb-6 border border-gray-700">
+            <div className="flex flex-wrap gap-2">
+              <button
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  semanaSelecionada === "atual"
+                    ? "bg-blue-500 text-white shadow-md"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+                type="button"
+                onClick={() => setSemanaSelecionada("atual")}
+              >
+                Semana Atual
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  semanaSelecionada === "proxima"
+                    ? "bg-blue-500 text-white shadow-md"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+                type="button"
+                onClick={() => setSemanaSelecionada("proxima")}
+              >
+                Próxima Semana
+              </button>
+            </div>
+          </div>
+
           {/* Grid de Cards dos Dias */}
           {isLoading ? (
             <div className="text-center py-12">
@@ -575,109 +672,106 @@ export function GestorHorariosPage() {
                       )
                     : 0;
 
-                // Calcula a data do dia da semana automaticamente
-                const dataDoDia = calcularDataDoDia(dia.value);
+                // Calcula a data do dia da semana automaticamente baseado na semana selecionada
+                const dataDoDia = calcularDataDoDia(
+                  dia.value,
+                  semanaSelecionada
+                );
+
+                const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
+                const hoje = new Date();
+                const hojeFormatado = `${String(hoje.getDate()).padStart(2, "0")}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
+                const isHoje = dataFormatada === hojeFormatado;
 
                 return (
                   <Card
                     key={dia.value}
                     className={`bg-gray-900 border ${
                       horario?.is_feriado
-                        ? "border-red-500"
-                        : "border-gray-700 hover:border-blue-500"
-                    } transition-all duration-300 shadow-md hover:shadow-lg`}
+                        ? "border-red-500/50"
+                        : isHoje
+                          ? "border-blue-500"
+                          : "border-gray-700"
+                    } transition-all duration-200 hover:border-blue-500`}
                   >
-                    <CardBody className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">
-                            {dia.label}
-                          </h3>
-                          {horario?.is_feriado && (
-                            <span className="inline-block mt-1 px-2 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full border border-red-500/30">
-                              Feriado
-                            </span>
-                          )}
+                    <CardBody className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-white">
+                              {dia.label}
+                            </h3>
+                            {isHoje && (
+                              <span className="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded">
+                                Hoje
+                              </span>
+                            )}
+                            {horario?.is_feriado && (
+                              <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded">
+                                Fechado
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {dataFormatada}
+                          </p>
                         </div>
                         <Button
                           color="primary"
                           size="sm"
-                          startContent={<PencilIcon className="w-4 h-4" />}
+                          startContent={<PencilIcon className="w-3 h-3" />}
                           variant="flat"
                           onPress={() => handleOpenModal(dia.value)}
                         >
-                          {horario ? "Editar" : "Configurar"}
+                          {horario ? "Editar" : "Config"}
                         </Button>
                       </div>
 
-                      {/* Exibir data calculada automaticamente */}
-                      <div className="mb-3">
-                        <div className="text-sm">
-                          <span className="text-gray-400">Data: </span>
-                          <span className="text-white font-medium">
-                            {String(dataDoDia.dia).padStart(2, "0")}/
-                            {String(dataDoDia.mes).padStart(2, "0")}/
-                            {dataDoDia.ano}
-                          </span>
-                        </div>
-                      </div>
-
                       {horario ? (
-                        <>
-                          <div className="space-y-2 text-sm">
-                            <div>
-                              <span className="text-gray-400">Horário: </span>
-                              <span className="text-white font-medium">
-                                {horario.horario_abertura} -{" "}
-                                {horario.horario_fechamento}
-                              </span>
-                            </div>
-
-                            {horario.tem_almoco &&
-                              horario.horario_almoco_inicio &&
-                              horario.horario_almoco_fim && (
-                                <div>
-                                  <span className="text-gray-400">
-                                    Almoço:{" "}
-                                  </span>
-                                  <span className="text-white font-medium">
-                                    {horario.horario_almoco_inicio} -{" "}
-                                    {horario.horario_almoco_fim}
-                                  </span>
-                                </div>
-                              )}
-
-                            <div>
-                              <span className="text-gray-400">
-                                Horários disponíveis:{" "}
-                              </span>
-                              <span className="text-green-400 font-semibold">
-                                {horario.is_feriado
-                                  ? 0
-                                  : horariosDisponiveisCard}
-                              </span>
-                            </div>
-
-                            {horario.profissionais &&
-                              horario.profissionais.length > 0 && (
-                                <div>
-                                  <span className="text-gray-400">
-                                    Barbeiros:{" "}
-                                  </span>
-                                  <span className="text-white">
-                                    {horario.profissionais.length}{" "}
-                                    {horario.profissionais.length === 1
-                                      ? "barbeiro"
-                                      : "barbeiros"}
-                                  </span>
-                                </div>
-                              )}
+                        <div className="space-y-1.5 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-400">Horário:</span>
+                            <span className="text-white font-medium">
+                              {horario.horario_abertura} -{" "}
+                              {horario.horario_fechamento}
+                            </span>
                           </div>
-                        </>
+
+                          {horario.tem_almoco &&
+                            horario.horario_almoco_inicio &&
+                            horario.horario_almoco_fim && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-400">Almoço:</span>
+                                <span className="text-white font-medium">
+                                  {horario.horario_almoco_inicio} -{" "}
+                                  {horario.horario_almoco_fim}
+                                </span>
+                              </div>
+                            )}
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-400">Disponíveis:</span>
+                            <span className="text-green-400 font-medium">
+                              {horario.is_feriado ? 0 : horariosDisponiveisCard}
+                            </span>
+                          </div>
+
+                          {horario.profissionais &&
+                            horario.profissionais.length > 0 && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-gray-400">
+                                  Barbeiros:
+                                </span>
+                                <span className="text-white font-medium">
+                                  {horario.profissionais.length}
+                                </span>
+                              </div>
+                            )}
+                        </div>
                       ) : (
-                        <div className="text-center py-4">
-                          <p className="text-gray-400 text-sm">
-                            Nenhum horário configurado
+                        <div className="text-center py-3">
+                          <p className="text-gray-400 text-xs">
+                            Não configurado
                           </p>
                         </div>
                       )}
@@ -709,13 +803,20 @@ export function GestorHorariosPage() {
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold text-white">
-              {selectedHorario
-                ? `Editar Horário - ${
-                    DIAS_SEMANA.find((d) => d.value === selectedDia)?.label
-                  }`
-                : `Configurar Horário - ${
-                    DIAS_SEMANA.find((d) => d.value === selectedDia)?.label
-                  }`}
+              {selectedDia
+                ? (() => {
+                    const diaInfo = DIAS_SEMANA.find(
+                      (d) => d.value === selectedDia
+                    );
+                    const dataDoDia = calcularDataDoDia(
+                      selectedDia,
+                      semanaSelecionada
+                    );
+                    const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
+
+                    return `Ajustar horário - ${diaInfo?.label || selectedDia} (${dataFormatada})`;
+                  })()
+                : "Ajustar horário"}
             </h2>
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -900,33 +1001,6 @@ export function GestorHorariosPage() {
                 </div>
               )}
 
-              {/* Switch Feriado */}
-              <Controller
-                control={control}
-                name="is_feriado"
-                render={({ field }) => (
-                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
-                    <div>
-                      <label
-                        className="block text-sm font-medium text-gray-300 mb-1"
-                        htmlFor="is_feriado_switch"
-                      >
-                        Não terá atendimento
-                      </label>
-                      <p className="text-xs text-gray-400">
-                        Marque se este dia não terá atendimento
-                      </p>
-                    </div>
-                    <Switch
-                      color="danger"
-                      id="is_feriado_switch"
-                      isSelected={field.value}
-                      onValueChange={field.onChange}
-                    />
-                  </div>
-                )}
-              />
-
               {/* Seleção de Barbeiros */}
               {!isFeriado && (
                 <div>
@@ -994,9 +1068,16 @@ export function GestorHorariosPage() {
                                   >
                                     {getInitials(barbeiro.nome)}
                                   </div>
-                                  <span className="text-white text-sm font-medium flex-1">
-                                    {barbeiro.nome}
-                                  </span>
+                                  <div className="flex-1">
+                                    <span className="text-white text-sm font-medium block">
+                                      {barbeiro.nome}
+                                    </span>
+                                    {barbeiro.funcao && (
+                                      <span className="text-gray-400 text-xs block mt-0.5">
+                                        {barbeiro.funcao}
+                                      </span>
+                                    )}
+                                  </div>
                                 </label>
                               );
                             })}
@@ -1012,6 +1093,33 @@ export function GestorHorariosPage() {
                   )}
                 </div>
               )}
+
+              {/* Switch Feriado */}
+              <Controller
+                control={control}
+                name="is_feriado"
+                render={({ field }) => (
+                  <div className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
+                    <div>
+                      <label
+                        className="block text-sm font-medium text-gray-300 mb-1"
+                        htmlFor="is_feriado_switch"
+                      >
+                        Não terá atendimento
+                      </label>
+                      <p className="text-xs text-gray-400">
+                        Marque se este dia não terá atendimento
+                      </p>
+                    </div>
+                    <Switch
+                      color="danger"
+                      id="is_feriado_switch"
+                      isSelected={field.value}
+                      onValueChange={field.onChange}
+                    />
+                  </div>
+                )}
+              />
             </ModalBody>
             <ModalFooter>
               <Button
