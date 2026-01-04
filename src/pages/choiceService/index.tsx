@@ -44,6 +44,23 @@ export function ChoiceServicePage() {
     fetchServices();
   }, []);
 
+  // Debug: Verificar dados dos serviços
+  useEffect(() => {
+    if (services.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log("Serviços carregados:", services);
+      // eslint-disable-next-line no-console
+      console.log(
+        "Primeiro serviço:",
+        services[0],
+        "Imagem:",
+        services[0]?.imagem
+      );
+      // eslint-disable-next-line no-console
+      console.log("VITE_API:", import.meta.env.VITE_API);
+    }
+  }, [services]);
+
   // Ordena no front conforme prioridade desejada
   const sortedServices = useMemo(() => {
     const list = Array.isArray(services) ? [...services] : [];
@@ -166,12 +183,12 @@ export function ChoiceServicePage() {
                   key={service.id}
                   aria-pressed={isSelected}
                   className={[
-                    "rounded-lg p-4 text-left shadow transition-all border",
+                    "rounded-lg shadow-lg transition-all border overflow-hidden flex",
                     isSelected
-                      ? "bg-gray-600 border-green-400 hover:bg-gray-700"
+                      ? "border-green-400 hover:border-green-300 bg-gray-800"
                       : isDisabled
-                        ? "bg-gray-900/50 border-gray-700 opacity-60 cursor-not-allowed"
-                        : "bg-gray-900 border-transparent hover:shadow-md",
+                        ? "border-gray-700 opacity-60 cursor-not-allowed bg-gray-900/50"
+                        : "border-transparent hover:border-gray-600 hover:shadow-xl bg-gray-900",
                   ].join(" ")}
                   disabled={isDisabled}
                   title={
@@ -182,27 +199,56 @@ export function ChoiceServicePage() {
                   type="button"
                   onClick={() => toggleService(service.id, service.nome)}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="text-white font-medium">{service.nome}</div>
-                    {isSelected && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-600 text-white border border-green-300/50">
-                        Selecionado
-                      </span>
-                    )}
+                  {/* Conteúdo do lado esquerdo */}
+                  <div className="flex-1 p-2.5 flex flex-col justify-between min-h-0">
+                    <div className="min-w-0">
+                      <div className="mb-1 text-left">
+                        <div className="text-white font-semibold text-sm leading-tight line-clamp-2 text-left">
+                          {service.nome}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center gap-1.5 mb-1">
+                        <span className="text-green-300 font-bold text-sm">
+                          {formatPrice(Number(service.preco))}
+                        </span>
+                        <span className="text-green-200 text-[10px] font-medium bg-gray-800/50 px-1 py-0.5 rounded whitespace-nowrap">
+                          {service.duracao} min
+                        </span>
+                      </div>
+
+                      {isSelected && (
+                        <div className="mb-1">
+                          <span className="text-[9px] px-1 py-0.5 rounded-full bg-green-600 text-white border border-green-300/50 shadow-lg inline-block">
+                            Selecionado
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-[9px] text-gray-400 mt-auto">
+                      Toque para {isSelected ? "remover" : "selecionar"}
+                    </div>
                   </div>
 
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-green-300 font-semibold">
-                      {/* se preferir manter ",00", troque pela linha de baixo */}
-                      {/* R$ {service.preco},00 */}
-                      {formatPrice(Number(service.preco))}
-                    </span>
-                    <span className="text-green-200 text-sm">
-                      {service.duracao} min
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    Toque para {isSelected ? "remover" : "selecionar"}
+                  {/* Imagem do lado direito */}
+                  <div className="w-1/2 relative overflow-hidden flex-shrink-0 bg-gray-700">
+                    <img
+                      alt={service.nome}
+                      className="w-full h-full object-cover"
+                      decoding="async"
+                      loading="lazy"
+                      src={
+                        service.imagem && import.meta.env.VITE_API
+                          ? `${import.meta.env.VITE_API}/servicos/${encodeURIComponent(service.imagem)}`
+                          : "/img-barber-icon.png"
+                      }
+                      onError={(e) => {
+                        // Fallback para uma imagem padrão se não carregar
+                        e.currentTarget.src = "/img-barber-icon.png";
+                      }}
+                    />
+                    {/* Overlay sutil no hover */}
+                    <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
                   </div>
                 </button>
               );

@@ -25,10 +25,15 @@ export function ChoiceSchedulePage() {
 
   // Estado para armazenar os horários disponíveis (incluindo ocupado/livre/passado)
   const [availableTimeSlots, setAvailableTimeSlots] = useState<
-    { time: string; isOccupied: boolean; isPast: boolean }[]
+    {
+      time: string;
+      isOccupied: boolean;
+      isPast: boolean;
+      turno: "manha" | "tarde" | "noite";
+    }[]
   >([]);
 
-  // Soma total da duração dos serviços
+  // SOMA TOTAL DA DURAÇÃO DOS SERVIÇOS
   const totalDuration = useMemo(
     () =>
       selectedServices?.reduce(
@@ -161,9 +166,26 @@ export function ChoiceSchedulePage() {
     return dates;
   };
 
+  // Função para determinar o turno de um horário
+  const getTurno = (time: string): "manha" | "tarde" | "noite" => {
+    const [hour] = time.split(":").map(Number);
+
+    if (hour >= 9 && hour < 12) return "manha";
+    if (hour === 12) return "manha"; // 12:00 e 12:30 ainda são manhã
+    if (hour >= 14 && hour < 18) return "tarde";
+    if (hour >= 18) return "noite"; // 18:00 até 19:30
+
+    return "manha"; // fallback
+  };
+
   // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS
   const generateTimeSlots = useCallback(() => {
-    const slots: { time: string; isOccupied: boolean; isPast: boolean }[] = [];
+    const slots: {
+      time: string;
+      isOccupied: boolean;
+      isPast: boolean;
+      turno: "manha" | "tarde" | "noite";
+    }[] = [];
     const step = totalDuration >= 60 ? 60 : 30;
 
     // Obtém a data e hora atual
@@ -230,8 +252,11 @@ export function ChoiceSchedulePage() {
         // Verifica se o horário já passou (apenas para hoje)
         const isPast = isToday && timeSlotStart < now.getTime();
 
+        // Determina o turno
+        const turno = getTurno(time);
+
         // Armazena o horário e se está ocupado, passado ou não
-        slots.push({ time, isOccupied, isPast });
+        slots.push({ time, isOccupied, isPast, turno });
       }
     }
 
@@ -274,8 +299,11 @@ export function ChoiceSchedulePage() {
         // Verifica se o horário já passou (apenas para hoje)
         const isPast = isToday && timeSlotStart < now.getTime();
 
+        // Determina o turno
+        const turno = getTurno(time);
+
         // Armazena o horário e se está ocupado, passado ou não
-        slots.push({ time, isOccupied, isPast });
+        slots.push({ time, isOccupied, isPast, turno });
       }
     }
 
@@ -352,7 +380,7 @@ export function ChoiceSchedulePage() {
             </div>
           </div>
 
-          {/* Resumo do agendamento */}
+          {/* RESUMO DO AGENDAMENTO */}
           {selectedServices && selectedServices.length > 0 && (
             <div className="bg-gray-900 rounded-lg p-4 mb-6">
               <h3 className="text-white font-medium mb-2">
@@ -409,34 +437,171 @@ export function ChoiceSchedulePage() {
             </div>
           </div>
 
-          {/* SELEÇÃO DE HORÁRIO */}
+          {/* SELEÇÃO DE HORÁRIO DISPONÍVEIS */}
           {selectedDate && availableTimeSlots.length > 0 && (
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-white mb-3">
                 Escolha o horário
               </h2>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {availableTimeSlots
-                  .filter(({ isPast }) => !isPast)
-                  .map(({ time, isOccupied }) => (
-                    <button
-                      key={time}
-                      className={`p-2 rounded-lg text-center text-sm transition-colors ${
-                        isOccupied
-                          ? "bg-gray-700 text-gray-500 cursor-not-allowed"
-                          : selectedTime === time
-                            ? "bg-green-600 text-white"
-                            : "bg-gray-900 text-gray-300 hover:bg-gray-700"
-                      }`}
-                      disabled={isOccupied}
-                      title={isOccupied ? "Horário ocupado" : "Disponível"}
-                      type="button"
-                      onClick={() => !isOccupied && setSelectedTime(time)}
-                    >
-                      {time}
-                    </button>
-                  ))}
-              </div>
+
+              {/* Agrupar horários por turno */}
+              {(() => {
+                const horariosFiltrados = availableTimeSlots.filter(
+                  ({ isPast }) => !isPast
+                );
+
+                const turnos = {
+                  manha: horariosFiltrados.filter(
+                    ({ turno }) => turno === "manha"
+                  ),
+                  tarde: horariosFiltrados.filter(
+                    ({ turno }) => turno === "tarde"
+                  ),
+                  noite: horariosFiltrados.filter(
+                    ({ turno }) => turno === "noite"
+                  ),
+                };
+
+                const contarDisponiveis = (
+                  horarios: typeof horariosFiltrados
+                ) => horarios.filter(({ isOccupied }) => !isOccupied).length;
+
+                const formatarDisponiveis = (quantidade: number) => {
+                  if (quantidade === 0) {
+                    return "Nenhum horário disponível";
+                  }
+                  if (quantidade === 1) {
+                    return "1 horário disponível";
+                  }
+
+                  return `${quantidade} horários disponíveis`;
+                };
+
+                return (
+                  <div className="space-y-4">
+                    {/* Turno Manhã */}
+                    {turnos.manha.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm font-semibold text-white">
+                            Manhã
+                          </h3>
+                          <span className="text-xs text-gray-400">
+                            {formatarDisponiveis(
+                              contarDisponiveis(turnos.manha)
+                            )}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {turnos.manha.map(({ time, isOccupied }) => (
+                            <button
+                              key={time}
+                              className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                                isOccupied
+                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  : selectedTime === time
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                              }`}
+                              disabled={isOccupied}
+                              title={
+                                isOccupied ? "Horário ocupado" : "Disponível"
+                              }
+                              type="button"
+                              onClick={() =>
+                                !isOccupied && setSelectedTime(time)
+                              }
+                            >
+                              {time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Turno Tarde */}
+                    {turnos.tarde.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm font-semibold text-white">
+                            Tarde
+                          </h3>
+                          <span className="text-xs text-gray-400">
+                            {formatarDisponiveis(
+                              contarDisponiveis(turnos.tarde)
+                            )}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {turnos.tarde.map(({ time, isOccupied }) => (
+                            <button
+                              key={time}
+                              className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                                isOccupied
+                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  : selectedTime === time
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                              }`}
+                              disabled={isOccupied}
+                              title={
+                                isOccupied ? "Horário ocupado" : "Disponível"
+                              }
+                              type="button"
+                              onClick={() =>
+                                !isOccupied && setSelectedTime(time)
+                              }
+                            >
+                              {time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Turno Noite */}
+                    {turnos.noite.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-sm font-semibold text-white">
+                            Noite
+                          </h3>
+                          <span className="text-xs text-gray-400">
+                            {formatarDisponiveis(
+                              contarDisponiveis(turnos.noite)
+                            )}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {turnos.noite.map(({ time, isOccupied }) => (
+                            <button
+                              key={time}
+                              className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                                isOccupied
+                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  : selectedTime === time
+                                    ? "bg-green-600 text-white"
+                                    : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                              }`}
+                              disabled={isOccupied}
+                              title={
+                                isOccupied ? "Horário ocupado" : "Disponível"
+                              }
+                              type="button"
+                              onClick={() =>
+                                !isOccupied && setSelectedTime(time)
+                              }
+                            >
+                              {time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
               <div className="mt-3 flex gap-4 text-xs text-gray-400">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-600 rounded" />
@@ -454,7 +619,7 @@ export function ChoiceSchedulePage() {
             </div>
           )}
 
-          {/* Botão de confirmação */}
+          {/* BOTÃO DE CONFIRMAÇÃO DO AGENDAMENTO */}
           {selectedDate && selectedTime && (
             <button
               className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
