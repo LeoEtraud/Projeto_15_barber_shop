@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Card,
@@ -26,10 +26,12 @@ import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import {
   GetHorariosFuncionamento,
-  CreateHorarioFuncionamento,
   UpdateHorarioFuncionamento,
 } from "@/contexts/ScheduleProvider/util";
-import { IHorarioFuncionamento } from "@/contexts/ScheduleProvider/types";
+import {
+  IHorarioFuncionamento,
+  IProfessionals,
+} from "@/contexts/ScheduleProvider/types";
 
 interface HorarioFormData {
   horario_abertura: string;
@@ -312,8 +314,6 @@ export function GestorHorariosPage() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [horarios, setHorarios] = useState<IHorarioFuncionamento[]>([]);
   const [selectedDia, setSelectedDia] = useState<string | null>(null);
-  const [selectedHorario, setSelectedHorario] =
-    useState<IHorarioFuncionamento | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -336,11 +336,11 @@ export function GestorHorariosPage() {
   } = useForm<HorarioFormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      horario_abertura: "09:00",
-      horario_fechamento: "19:30",
-      tem_almoco: true,
-      horario_almoco_inicio: "12:30",
-      horario_almoco_fim: "14:00",
+      horario_abertura: "",
+      horario_fechamento: "",
+      tem_almoco: false,
+      horario_almoco_inicio: "",
+      horario_almoco_fim: "",
       is_feriado: false,
       profissionais_ids: [],
     },
@@ -369,6 +369,66 @@ export function GestorHorariosPage() {
           quantidadeBarbeiros
         );
 
+  // Função para enriquecer horários com dados completos dos profissionais
+  // Prioriza os dados que já vêm da API
+  const enriquecerHorariosComProfissionais = (
+    horarios: IHorarioFuncionamento[]
+  ): IHorarioFuncionamento[] => {
+    return horarios.map((horario) => {
+      // Se não há profissionais no horário, retorna como está
+      if (!horario.profissionais || horario.profissionais.length === 0) {
+        return horario;
+      }
+
+      // Enriquecer profissionais - prioriza dados da API
+      const profissionaisEnriquecidos = horario.profissionais
+        .map((prof: any) => {
+          // Se a API já retornou nome e função, usa diretamente
+          if (prof.nome && prof.funcao && prof.id) {
+            // Tenta enriquecer apenas com avatar se não tiver
+            if (!prof.avatar && professionals.length > 0) {
+              const profissionalCompleto = professionals.find(
+                (p) => p.id === prof.id
+              );
+              if (profissionalCompleto?.avatar) {
+                return {
+                  ...prof,
+                  avatar: profissionalCompleto.avatar,
+                };
+              }
+            }
+            // Retorna os dados da API como estão
+            return prof as IProfessionals;
+          }
+
+          // Se não tem dados completos, tenta buscar na lista de professionals
+          const profissionalCompleto = professionals.find(
+            (p) =>
+              p.id === prof.id ||
+              p.id === prof.id_profissional ||
+              p.id === prof.profissional_id
+          );
+
+          if (profissionalCompleto) {
+            return profissionalCompleto;
+          }
+
+          // Se não encontrou mas tem ID, retorna como está
+          if (prof.id) {
+            return prof as IProfessionals;
+          }
+
+          return null;
+        })
+        .filter((p) => p !== undefined && p !== null) as IProfessionals[];
+
+      return {
+        ...horario,
+        profissionais: profissionaisEnriquecidos,
+      };
+    });
+  };
+
   // Função para buscar horários de funcionamento
   const fetchHorarios = async () => {
     try {
@@ -381,7 +441,10 @@ export function GestorHorariosPage() {
 
       const response = await GetHorariosFuncionamento(barbeariaId);
 
-      setHorarios(response.horarios || []);
+      // A API retorna os dados em hoursFunctionment
+      const horariosDaAPI =
+        response.hoursFunctionment || response.horarios || response || [];
+      setHorarios(Array.isArray(horariosDaAPI) ? horariosDaAPI : []);
     } catch (error) {
       console.error("Erro ao buscar horários:", error);
       addToast({
@@ -402,45 +465,73 @@ export function GestorHorariosPage() {
     }
   }, [isGestor]);
 
-  // Função para obter horário de um dia específico
-  const getHorarioByDia = (dia: string): IHorarioFuncionamento | undefined => {
-    return horarios.find((h) => h.dia_da_semana === dia);
-  };
+  // Enriquecer horários com dados completos dos profissionais usando useMemo
+  const horariosEnriquecidos = useMemo(() => {
+    if (horarios.length === 0) {
+      return horarios;
+    }
+    // Sempre tenta enriquecer, mesmo se professionals ainda não foram carregados
+    // (a API pode já ter retornado os dados completos)
+    return enriquecerHorariosComProfissionais(horarios);
+  }, [horarios, professionals]);
 
-  // Função para obter valores padrão baseado no dia da semana
-  const getValoresPadrao = (dia: string) => {
-    // Filtrar apenas barbeiros ativos
-    const barbeirosAtivosIds = professionals
-      .filter(
-        (p) =>
-          (p.status === "ATIVO" || p.status === "ativo") &&
-          (p.funcao === "Barbeiro" || p.funcao === "Barbeiros")
-      )
-      .map((p) => p.id);
+  // Função para obter horário de um dia específico baseado na semana selecionada
+  // Lógica: Sempre usa PADRAO como base, só usa EXCECAO se houver data_excecao correspondente
+  const getHorarioByDia = (
+    dia: string,
+    semana: "atual" | "proxima" = semanaSelecionada
+  ): IHorarioFuncionamento | undefined => {
+    // Calcula a data do dia na semana selecionada
+    const dataDoDia = calcularDataDoDia(dia, semana);
+    const dataCalculada = new Date(
+      dataDoDia.ano,
+      dataDoDia.mes - 1,
+      dataDoDia.dia,
+      0,
+      0,
+      0,
+      0
+    );
+    dataCalculada.setHours(0, 0, 0, 0);
 
-    // Domingo é fechado por padrão
-    if (dia === "DOMINGO") {
-      return {
-        horario_abertura: "09:00",
-        horario_fechamento: "19:30",
-        tem_almoco: false,
-        horario_almoco_inicio: "12:30",
-        horario_almoco_fim: "14:00",
-        is_feriado: true,
-        profissionais_ids: [],
-      };
+    // Busca todos os horários para esse dia da semana
+    const horariosDoDia = horariosEnriquecidos.filter(
+      (h) => h.dia_da_semana === dia
+    );
+
+    if (horariosDoDia.length === 0) {
+      return undefined;
     }
 
-    // Segunda a sábado: aberto com horários padrão, intervalo de almoço e todos os barbeiros ativos
-    return {
-      horario_abertura: "09:00",
-      horario_fechamento: "19:30",
-      tem_almoco: true,
-      horario_almoco_inicio: "12:30",
-      horario_almoco_fim: "14:00",
-      is_feriado: false,
-      profissionais_ids: barbeirosAtivosIds,
-    };
+    // Primeiro, procura por EXCECAO que corresponda exatamente à data calculada
+    const excecaoEncontrada = horariosDoDia.find((h) => {
+      if (h.tipo_regra === "EXCECAO" && h.data_excecao) {
+        const dataExcecao = new Date(h.data_excecao);
+        dataExcecao.setHours(0, 0, 0, 0);
+        // Compara apenas dia, mês e ano
+        return (
+          dataExcecao.getDate() === dataCalculada.getDate() &&
+          dataExcecao.getMonth() === dataCalculada.getMonth() &&
+          dataExcecao.getFullYear() === dataCalculada.getFullYear()
+        );
+      }
+      return false;
+    });
+
+    // Se encontrou exceção para essa data específica, retorna ela
+    if (excecaoEncontrada) {
+      return excecaoEncontrada;
+    }
+
+    // Caso contrário, sempre retorna o PADRAO (regra padrão)
+    // A próxima semana segue a mesma regra padrão da atual
+    const padrao = horariosDoDia.find((h) => h.tipo_regra === "PADRAO");
+    if (padrao) {
+      return padrao;
+    }
+
+    // Fallback: retorna o primeiro horário encontrado
+    return horariosDoDia[0];
   };
 
   // Função para abrir modal de edição
@@ -448,31 +539,32 @@ export function GestorHorariosPage() {
     setSelectedDia(dia);
     const horarioExistente = getHorarioByDia(dia);
 
-    if (horarioExistente) {
-      setSelectedHorario(horarioExistente);
-      reset({
-        horario_abertura: horarioExistente.horario_abertura || "09:00",
-        horario_fechamento: horarioExistente.horario_fechamento || "19:30",
-        tem_almoco: horarioExistente.tem_almoco ?? true,
-        horario_almoco_inicio:
-          horarioExistente.horario_almoco_inicio || "12:30",
-        horario_almoco_fim: horarioExistente.horario_almoco_fim || "14:00",
-        is_feriado: horarioExistente.is_feriado || false,
-        profissionais_ids:
-          horarioExistente.profissionais?.map((p) => p.id) || [],
+    if (!horarioExistente) {
+      addToast({
+        title: "Aviso",
+        description: "Horário não encontrado. É necessário criar o horário primeiro.",
+        color: "warning",
+        timeout: 3000,
       });
-    } else {
-      setSelectedHorario(null);
-      const valoresPadrao = getValoresPadrao(dia);
-
-      reset(valoresPadrao);
+      return;
     }
+
+    // Usa apenas os valores retornados da API, sem valores padrão
+    reset({
+      horario_abertura: horarioExistente.horario_abertura || "",
+      horario_fechamento: horarioExistente.horario_fechamento || "",
+      tem_almoco: horarioExistente.tem_almoco ?? false,
+      horario_almoco_inicio: horarioExistente.horario_almoco_inicio || "",
+      horario_almoco_fim: horarioExistente.horario_almoco_fim || "",
+      is_feriado: horarioExistente.is_feriado || false,
+      profissionais_ids:
+        horarioExistente.profissionais?.map((p) => p.id) || [],
+    });
     onOpen();
   };
 
   const handleCloseModal = () => {
     setSelectedDia(null);
-    setSelectedHorario(null);
     reset();
     onClose();
   };
@@ -505,6 +597,34 @@ export function GestorHorariosPage() {
         return;
       }
 
+      // Busca o horário existente primeiro
+      const horarioExistente = getHorarioByDia(selectedDia);
+
+      if (!horarioExistente?.id) {
+        addToast({
+          title: "Erro",
+          description:
+            "Horário não encontrado. É necessário criar o horário primeiro.",
+          color: "danger",
+          timeout: 3000,
+        });
+        return;
+      }
+
+      // Calcula a data do dia selecionado baseado na semana atual para data_excecao
+      const dataDoDia = calcularDataDoDia(selectedDia, semanaSelecionada);
+      const dataExcecao = new Date(
+        dataDoDia.ano,
+        dataDoDia.mes - 1,
+        dataDoDia.dia,
+        0,
+        0,
+        0,
+        0
+      );
+      // Formata para ISO 8601 (DateTime)
+      const dataExcecaoISO = dataExcecao.toISOString();
+
       const payload = {
         id_barbearia: barbeariaId,
         dia_da_semana: selectedDia,
@@ -519,27 +639,22 @@ export function GestorHorariosPage() {
           : undefined,
         is_feriado: data.is_feriado,
         profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
+        // Ao atualizar, sempre define como EXCECAO com a data atual
+        tipo_regra: "EXCECAO" as const,
+        data_excecao: dataExcecaoISO,
       };
 
-      if (selectedHorario) {
-        // Atualizar horário existente
-        await UpdateHorarioFuncionamento(selectedHorario.id, payload);
-        addToast({
-          title: "Sucesso",
-          description: "Horário atualizado com sucesso!",
-          color: "success",
-          timeout: 3000,
-        });
-      } else {
-        // Criar novo horário
-        await CreateHorarioFuncionamento(payload);
-        addToast({
-          title: "Sucesso",
-          description: "Horário cadastrado com sucesso!",
-          color: "success",
-          timeout: 3000,
-        });
-      }
+      await UpdateHorarioFuncionamento({
+        id: horarioExistente.id,
+        ...payload,
+      });
+
+      addToast({
+        title: "Sucesso",
+        description: "Horário atualizado com sucesso!",
+        color: "success",
+        timeout: 3000,
+      });
 
       await fetchHorarios();
       handleCloseModal();
@@ -547,9 +662,7 @@ export function GestorHorariosPage() {
       console.error("Erro ao salvar horário:", error);
       addToast({
         title: "Erro",
-        description: selectedHorario
-          ? "Falha ao atualizar horário. Tente novamente."
-          : "Falha ao cadastrar horário. Tente novamente.",
+        description: "Falha ao atualizar horário. Tente novamente.",
         color: "danger",
         timeout: 5000,
       });
@@ -672,16 +785,18 @@ export function GestorHorariosPage() {
                       )
                     : 0;
 
-                // Calcula a data do dia da semana automaticamente baseado na semana selecionada
+                // Sempre calcula a data baseado na semana selecionada
+                // A próxima semana segue a mesma regra padrão da atual
                 const dataDoDia = calcularDataDoDia(
                   dia.value,
                   semanaSelecionada
                 );
-
                 const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
+
                 const hoje = new Date();
                 const hojeFormatado = `${String(hoje.getDate()).padStart(2, "0")}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
                 const isHoje = dataFormatada === hojeFormatado;
+                const isExcecao = horario?.tipo_regra === "EXCECAO";
 
                 return (
                   <Card
@@ -711,9 +826,19 @@ export function GestorHorariosPage() {
                                 Fechado
                               </span>
                             )}
+                            {isExcecao && (
+                              <span className="px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded">
+                                Exceção
+                              </span>
+                            )}
                           </div>
                           <p className="text-xs text-gray-400 mt-0.5">
                             {dataFormatada}
+                            {isExcecao && horario?.data_excecao && (
+                              <span className="ml-2 text-purple-400">
+                                (Exceção)
+                              </span>
+                            )}
                           </p>
                         </div>
                         <Button
@@ -728,45 +853,118 @@ export function GestorHorariosPage() {
                       </div>
 
                       {horario ? (
-                        <div className="space-y-1.5 text-xs">
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400">Horário:</span>
-                            <span className="text-white font-medium">
-                              {horario.horario_abertura} -{" "}
-                              {horario.horario_fechamento}
-                            </span>
+                        <div className="space-y-2.5 text-xs">
+                          {/* Horário de Funcionamento - Valores diretos da API */}
+                          <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700/50">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-gray-400 text-[10px] uppercase tracking-wide">
+                                Horário de Funcionamento
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-blue-400 font-bold text-sm">
+                                {horario.horario_abertura || "N/A"}
+                              </span>
+                              <span className="text-gray-500">-</span>
+                              <span className="text-blue-400 font-bold text-sm">
+                                {horario.horario_fechamento || "N/A"}
+                              </span>
+                            </div>
                           </div>
 
+                          {/* Horário de Almoço */}
                           {horario.tem_almoco &&
                             horario.horario_almoco_inicio &&
                             horario.horario_almoco_fim && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-400">Almoço:</span>
-                                <span className="text-white font-medium">
-                                  {horario.horario_almoco_inicio} -{" "}
-                                  {horario.horario_almoco_fim}
-                                </span>
+                              <div className="bg-amber-500/10 rounded-lg p-2 border border-amber-500/30">
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-amber-400 text-[10px] uppercase tracking-wide">
+                                    Intervalo de Almoço
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-amber-300 font-semibold text-xs">
+                                    {horario.horario_almoco_inicio}
+                                  </span>
+                                  <span className="text-gray-500">-</span>
+                                  <span className="text-amber-300 font-semibold text-xs">
+                                    {horario.horario_almoco_fim}
+                                  </span>
+                                </div>
                               </div>
                             )}
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-400">Disponíveis:</span>
-                            <span className="text-green-400 font-medium">
-                              {horario.is_feriado ? 0 : horariosDisponiveisCard}
+                          {/* Horários Disponíveis */}
+                          {!horario.is_feriado && (
+                            <div className="flex items-center justify-between bg-green-500/10 rounded-lg p-2 border border-green-500/30">
+                              <span className="text-gray-300 text-[10px]">
+                                Horários Disponíveis:
+                              </span>
+                              <span className="text-green-400 font-bold text-sm">
+                                {horariosDisponiveisCard}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Lista de Barbeiros */}
+                          <div className="mt-2 pt-2 border-t border-gray-700">
+                            <span className="text-gray-400 block mb-2 text-[10px] uppercase tracking-wide">
+                              Barbeiros{" "}
+                              {horario.profissionais &&
+                              horario.profissionais.length > 0
+                                ? `(${horario.profissionais.length})`
+                                : "(0)"}
                             </span>
-                          </div>
+                            {horario.profissionais &&
+                            horario.profissionais.length > 0 ? (
+                              <div className="flex flex-wrap gap-1.5">
+                                {horario.profissionais.map((profissional) => {
+                                  const avatarUrl = getAvatarUrl(
+                                    profissional.avatar
+                                  );
 
-                          {horario.profissionais &&
-                            horario.profissionais.length > 0 && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-gray-400">
-                                  Barbeiros:
-                                </span>
-                                <span className="text-white font-medium">
-                                  {horario.profissionais.length}
-                                </span>
+                                  return (
+                                    <div
+                                      key={profissional.id}
+                                      className="flex items-center gap-1.5 bg-gray-800 rounded-lg px-2 py-1.5 border border-gray-700/50 hover:border-blue-500/50 transition-colors"
+                                    >
+                                      {/* Avatar do Barbeiro */}
+                                      {avatarUrl ? (
+                                        <img
+                                          alt={profissional.nome}
+                                          className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
+                                          src={avatarUrl}
+                                          onError={(e) => {
+                                            e.currentTarget.style.display =
+                                              "none";
+                                            const fallback =
+                                              e.currentTarget.nextElementSibling;
+                                            if (fallback) {
+                                              fallback.classList.remove("hidden");
+                                            }
+                                          }}
+                                        />
+                                      ) : null}
+                                      <div
+                                        className={`w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold border-2 border-gray-600 flex-shrink-0 ${
+                                          avatarUrl ? "hidden" : ""
+                                        }`}
+                                      >
+                                        {getInitials(profissional.nome)}
+                                      </div>
+                                      <span className="text-white text-xs font-medium truncate max-w-[100px]">
+                                        {profissional.nome}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
                               </div>
+                            ) : (
+                              <p className="text-gray-500 text-[10px] italic">
+                                Nenhum barbeiro atribuído
+                              </p>
                             )}
+                          </div>
                         </div>
                       ) : (
                         <div className="text-center py-3">
@@ -1131,7 +1329,7 @@ export function GestorHorariosPage() {
                 Cancelar
               </Button>
               <Button color="primary" isLoading={isSubmitting} type="submit">
-                {selectedHorario ? "Atualizar" : "Salvar"}
+                Atualizar
               </Button>
             </ModalFooter>
           </form>

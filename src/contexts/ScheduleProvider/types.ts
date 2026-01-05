@@ -95,6 +95,10 @@ export interface IHorarioFuncionamento {
   horario_almoco_fim?: string;
   is_feriado: boolean;
   profissionais?: IProfessionals[];
+  tipo_regra?: "PADRAO" | "EXCECAO";
+  data_excecao?: string | null;
+  data_criacao?: string;
+  data_atualizacao?: string;
 }
 
 export interface IScheduleProvider {
