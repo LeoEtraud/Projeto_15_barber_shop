@@ -534,6 +534,32 @@ export function GestorHorariosPage() {
     return horariosDoDia[0];
   };
 
+  // Função para verificar se há mudanças no horário (comparando EXCECAO com PADRAO)
+  const temMudancasNoHorario = (
+    horarioExcecao: IHorarioFuncionamento | undefined,
+    horarioPadrao: IHorarioFuncionamento | undefined
+  ): boolean => {
+    if (!horarioExcecao || !horarioPadrao) {
+      return false;
+    }
+
+    // Compara IDs dos profissionais
+    const idsExcecao = horarioExcecao.profissionais?.map((p) => p.id).sort() || [];
+    const idsPadrao = horarioPadrao.profissionais?.map((p) => p.id).sort() || [];
+
+    // Compara os campos principais do horário
+    return (
+      horarioExcecao.horario_abertura !== horarioPadrao.horario_abertura ||
+      horarioExcecao.horario_fechamento !== horarioPadrao.horario_fechamento ||
+      horarioExcecao.tem_almoco !== horarioPadrao.tem_almoco ||
+      horarioExcecao.horario_almoco_inicio !==
+        horarioPadrao.horario_almoco_inicio ||
+      horarioExcecao.horario_almoco_fim !== horarioPadrao.horario_almoco_fim ||
+      horarioExcecao.is_feriado !== horarioPadrao.is_feriado ||
+      JSON.stringify(idsExcecao) !== JSON.stringify(idsPadrao)
+    );
+  };
+
   // Função para abrir modal de edição
   const handleOpenModal = (dia: string) => {
     setSelectedDia(dia);
@@ -770,23 +796,22 @@ export function GestorHorariosPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {DIAS_SEMANA.map((dia) => {
                 const horario = getHorarioByDia(dia.value);
-                const quantidadeBarbeirosCard =
-                  horario?.profissionais?.length || 0;
-                const horariosDisponiveisCard =
-                  horario && !horario.is_feriado && quantidadeBarbeirosCard > 0
-                    ? calcularHorariosDisponiveis(
-                        horario.horario_abertura,
-                        horario.horario_fechamento,
-                        horario.tem_almoco,
-                        horario.horario_almoco_inicio,
-                        horario.horario_almoco_fim,
-                        30,
-                        quantidadeBarbeirosCard
-                      )
-                    : 0;
+                
+                // Busca o horário PADRAO para comparação
+                const horariosDoDia = horariosEnriquecidos.filter(
+                  (h) => h.dia_da_semana === dia.value
+                );
+                const horarioPadrao = horariosDoDia.find(
+                  (h) => h.tipo_regra === "PADRAO"
+                );
+                
+                // Verifica se há mudanças no horário (só mostra badge se houver diferenças)
+                const temMudancas =
+                  horario?.tipo_regra === "EXCECAO" &&
+                  horarioPadrao &&
+                  temMudancasNoHorario(horario, horarioPadrao);
 
                 // Sempre calcula a data baseado na semana selecionada
-                // A próxima semana segue a mesma regra padrão da atual
                 const dataDoDia = calcularDataDoDia(
                   dia.value,
                   semanaSelecionada
@@ -796,7 +821,6 @@ export function GestorHorariosPage() {
                 const hoje = new Date();
                 const hojeFormatado = `${String(hoje.getDate()).padStart(2, "0")}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
                 const isHoje = dataFormatada === hojeFormatado;
-                const isExcecao = horario?.tipo_regra === "EXCECAO";
 
                 return (
                   <Card
@@ -826,7 +850,7 @@ export function GestorHorariosPage() {
                                 Fechado
                               </span>
                             )}
-                            {isExcecao && (
+                            {temMudancas && (
                               <span className="px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded">
                                 Exceção
                               </span>
@@ -834,11 +858,6 @@ export function GestorHorariosPage() {
                           </div>
                           <p className="text-xs text-gray-400 mt-0.5">
                             {dataFormatada}
-                            {isExcecao && horario?.data_excecao && (
-                              <span className="ml-2 text-purple-400">
-                                (Exceção)
-                              </span>
-                            )}
                           </p>
                         </div>
                         <Button
@@ -853,61 +872,27 @@ export function GestorHorariosPage() {
                       </div>
 
                       {horario ? (
-                        <div className="space-y-2.5 text-xs">
-                          {/* Horário de Funcionamento - Valores diretos da API */}
-                          <div className="bg-gray-800/50 rounded-lg p-2 border border-gray-700/50">
-                            <div className="flex items-center justify-between mb-1">
+                        <div className="space-y-3 text-xs">
+                          {/* Horário de Funcionamento */}
+                          <div className="bg-gray-800/50 rounded-lg p-2.5 border border-gray-700/50">
+                            <div className="flex items-center justify-between mb-1.5">
                               <span className="text-gray-400 text-[10px] uppercase tracking-wide">
                                 Horário de Funcionamento
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-blue-400 font-bold text-sm">
+                              <span className="text-blue-400 font-bold text-base">
                                 {horario.horario_abertura || "N/A"}
                               </span>
                               <span className="text-gray-500">-</span>
-                              <span className="text-blue-400 font-bold text-sm">
+                              <span className="text-blue-400 font-bold text-base">
                                 {horario.horario_fechamento || "N/A"}
                               </span>
                             </div>
                           </div>
 
-                          {/* Horário de Almoço */}
-                          {horario.tem_almoco &&
-                            horario.horario_almoco_inicio &&
-                            horario.horario_almoco_fim && (
-                              <div className="bg-amber-500/10 rounded-lg p-2 border border-amber-500/30">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-amber-400 text-[10px] uppercase tracking-wide">
-                                    Intervalo de Almoço
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-amber-300 font-semibold text-xs">
-                                    {horario.horario_almoco_inicio}
-                                  </span>
-                                  <span className="text-gray-500">-</span>
-                                  <span className="text-amber-300 font-semibold text-xs">
-                                    {horario.horario_almoco_fim}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-
-                          {/* Horários Disponíveis */}
-                          {!horario.is_feriado && (
-                            <div className="flex items-center justify-between bg-green-500/10 rounded-lg p-2 border border-green-500/30">
-                              <span className="text-gray-300 text-[10px]">
-                                Horários Disponíveis:
-                              </span>
-                              <span className="text-green-400 font-bold text-sm">
-                                {horariosDisponiveisCard}
-                              </span>
-                            </div>
-                          )}
-
                           {/* Lista de Barbeiros */}
-                          <div className="mt-2 pt-2 border-t border-gray-700">
+                          <div className="pt-2 border-t border-gray-700">
                             <span className="text-gray-400 block mb-2 text-[10px] uppercase tracking-wide">
                               Barbeiros{" "}
                               {horario.profissionais &&

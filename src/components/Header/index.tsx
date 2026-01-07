@@ -25,8 +25,8 @@ export function Header() {
   }
 
   return (
-    <header className="w-full flex items-center justify-between px-4 py-3 bg-gray-900 sticky top-0 z-50">
-      <div className="flex items-center gap-3">
+    <header className="w-full flex items-center justify-between px-3 py-2 bg-gray-900 sticky top-0 z-50">
+      <div className="flex items-center gap-2">
         <button
           aria-label="Ir para inicial"
           className="flex items-center gap-2 focus:outline-none"
@@ -35,10 +35,10 @@ export function Header() {
         >
           <img
             alt="Logo da Barbearia"
-            className="h-9 w-9 select-none border-1 border-gray-300 rounded-lg "
+            className="h-8 w-8 select-none border-1 border-gray-300 rounded-lg"
             src="/logo-ia.png"
           />
-          <span className="text-white font-semibold text-lg">
+          <span className="text-white font-semibold text-base">
             Balata Barbearia
           </span>
         </button>
@@ -46,12 +46,46 @@ export function Header() {
 
       <div className="flex items-center gap-2">
         {user?.user ? (
-          <Dropdown placement="bottom-end">
+          <Dropdown
+            placement="bottom-end"
+            shouldBlockScroll={false}
+            backdrop="transparent"
+            motionProps={{
+              variants: {
+                enter: {
+                  y: 0,
+                  opacity: 1,
+                  scale: 1,
+                  transition: {
+                    duration: 0,
+                    ease: "easeOut",
+                  },
+                },
+                exit: {
+                  y: 0,
+                  opacity: 0,
+                  scale: 1,
+                  transition: {
+                    duration: 0,
+                    ease: "easeIn",
+                  },
+                },
+              },
+            }}
+          >
             <DropdownTrigger>
-              <button className="rounded-full focus:outline-none">
+              <button className="flex items-center gap-4 rounded-lg px-2 py-1 hover:bg-gray-800 transition-colors focus:outline-none active:scale-100">
+                <div className="flex flex-col items-end text-right">
+                  <span className="text-white text-sm font-medium leading-tight">
+                    {user.user.nome || "Usuário"}
+                  </span>
+                  <span className="text-gray-400 text-xs leading-tight mt-0.5">
+                    {user.user.email || ""}
+                  </span>
+                </div>
                 <Avatar
                   isBordered
-                  className="w-9 h-9 text-md"
+                  className="w-9 h-9 text-xs flex-shrink-0 active:scale-100"
                   color="default"
                 >
                   {getUserInitials(user.user.nome ?? "")}
@@ -76,7 +110,7 @@ export function Header() {
             </DropdownMenu>
           </Dropdown>
         ) : (
-          <Avatar isBordered className="w-9 h-9 text-md" color="default">
+          <Avatar isBordered className="w-10 h-10 text-sm" color="default">
             U
           </Avatar>
         )}
