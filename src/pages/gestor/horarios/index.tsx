@@ -326,7 +326,7 @@ export function GestorHorariosPage() {
   // Se hoje for domingo e não houver atendimento, inicia com "proxima", caso contrário "atual"
   const hoje = new Date();
   const diaAtual = hoje.getDay();
-  const [semanaSelecionada, setSemanaSelecionada] = useState<
+  const [semanaSelecionada,] = useState<
     "atual" | "proxima"
   >(diaAtual === 0 ? "proxima" : "atual");
   
