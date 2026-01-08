@@ -35,7 +35,7 @@ export function Header() {
         >
           <img
             alt="Logo da Barbearia"
-            className="h-8 w-8 select-none border-1 border-gray-300 rounded-lg"
+            className="h-12 w-12 md:h-12 md:w-12 select-none border-1 border-gray-300 rounded-lg"
             src="/logo-ia.png"
           />
           <span className="text-white font-semibold text-base">
@@ -75,7 +75,7 @@ export function Header() {
           >
             <DropdownTrigger>
               <button className="flex items-center gap-4 rounded-lg px-2 py-1 hover:bg-gray-800 transition-colors focus:outline-none active:scale-100">
-                <div className="flex flex-col items-end text-right">
+                <div className="hidden md:flex flex-col items-end text-right">
                   <span className="text-white text-sm font-medium leading-tight">
                     {user.user.nome || "Usuário"}
                   </span>
@@ -85,7 +85,7 @@ export function Header() {
                 </div>
                 <Avatar
                   isBordered
-                  className="w-9 h-9 text-xs flex-shrink-0 active:scale-100"
+                  className="w-9 h-9 md:w-9 md:h-9 text-xs flex-shrink-0 active:scale-100"
                   color="default"
                 >
                   {getUserInitials(user.user.nome ?? "")}

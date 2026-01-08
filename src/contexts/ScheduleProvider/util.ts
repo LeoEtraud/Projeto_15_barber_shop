@@ -262,3 +262,49 @@ export async function UpdateHorarioFuncionamento(data: {
     return Promise.reject(error);
   }
 }
+
+// CHAMADA DA API PARA CRIAR EXCEÇÃO DE HORÁRIO DE FUNCIONAMENTO
+export async function CreateHorarioExcecao(data: {
+  id_barbearia: string;
+  dia_da_semana: string;
+  dia?: number;
+  mes?: number;
+  ano?: number;
+  horario_abertura: string;
+  horario_fechamento: string;
+  tem_almoco: boolean;
+  horario_almoco_inicio?: string;
+  horario_almoco_fim?: string;
+  is_feriado: boolean;
+  profissionais_ids?: string[];
+  tipo_regra: "EXCECAO";
+  data_excecao: string;
+}) {
+  try {
+    const request = await apiBarber.post(
+      "/create-horario-excecao",
+      data
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
+// CHAMADA DA API PARA EXCLUIR EXCEÇÃO DE HORÁRIO DE FUNCIONAMENTO
+export async function DeleteHorarioExcecao(horarioId: string) {
+  try {
+    if (!horarioId) {
+      throw new Error("ID do horário é obrigatório");
+    }
+
+    const request = await apiBarber.delete(
+      `/delete-horario-excecao/${horarioId}`
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}

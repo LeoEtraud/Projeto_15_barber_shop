@@ -16,7 +16,7 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { PencilIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { PencilIcon, ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 
 import { Header } from "@/components/Header";
@@ -27,6 +27,8 @@ import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import {
   GetHorariosFuncionamento,
   UpdateHorarioFuncionamento,
+  CreateHorarioExcecao,
+  DeleteHorarioExcecao,
 } from "@/contexts/ScheduleProvider/util";
 import {
   IHorarioFuncionamento,
@@ -317,13 +319,24 @@ export function GestorHorariosPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estado para controlar qual semana está sendo visualizada
-  // Se hoje for domingo, inicia com "proxima", caso contrário "atual"
+  // Estado para controlar qual aba está ativa
+  const [abaAtiva, setAbaAtiva] = useState<"padrao" | "excecoes" | "cliente">("padrao");
+  
+  // Estado para controlar qual semana está sendo visualizada (apenas para aba Padrão Semanal)
+  // Se hoje for domingo e não houver atendimento, inicia com "proxima", caso contrário "atual"
   const hoje = new Date();
   const diaAtual = hoje.getDay();
   const [semanaSelecionada, setSemanaSelecionada] = useState<
     "atual" | "proxima"
   >(diaAtual === 0 ? "proxima" : "atual");
+  
+  // Estado para o calendário (aba Exceções)
+  const [mesCalendario, setMesCalendario] = useState(new Date().getMonth());
+  const [anoCalendario, setAnoCalendario] = useState(new Date().getFullYear());
+  
+  // Estado para controlar se está criando ou editando exceção
+  const [isCriandoExcecao, setIsCriandoExcecao] = useState(false);
+  const [dataSelecionadaExcecao, setDataSelecionadaExcecao] = useState<Date | null>(null);
 
   const opcoesHorario = gerarOpcoesHorario();
 
@@ -560,9 +573,166 @@ export function GestorHorariosPage() {
     );
   };
 
-  // Função para abrir modal de edição
+  // Função para obter apenas exceções (tipo_regra === "EXCECAO")
+  const excecoes = useMemo(() => {
+    return horariosEnriquecidos.filter((h) => h.tipo_regra === "EXCECAO");
+  }, [horariosEnriquecidos]);
+
+  // Função para verificar se uma data é passada
+  const isDataPassada = (data: { dia: number; mes: number; ano: number }): boolean => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    const dataComparar = new Date(data.ano, data.mes - 1, data.dia);
+    dataComparar.setHours(0, 0, 0, 0);
+    return dataComparar < hoje;
+  };
+
+  // Função para verificar se domingo tem atendimento (não é feriado)
+  const domingoTemAtendimento = (): boolean => {
+    const horarioDomingo = getHorarioByDia("DOMINGO", "atual");
+    return horarioDomingo ? !horarioDomingo.is_feriado : false;
+  };
+
+  // Função para gerar dias do calendário
+  const gerarDiasCalendario = (mes: number, ano: number) => {
+    const primeiroDia = new Date(ano, mes, 1);
+    const ultimoDia = new Date(ano, mes + 1, 0);
+    const diasNoMes = ultimoDia.getDate();
+    const diaInicioSemana = primeiroDia.getDay();
+
+    const dias: Array<{ dia: number; mes: number; ano: number; data: Date } | null> = [];
+
+    // Preencher dias vazios do início
+    for (let i = 0; i < diaInicioSemana; i++) {
+      dias.push(null);
+    }
+
+    // Adicionar dias do mês
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+      const data = new Date(ano, mes, dia);
+      dias.push({
+        dia,
+        mes: mes + 1,
+        ano,
+        data,
+      });
+    }
+
+    return dias;
+  };
+
+  // Função para obter exceção de uma data específica
+  const getExcecaoPorData = (data: Date): IHorarioFuncionamento | undefined => {
+    return excecoes.find((excecao) => {
+      if (!excecao.data_excecao) return false;
+      const excecaoData = new Date(excecao.data_excecao);
+      excecaoData.setHours(0, 0, 0, 0);
+      const compararData = new Date(data);
+      compararData.setHours(0, 0, 0, 0);
+      return (
+        excecaoData.getDate() === compararData.getDate() &&
+        excecaoData.getMonth() === compararData.getMonth() &&
+        excecaoData.getFullYear() === compararData.getFullYear()
+      );
+    });
+  };
+
+  // Função para gerar próximos 6 dias (para Visão do Cliente)
+  const gerarProximos6Dias = () => {
+    const dias: Array<{ data: Date; diaSemana: string; horario?: IHorarioFuncionamento }> = [];
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    let diasAdicionados = 0;
+    let i = 0;
+
+    // Garante exatamente 6 dias
+    while (diasAdicionados < 6) {
+      const data = new Date(hoje);
+      data.setDate(hoje.getDate() + i);
+      
+      const diaSemanaNum = data.getDay();
+      const diaSemanaMap: Record<number, string> = {
+        0: "DOMINGO",
+        1: "SEGUNDA",
+        2: "TERCA",
+        3: "QUARTA",
+        4: "QUINTA",
+        5: "SEXTA",
+        6: "SABADO",
+      };
+      const diaSemana = diaSemanaMap[diaSemanaNum];
+
+      // Para domingo, só mostra se houver exceção
+      if (diaSemana === "DOMINGO") {
+        const excecao = getExcecaoPorData(data);
+        if (excecao && !excecao.is_feriado) {
+          dias.push({ data, diaSemana, horario: excecao });
+          diasAdicionados++;
+        }
+        // Se não houver exceção, pula o domingo mas continua contando
+      } else {
+        // Para outros dias, busca horário (exceção ou padrão)
+        const excecao = getExcecaoPorData(data);
+        const horarioPadrao = horariosEnriquecidos.find(
+          (h) => h.dia_da_semana === diaSemana && h.tipo_regra === "PADRAO"
+        );
+        dias.push({ data, diaSemana, horario: excecao || horarioPadrao });
+        diasAdicionados++;
+      }
+      
+      i++;
+    }
+
+    return dias;
+  };
+
+  // Função para gerar slots de horário
+  const gerarSlotsHorario = (
+    horario: IHorarioFuncionamento | undefined
+  ): Array<{ hora: string; disponivel: boolean; isAlmoco: boolean }> => {
+    if (!horario || horario.is_feriado) {
+      return [];
+    }
+
+    const slots: Array<{ hora: string; disponivel: boolean; isAlmoco: boolean }> = [];
+    const [horaAbertura, minutoAbertura] = horario.horario_abertura.split(":").map(Number);
+    const [horaFechamento, minutoFechamento] = horario.horario_fechamento.split(":").map(Number);
+
+    let horaAtual = horaAbertura;
+    let minutoAtual = minutoAbertura;
+
+    while (horaAtual < horaFechamento || (horaAtual === horaFechamento && minutoAtual < minutoFechamento)) {
+      const horaStr = `${String(horaAtual).padStart(2, "0")}:${String(minutoAtual).padStart(2, "0")}`;
+      
+      // Verifica se está no intervalo de almoço
+      const isAlmoco = horario.tem_almoco &&
+        horario.horario_almoco_inicio &&
+        horario.horario_almoco_fim &&
+        horaStr >= horario.horario_almoco_inicio &&
+        horaStr < horario.horario_almoco_fim;
+
+      slots.push({
+        hora: horaStr,
+        disponivel: !isAlmoco,
+        isAlmoco: !!isAlmoco,
+      });
+
+      // Avança 30 minutos
+      minutoAtual += 30;
+      if (minutoAtual >= 60) {
+        minutoAtual = 0;
+        horaAtual++;
+      }
+    }
+
+    return slots;
+  };
+
+  // Função para abrir modal de edição (Padrão Semanal)
   const handleOpenModal = (dia: string) => {
     setSelectedDia(dia);
+    setIsCriandoExcecao(false);
+    setDataSelecionadaExcecao(null);
     const horarioExistente = getHorarioByDia(dia);
 
     if (!horarioExistente) {
@@ -589,8 +759,94 @@ export function GestorHorariosPage() {
     onOpen();
   };
 
+  // Função para abrir modal de criação de exceção (Exceções por data)
+  const handleOpenModalExcecao = (data: Date, excecaoExistente?: IHorarioFuncionamento) => {
+    setDataSelecionadaExcecao(data);
+    setIsCriandoExcecao(!excecaoExistente);
+    
+    if (excecaoExistente) {
+      // Editar exceção existente
+      reset({
+        horario_abertura: excecaoExistente.horario_abertura || "",
+        horario_fechamento: excecaoExistente.horario_fechamento || "",
+        tem_almoco: excecaoExistente.tem_almoco ?? false,
+        horario_almoco_inicio: excecaoExistente.horario_almoco_inicio || "",
+        horario_almoco_fim: excecaoExistente.horario_almoco_fim || "",
+        is_feriado: excecaoExistente.is_feriado || false,
+        profissionais_ids: excecaoExistente.profissionais?.map((p) => p.id) || [],
+      });
+      setSelectedDia(excecaoExistente.dia_da_semana);
+    } else {
+      // Criar nova exceção - busca o padrão do dia da semana
+      const diaSemanaNum = data.getDay();
+      const diaSemanaMap: Record<number, string> = {
+        0: "DOMINGO",
+        1: "SEGUNDA",
+        2: "TERCA",
+        3: "QUARTA",
+        4: "QUINTA",
+        5: "SEXTA",
+        6: "SABADO",
+      };
+      const diaSemana = diaSemanaMap[diaSemanaNum];
+      setSelectedDia(diaSemana);
+      
+      const horarioPadrao = horariosEnriquecidos.find(
+        (h) => h.dia_da_semana === diaSemana && h.tipo_regra === "PADRAO"
+      );
+
+      if (horarioPadrao) {
+        reset({
+          horario_abertura: horarioPadrao.horario_abertura || "",
+          horario_fechamento: horarioPadrao.horario_fechamento || "",
+          tem_almoco: horarioPadrao.tem_almoco ?? false,
+          horario_almoco_inicio: horarioPadrao.horario_almoco_inicio || "",
+          horario_almoco_fim: horarioPadrao.horario_almoco_fim || "",
+          is_feriado: horarioPadrao.is_feriado || false,
+          profissionais_ids: horarioPadrao.profissionais?.map((p) => p.id) || [],
+        });
+      } else {
+        reset({
+          horario_abertura: "",
+          horario_fechamento: "",
+          tem_almoco: false,
+          horario_almoco_inicio: "",
+          horario_almoco_fim: "",
+          is_feriado: false,
+          profissionais_ids: [],
+        });
+      }
+    }
+    
+    onOpen();
+  };
+
+  // Função para deletar exceção
+  const handleDeleteExcecao = async (excecaoId: string) => {
+    try {
+      await DeleteHorarioExcecao(excecaoId);
+      addToast({
+        title: "Sucesso",
+        description: "Exceção removida com sucesso!",
+        color: "success",
+        timeout: 3000,
+      });
+      await fetchHorarios();
+    } catch (error) {
+      console.error("Erro ao deletar exceção:", error);
+      addToast({
+        title: "Erro",
+        description: "Falha ao remover exceção. Tente novamente.",
+        color: "danger",
+        timeout: 5000,
+      });
+    }
+  };
+
   const handleCloseModal = () => {
     setSelectedDia(null);
+    setIsCriandoExcecao(false);
+    setDataSelecionadaExcecao(null);
     reset();
     onClose();
   };
@@ -608,7 +864,6 @@ export function GestorHorariosPage() {
           color: "danger",
           timeout: 3000,
         });
-
         return;
       }
 
@@ -619,68 +874,113 @@ export function GestorHorariosPage() {
           color: "danger",
           timeout: 3000,
         });
-
         return;
       }
 
-      // Busca o horário existente primeiro
-      const horarioExistente = getHorarioByDia(selectedDia);
+      // Se está criando exceção (aba Exceções por data)
+      if (isCriandoExcecao && dataSelecionadaExcecao) {
+        const dataExcecaoISO = dataSelecionadaExcecao.toISOString();
+        
+        const payload = {
+          id_barbearia: barbeariaId,
+          dia_da_semana: selectedDia,
+          horario_abertura: data.horario_abertura,
+          horario_fechamento: data.horario_fechamento,
+          tem_almoco: data.tem_almoco,
+          horario_almoco_inicio: data.tem_almoco
+            ? data.horario_almoco_inicio
+            : undefined,
+          horario_almoco_fim: data.tem_almoco
+            ? data.horario_almoco_fim
+            : undefined,
+          is_feriado: data.is_feriado,
+          profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
+          tipo_regra: "EXCECAO" as const,
+          data_excecao: dataExcecaoISO,
+        };
 
-      if (!horarioExistente?.id) {
+        await CreateHorarioExcecao(payload);
+        
         addToast({
-          title: "Erro",
-          description:
-            "Horário não encontrado. É necessário criar o horário primeiro.",
-          color: "danger",
+          title: "Sucesso",
+          description: "Exceção criada com sucesso!",
+          color: "success",
           timeout: 3000,
         });
-        return;
+      } else {
+        // Atualizar horário (Padrão Semanal ou editar exceção)
+        let horarioExistente: IHorarioFuncionamento | undefined;
+        
+        if (dataSelecionadaExcecao) {
+          // Editando exceção existente
+          horarioExistente = getExcecaoPorData(dataSelecionadaExcecao);
+        } else {
+          // Editando padrão semanal
+          horarioExistente = getHorarioByDia(selectedDia);
+        }
+
+        if (!horarioExistente?.id) {
+          addToast({
+            title: "Erro",
+            description: "Horário não encontrado.",
+            color: "danger",
+            timeout: 3000,
+          });
+          return;
+        }
+
+        // Calcula a data do dia selecionado
+        let dataExcecaoISO: string;
+        if (dataSelecionadaExcecao) {
+          dataExcecaoISO = dataSelecionadaExcecao.toISOString();
+        } else {
+          // Usa semana atual ou próxima se for domingo sem atendimento
+          const hojeDate = new Date();
+          const hojeDiaSemana = hojeDate.getDay();
+          const semanaParaUsar = (hojeDiaSemana === 0 && !domingoTemAtendimento()) ? "proxima" : "atual";
+          const dataDoDia = calcularDataDoDia(selectedDia, semanaParaUsar);
+          const dataExcecao = new Date(
+            dataDoDia.ano,
+            dataDoDia.mes - 1,
+            dataDoDia.dia,
+            0,
+            0,
+            0,
+            0
+          );
+          dataExcecaoISO = dataExcecao.toISOString();
+        }
+
+        const payload = {
+          id_barbearia: barbeariaId,
+          dia_da_semana: selectedDia,
+          horario_abertura: data.horario_abertura,
+          horario_fechamento: data.horario_fechamento,
+          tem_almoco: data.tem_almoco,
+          horario_almoco_inicio: data.tem_almoco
+            ? data.horario_almoco_inicio
+            : undefined,
+          horario_almoco_fim: data.tem_almoco
+            ? data.horario_almoco_fim
+            : undefined,
+          is_feriado: data.is_feriado,
+          profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
+          tipo_regra: dataSelecionadaExcecao ? ("EXCECAO" as const) : ("EXCECAO" as const),
+          data_excecao: dataExcecaoISO,
+        };
+
+        await UpdateHorarioFuncionamento({
+          id: horarioExistente.id,
+          ...payload,
+        });
+
+        addToast({
+          title: "Sucesso",
+          description: "Horário atualizado com sucesso!",
+          color: "success",
+          timeout: 3000,
+        });
       }
-
-      // Calcula a data do dia selecionado baseado na semana atual para data_excecao
-      const dataDoDia = calcularDataDoDia(selectedDia, semanaSelecionada);
-      const dataExcecao = new Date(
-        dataDoDia.ano,
-        dataDoDia.mes - 1,
-        dataDoDia.dia,
-        0,
-        0,
-        0,
-        0
-      );
-      // Formata para ISO 8601 (DateTime)
-      const dataExcecaoISO = dataExcecao.toISOString();
-
-      const payload = {
-        id_barbearia: barbeariaId,
-        dia_da_semana: selectedDia,
-        horario_abertura: data.horario_abertura,
-        horario_fechamento: data.horario_fechamento,
-        tem_almoco: data.tem_almoco,
-        horario_almoco_inicio: data.tem_almoco
-          ? data.horario_almoco_inicio
-          : undefined,
-        horario_almoco_fim: data.tem_almoco
-          ? data.horario_almoco_fim
-          : undefined,
-        is_feriado: data.is_feriado,
-        profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
-        // Ao atualizar, sempre define como EXCECAO com a data atual
-        tipo_regra: "EXCECAO" as const,
-        data_excecao: dataExcecaoISO,
-      };
-
-      await UpdateHorarioFuncionamento({
-        id: horarioExistente.id,
-        ...payload,
-      });
-
-      addToast({
-        title: "Sucesso",
-        description: "Horário atualizado com sucesso!",
-        color: "success",
-        timeout: 3000,
-      });
 
       await fetchHorarios();
       handleCloseModal();
@@ -688,7 +988,7 @@ export function GestorHorariosPage() {
       console.error("Erro ao salvar horário:", error);
       addToast({
         title: "Erro",
-        description: "Falha ao atualizar horário. Tente novamente.",
+        description: "Falha ao salvar horário. Tente novamente.",
         color: "danger",
         timeout: 5000,
       });
@@ -759,42 +1059,56 @@ export function GestorHorariosPage() {
             </div>
           </div>
 
-          {/* Abas de Seleção de Semana */}
+          {/* Abas de Navegação */}
           <div className="bg-gray-900 rounded-lg p-2 mb-6 border border-gray-700">
             <div className="flex flex-wrap gap-2">
               <button
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  semanaSelecionada === "atual"
+                  abaAtiva === "padrao"
                     ? "bg-blue-500 text-white shadow-md"
                     : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
                 type="button"
-                onClick={() => setSemanaSelecionada("atual")}
+                onClick={() => setAbaAtiva("padrao")}
               >
-                Semana Atual
+                Padrão Semanal
               </button>
               <button
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  semanaSelecionada === "proxima"
+                  abaAtiva === "excecoes"
                     ? "bg-blue-500 text-white shadow-md"
                     : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                 }`}
                 type="button"
-                onClick={() => setSemanaSelecionada("proxima")}
+                onClick={() => setAbaAtiva("excecoes")}
               >
-                Próxima Semana
+                Exceções por data
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  abaAtiva === "cliente"
+                    ? "bg-blue-500 text-white shadow-md"
+                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                }`}
+                type="button"
+                onClick={() => setAbaAtiva("cliente")}
+              >
+                Visão do Cliente
               </button>
             </div>
           </div>
 
-          {/* Grid de Cards dos Dias */}
+          {/* Conteúdo das Abas */}
           {isLoading ? (
             <div className="text-center py-12">
               <p className="text-gray-400">Carregando horários...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {DIAS_SEMANA.map((dia) => {
+            <>
+              {/* Aba: Padrão Semanal */}
+              {abaAtiva === "padrao" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {DIAS_SEMANA.map((dia) => {
                 const horario = getHorarioByDia(dia.value);
                 
                 // Busca o horário PADRAO para comparação
@@ -811,21 +1125,24 @@ export function GestorHorariosPage() {
                   horarioPadrao &&
                   temMudancasNoHorario(horario, horarioPadrao);
 
-                // Sempre calcula a data baseado na semana selecionada
+                // Calcula a data baseado na semana (atual ou próxima se for domingo sem atendimento)
+                const hojeDate = new Date();
+                const hojeDiaSemana = hojeDate.getDay();
+                const semanaParaUsar = (hojeDiaSemana === 0 && !domingoTemAtendimento()) ? "proxima" : "atual";
                 const dataDoDia = calcularDataDoDia(
                   dia.value,
-                  semanaSelecionada
+                  semanaParaUsar
                 );
                 const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
 
-                const hoje = new Date();
-                const hojeFormatado = `${String(hoje.getDate()).padStart(2, "0")}/${String(hoje.getMonth() + 1).padStart(2, "0")}/${hoje.getFullYear()}`;
+                const hojeFormatado = `${String(hojeDate.getDate()).padStart(2, "0")}/${String(hojeDate.getMonth() + 1).padStart(2, "0")}/${hojeDate.getFullYear()}`;
                 const isHoje = dataFormatada === hojeFormatado;
+                const isPassado = isDataPassada(dataDoDia);
 
                 return (
                   <Card
                     key={dia.value}
-                    className={`bg-gray-900 border ${
+                    className={`${isPassado ? "bg-gray-800/50 opacity-60" : "bg-gray-900"} border ${
                       horario?.is_feriado
                         ? "border-red-500/50"
                         : isHoje
@@ -863,9 +1180,10 @@ export function GestorHorariosPage() {
                         <Button
                           color="primary"
                           size="sm"
-                          startContent={<PencilIcon className="w-3 h-3" />}
+                          startContent={<PencilIcon className="w-3 h-3 text-white" />}
                           variant="flat"
                           onPress={() => handleOpenModal(dia.value)}
+                          className="text-white"
                         >
                           {horario ? "Editar" : "Config"}
                         </Button>
@@ -873,33 +1191,36 @@ export function GestorHorariosPage() {
 
                       {horario ? (
                         <div className="space-y-3 text-xs">
-                          {/* Horário de Funcionamento */}
-                          <div className="bg-gray-800/50 rounded-lg p-2.5 border border-gray-700/50">
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-gray-400 text-[10px] uppercase tracking-wide">
-                                Horário de Funcionamento
-                              </span>
-                            </div>
+                          {/* Horário de Funcionamento - Não exibir se for feriado */}
+                          {!horario.is_feriado && (
+                            <div className="bg-gray-800/50 rounded-lg p-2.5 border border-gray-700/50">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-gray-400 text-[10px] uppercase tracking-wide">
+                                  Horário de Funcionamento
+                            </span>
+                          </div>
                             <div className="flex items-center gap-2">
                               <span className="text-blue-400 font-bold text-base">
                                 {horario.horario_abertura || "N/A"}
-                              </span>
+                                </span>
                               <span className="text-gray-500">-</span>
                               <span className="text-blue-400 font-bold text-base">
                                 {horario.horario_fechamento || "N/A"}
-                              </span>
+                            </span>
                             </div>
                           </div>
+                          )}
 
-                          {/* Lista de Barbeiros */}
-                          <div className="pt-2 border-t border-gray-700">
-                            <span className="text-gray-400 block mb-2 text-[10px] uppercase tracking-wide">
-                              Barbeiros{" "}
-                              {horario.profissionais &&
+                          {/* Lista de Barbeiros - Não exibir se for feriado */}
+                          {!horario.is_feriado && (
+                            <div className="pt-2 border-t border-gray-700">
+                              <span className="text-gray-400 block mb-2 text-[10px] uppercase tracking-wide">
+                                Barbeiros{" "}
+                          {horario.profissionais &&
                               horario.profissionais.length > 0
                                 ? `(${horario.profissionais.length})`
                                 : "(0)"}
-                            </span>
+                                </span>
                             {horario.profissionais &&
                             horario.profissionais.length > 0 ? (
                               <div className="flex flex-wrap gap-1.5">
@@ -939,8 +1260,8 @@ export function GestorHorariosPage() {
                                       </div>
                                       <span className="text-white text-xs font-medium truncate max-w-[100px]">
                                         {profissional.nome}
-                                      </span>
-                                    </div>
+                                </span>
+                              </div>
                                   );
                                 })}
                               </div>
@@ -950,6 +1271,7 @@ export function GestorHorariosPage() {
                               </p>
                             )}
                           </div>
+                          )}
                         </div>
                       ) : (
                         <div className="text-center py-3">
@@ -962,7 +1284,257 @@ export function GestorHorariosPage() {
                   </Card>
                 );
               })}
-            </div>
+                </div>
+              )}
+
+              {/* Aba: Exceções por data */}
+              {abaAtiva === "excecoes" && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Calendário */}
+                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white">Calendário</h3>
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700"
+                          onClick={() => {
+                            if (mesCalendario === 0) {
+                              setMesCalendario(11);
+                              setAnoCalendario(anoCalendario - 1);
+                            } else {
+                              setMesCalendario(mesCalendario - 1);
+                            }
+                          }}
+                        >
+                          &lt;&lt;
+                        </button>
+                        <span className="text-white font-medium min-w-[120px] text-center">
+                          {new Date(anoCalendario, mesCalendario).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+                        </span>
+                        <button
+                          className="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700"
+                          onClick={() => {
+                            if (mesCalendario === 11) {
+                              setMesCalendario(0);
+                              setAnoCalendario(anoCalendario + 1);
+                            } else {
+                              setMesCalendario(mesCalendario + 1);
+                            }
+                          }}
+                        >
+                          &gt;&gt;
+                        </button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((dia) => (
+                        <div key={dia} className="text-center text-xs text-gray-400 font-medium py-1">
+                          {dia}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {gerarDiasCalendario(mesCalendario, anoCalendario).map((dia, index) => {
+                        if (!dia) {
+                          return <div key={index} className="aspect-square" />;
+                        }
+                        const excecao = getExcecaoPorData(dia.data);
+                        const hoje = new Date();
+                        hoje.setHours(0, 0, 0, 0);
+                        const isHoje = dia.data.getTime() === hoje.getTime();
+                        const isPassado = dia.data < hoje;
+
+                        return (
+                          <button
+                            key={index}
+                            className={`aspect-square rounded text-sm font-medium transition-all ${
+                              isHoje
+                                ? "bg-blue-500 text-white"
+                                : excecao
+                                  ? "bg-purple-500/30 text-purple-300 border border-purple-500"
+                                  : isPassado
+                                    ? "bg-gray-800 text-gray-500"
+                                    : "bg-gray-800 text-white hover:bg-gray-700"
+                            }`}
+                            onClick={() => handleOpenModalExcecao(dia.data, excecao)}
+                            disabled={isPassado}
+                          >
+                            {dia.dia}
+                            {excecao && <span className="block text-[8px]">*</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-4">* datas com exceção</p>
+                  </div>
+
+                  {/* Lista de Exceções */}
+                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                    <h3 className="text-lg font-semibold text-white mb-4">
+                      Lista de Exceções (ordenada por data)
+                    </h3>
+                    <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                      {excecoes.length === 0 ? (
+                        <p className="text-gray-400 text-sm text-center py-8">
+                          Nenhuma exceção cadastrada
+                        </p>
+                      ) : (
+                        excecoes
+                          .sort((a, b) => {
+                            if (!a.data_excecao || !b.data_excecao) return 0;
+                            return new Date(a.data_excecao).getTime() - new Date(b.data_excecao).getTime();
+                          })
+                          .map((excecao) => {
+                            if (!excecao.data_excecao) return null;
+                            const dataExcecao = new Date(excecao.data_excecao);
+                            const diaSemanaMap: Record<string, string> = {
+                              DOMINGO: "Dom",
+                              SEGUNDA: "Seg",
+                              TERCA: "Ter",
+                              QUARTA: "Qua",
+                              QUINTA: "Qui",
+                              SEXTA: "Sex",
+                              SABADO: "Sáb",
+                            };
+                            const diaSemana = diaSemanaMap[excecao.dia_da_semana] || excecao.dia_da_semana;
+                            const dataFormatada = `${String(dataExcecao.getDate()).padStart(2, "0")}/${String(dataExcecao.getMonth() + 1).padStart(2, "0")}`;
+
+                            return (
+                              <div
+                                key={excecao.id}
+                                className="bg-gray-800 rounded-lg p-3 border border-gray-700"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <div className="text-purple-400 font-semibold">
+                                      {dataFormatada} ({diaSemana})
+                                    </div>
+                                    <div className="text-white text-sm mt-1">
+                                      {excecao.is_feriado
+                                        ? "FECHADO"
+                                        : `${excecao.horario_abertura} - ${excecao.horario_fechamento}`}
+                                    </div>
+                                    {excecao.tem_almoco && !excecao.is_feriado && (
+                                      <div className="text-gray-400 text-xs mt-1">
+                                        • {excecao.horario_almoco_inicio} - {excecao.horario_almoco_fim} (almoço)
+                                      </div>
+                                    )}
+                                    {!excecao.tem_almoco && !excecao.is_feriado && (
+                                      <div className="text-gray-400 text-xs mt-1">
+                                        • sem almoço
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      color="primary"
+                                      size="sm"
+                                      variant="flat"
+                                      onPress={() => handleOpenModalExcecao(dataExcecao, excecao)}
+                                    >
+                                      Editar
+                                    </Button>
+                                    <Button
+                                      color="danger"
+                                      size="sm"
+                                      variant="flat"
+                                      onPress={() => handleDeleteExcecao(excecao.id)}
+                                      startContent={<TrashIcon className="w-4 h-4" />}
+                                    >
+                                      Excluir
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Aba: Visão do Cliente */}
+              {abaAtiva === "cliente" && (
+                <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4">
+                    Grade de Disponibilidade (6 dias)
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <div className="grid grid-cols-6 gap-4 min-w-[800px]">
+                      {gerarProximos6Dias().map((diaInfo, index) => {
+                        const dataFormatada = `${String(diaInfo.data.getDate()).padStart(2, "0")}/${String(diaInfo.data.getMonth() + 1).padStart(2, "0")}`;
+                        const diaSemanaMap: Record<string, string> = {
+                          DOMINGO: "Dom",
+                          SEGUNDA: "Seg",
+                          TERCA: "Ter",
+                          QUARTA: "Qua",
+                          QUINTA: "Qui",
+                          SEXTA: "Sex",
+                          SABADO: "Sáb",
+                        };
+                        const diaSemana = diaSemanaMap[diaInfo.diaSemana] || diaInfo.diaSemana;
+                        const slots = gerarSlotsHorario(diaInfo.horario);
+
+                        return (
+                          <div key={index} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+                            <div className="text-white font-semibold mb-2 text-center">
+                              {diaSemana} {dataFormatada}
+                            </div>
+                            {diaInfo.horario && !diaInfo.horario.is_feriado ? (
+                              <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                                {slots.map((slot, slotIndex) => (
+                                  <div
+                                    key={slotIndex}
+                                    className={`text-xs p-1 rounded text-center ${
+                                      slot.isAlmoco
+                                        ? "bg-gray-700 text-gray-400 line-through"
+                                        : slot.disponivel
+                                          ? "bg-green-500/20 text-green-400"
+                                          : "bg-red-500/20 text-red-400"
+                                    }`}
+                                  >
+                                    {slot.hora} {slot.isAlmoco ? "— almoço" : slot.disponivel ? "•" : "■"}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-4">
+                                <div className="text-red-400 font-semibold">FECHADO</div>
+                                {diaInfo.horario?.is_feriado && (
+                                  <div className="text-gray-400 text-xs mt-1">(padrão)</div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <h4 className="text-sm font-semibold text-white mb-3">Legenda:</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 font-bold">•</span>
+                        <span className="text-gray-300 text-xs">disponível</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-400 font-bold">■</span>
+                        <span className="text-gray-300 text-xs">ocupado</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 font-bold">—</span>
+                        <span className="text-gray-300 text-xs">intervalo</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-red-400 font-bold">FECHADO</span>
+                        <span className="text-gray-300 text-xs">sem slots</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -986,20 +1558,34 @@ export function GestorHorariosPage() {
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold text-white">
-              {selectedDia
+              {isCriandoExcecao && dataSelecionadaExcecao
                 ? (() => {
-                    const diaInfo = DIAS_SEMANA.find(
-                      (d) => d.value === selectedDia
-                    );
-                    const dataDoDia = calcularDataDoDia(
-                      selectedDia,
-                      semanaSelecionada
-                    );
-                    const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
-
-                    return `Ajustar horário - ${diaInfo?.label || selectedDia} (${dataFormatada})`;
+                    const dataFormatada = `${String(dataSelecionadaExcecao.getDate()).padStart(2, "0")}/${String(dataSelecionadaExcecao.getMonth() + 1).padStart(2, "0")}/${dataSelecionadaExcecao.getFullYear()}`;
+                    return `Criar exceção - ${dataFormatada}`;
                   })()
-                : "Ajustar horário"}
+                : dataSelecionadaExcecao
+                  ? (() => {
+                      const dataFormatada = `${String(dataSelecionadaExcecao.getDate()).padStart(2, "0")}/${String(dataSelecionadaExcecao.getMonth() + 1).padStart(2, "0")}/${dataSelecionadaExcecao.getFullYear()}`;
+                      return `Editar exceção - ${dataFormatada}`;
+                    })()
+                  : selectedDia
+                    ? (() => {
+                        const diaInfo = DIAS_SEMANA.find(
+                          (d) => d.value === selectedDia
+                        );
+                        // Usa semana atual ou próxima se for domingo sem atendimento
+                        const hojeDate = new Date();
+                        const hojeDiaSemana = hojeDate.getDay();
+                        const semanaParaUsar = (hojeDiaSemana === 0 && !domingoTemAtendimento()) ? "proxima" : "atual";
+                        const dataDoDia = calcularDataDoDia(
+                          selectedDia,
+                          semanaParaUsar
+                        );
+                        const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
+
+                        return `Ajustar horário - ${diaInfo?.label || selectedDia} (${dataFormatada})`;
+                      })()
+                    : "Ajustar horário"}
             </h2>
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>

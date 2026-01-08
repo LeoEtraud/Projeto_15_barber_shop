@@ -185,13 +185,13 @@ Com essa estrutura de banco de dados e fluxo de processos, seu SaaS pode oferece
 - Frontend: React, Vite
 - Pagamentos: Stripe, Pix, Cartão de Crédito/Débito
 
-### FUNCIONALIDADES A SEREM IMPLEMENTADAS (20/11/2025) (✅ ❌)
+### FUNCIONALIDADES A SEREM IMPLEMENTADAS (20/11/2025) (✅ "concluído" ❌ "pendente")
 
-- Mecanismo de autenticação de usuário através de Login Social (Conta Google).
-- Ajustar o meu front para permitir agendamento de 2 serviços com horários fracionados como das 15:30 às 16:30
-- Refatorar lógica de exibição de horários de agendamentos conforme o tempo dos serviços selecionados
-- Implementar upload de imagens dos usuários utilizando o serviço da AWS S3 de armazenamento na nuvem
-- Corrigir erro apresentado ao enviar código para recuperação de senha ❌
-- Implementar para que o profissional (Barbeiro) confirme o atendimento do agendamento após o serviço. ✅
-- Corrigir alteração de telefone para verificar se já existe número cadastrado tanto na model (cliente e profissional)
-- Implementar recebimento de notificações no app quando os clientes agendarem serviços
+- Mecanismo de autenticação de usuário através de Login Social (Conta Google). ❌
+- Ajustar o meu front para permitir agendamento de 2 serviços com horários fracionados como das 15:30 às 16:30. ❌
+- Refatorar lógica de exibição de horários de agendamentos conforme o tempo dos serviços selecionados. ❌
+- Implementar upload de imagens dos usuários utilizando o serviço da AWS S3 de armazenamento na nuvem. ❌
+- Corrigir erro apresentado ao enviar código para recuperação de senha. ❌
+- Implementar para que o atendente da barbearia confirme o atendimento do agendamento após o serviço. ❌
+- Corrigir alteração de telefone para verificar se já existe número cadastrado tanto na model (cliente e profissional) ❌.
+- Implementar recebimento de notificações no app quando os clientes agendarem serviços ❌.
