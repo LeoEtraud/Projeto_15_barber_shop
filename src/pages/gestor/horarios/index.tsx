@@ -333,6 +333,9 @@ export function GestorHorariosPage() {
   // Estado para o calendário (aba Exceções)
   const [mesCalendario, setMesCalendario] = useState(new Date().getMonth());
   const [anoCalendario, setAnoCalendario] = useState(new Date().getFullYear());
+
+  // Estado para filtro de barbeiro na Visão do Cliente
+  const [barbeiroSelecionado, setBarbeiroSelecionado] = useState<string | null>(null);
   
   // Estado para controlar se está criando ou editando exceção
   const [isCriandoExcecao, setIsCriandoExcecao] = useState(false);
@@ -686,20 +689,35 @@ export function GestorHorariosPage() {
     return dias;
   };
 
-  // Função para gerar slots de horário
+  // Função para verificar se uma data está na Visão do Cliente (próximos 6 dias)
+  const estaNaVisaoCliente = (data: Date): boolean => {
+    const diasVisaoCliente = gerarProximos6Dias();
+    const dataComparar = new Date(data);
+    dataComparar.setHours(0, 0, 0, 0);
+    
+    return diasVisaoCliente.some((dia) => {
+      const diaData = new Date(dia.data);
+      diaData.setHours(0, 0, 0, 0);
+      return diaData.getTime() === dataComparar.getTime();
+    });
+  };
+
+  // Função para gerar slots de horário (simplificada - almoço em um único slot)
   const gerarSlotsHorario = (
-    horario: IHorarioFuncionamento | undefined
-  ): Array<{ hora: string; disponivel: boolean; isAlmoco: boolean }> => {
+    horario: IHorarioFuncionamento | undefined,
+    barbeiroId?: string | null
+  ): Array<{ hora: string; disponivel: boolean; isAlmoco: boolean; isSlotAlmoco?: boolean }> => {
     if (!horario || horario.is_feriado) {
       return [];
     }
 
-    const slots: Array<{ hora: string; disponivel: boolean; isAlmoco: boolean }> = [];
+    const slots: Array<{ hora: string; disponivel: boolean; isAlmoco: boolean; isSlotAlmoco?: boolean }> = [];
     const [horaAbertura, minutoAbertura] = horario.horario_abertura.split(":").map(Number);
     const [horaFechamento, minutoFechamento] = horario.horario_fechamento.split(":").map(Number);
 
     let horaAtual = horaAbertura;
     let minutoAtual = minutoAbertura;
+    let slotAlmocoAdicionado = false;
 
     while (horaAtual < horaFechamento || (horaAtual === horaFechamento && minutoAtual < minutoFechamento)) {
       const horaStr = `${String(horaAtual).padStart(2, "0")}:${String(minutoAtual).padStart(2, "0")}`;
@@ -711,11 +729,37 @@ export function GestorHorariosPage() {
         horaStr >= horario.horario_almoco_inicio &&
         horaStr < horario.horario_almoco_fim;
 
-      slots.push({
-        hora: horaStr,
-        disponivel: !isAlmoco,
-        isAlmoco: !!isAlmoco,
-      });
+      // Se está no início do intervalo de almoço e ainda não adicionou o slot de almoço
+      if (isAlmoco && !slotAlmocoAdicionado && horaStr === horario.horario_almoco_inicio && horario.horario_almoco_fim) {
+        slots.push({
+          hora: `${horario.horario_almoco_inicio} - ${horario.horario_almoco_fim}`,
+          disponivel: false,
+          isAlmoco: true,
+          isSlotAlmoco: true,
+        });
+        slotAlmocoAdicionado = true;
+        
+        // Pula para o fim do almoço
+        const [horaAlmocoFim, minutoAlmocoFim] = horario.horario_almoco_fim.split(":").map(Number);
+        horaAtual = horaAlmocoFim;
+        minutoAtual = minutoAlmocoFim;
+        continue;
+      }
+
+      // Se não está no intervalo de almoço, adiciona slot normal
+      if (!isAlmoco) {
+        // Verifica se o barbeiro está disponível neste horário (se filtro ativo)
+        let disponivel = true;
+        if (barbeiroId && horario.profissionais) {
+          disponivel = horario.profissionais.some((p) => p.id === barbeiroId);
+        }
+
+        slots.push({
+          hora: horaStr,
+          disponivel,
+          isAlmoco: false,
+        });
+      }
 
       // Avança 30 minutos
       minutoAtual += 30;
@@ -930,26 +974,12 @@ export function GestorHorariosPage() {
         }
 
         // Calcula a data do dia selecionado
-        let dataExcecaoISO: string;
+        let dataExcecaoISO: string | null = null;
         if (dataSelecionadaExcecao) {
+          // Editando exceção - usa a data da exceção
           dataExcecaoISO = dataSelecionadaExcecao.toISOString();
-        } else {
-          // Usa semana atual ou próxima se for domingo sem atendimento
-          const hojeDate = new Date();
-          const hojeDiaSemana = hojeDate.getDay();
-          const semanaParaUsar = (hojeDiaSemana === 0 && !domingoTemAtendimento()) ? "proxima" : "atual";
-          const dataDoDia = calcularDataDoDia(selectedDia, semanaParaUsar);
-          const dataExcecao = new Date(
-            dataDoDia.ano,
-            dataDoDia.mes - 1,
-            dataDoDia.dia,
-            0,
-            0,
-            0,
-            0
-          );
-          dataExcecaoISO = dataExcecao.toISOString();
         }
+        // Se não houver dataSelecionadaExcecao, é padrão semanal e data_excecao deve ser null
 
         const payload = {
           id_barbearia: barbeariaId,
@@ -965,7 +995,7 @@ export function GestorHorariosPage() {
             : undefined,
           is_feriado: data.is_feriado,
           profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
-          tipo_regra: dataSelecionadaExcecao ? ("EXCECAO" as const) : ("EXCECAO" as const),
+          tipo_regra: dataSelecionadaExcecao ? ("EXCECAO" as const) : ("PADRAO" as const),
           data_excecao: dataExcecaoISO,
         };
 
@@ -976,7 +1006,7 @@ export function GestorHorariosPage() {
 
         addToast({
           title: "Sucesso",
-          description: "Horário atualizado com sucesso!",
+          description: "Informações atualizadas.",
           color: "success",
           timeout: 3000,
         });
@@ -1125,29 +1155,13 @@ export function GestorHorariosPage() {
                   horarioPadrao &&
                   temMudancasNoHorario(horario, horarioPadrao);
 
-                // Calcula a data baseado na semana (atual ou próxima se for domingo sem atendimento)
-                const hojeDate = new Date();
-                const hojeDiaSemana = hojeDate.getDay();
-                const semanaParaUsar = (hojeDiaSemana === 0 && !domingoTemAtendimento()) ? "proxima" : "atual";
-                const dataDoDia = calcularDataDoDia(
-                  dia.value,
-                  semanaParaUsar
-                );
-                const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
-
-                const hojeFormatado = `${String(hojeDate.getDate()).padStart(2, "0")}/${String(hojeDate.getMonth() + 1).padStart(2, "0")}/${hojeDate.getFullYear()}`;
-                const isHoje = dataFormatada === hojeFormatado;
-                const isPassado = isDataPassada(dataDoDia);
-
                 return (
                   <Card
                     key={dia.value}
-                    className={`${isPassado ? "bg-gray-800/50 opacity-60" : "bg-gray-900"} border ${
+                    className={`bg-gray-900 border ${
                       horario?.is_feriado
                         ? "border-red-500/50"
-                        : isHoje
-                          ? "border-blue-500"
-                          : "border-gray-700"
+                        : "border-gray-700"
                     } transition-all duration-200 hover:border-blue-500`}
                   >
                     <CardBody className="p-3">
@@ -1157,11 +1171,6 @@ export function GestorHorariosPage() {
                             <h3 className="text-sm font-semibold text-white">
                               {dia.label}
                             </h3>
-                            {isHoje && (
-                              <span className="px-1.5 py-0.5 bg-blue-500 text-white text-xs rounded">
-                                Hoje
-                              </span>
-                            )}
                             {horario?.is_feriado && (
                               <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded">
                                 Fechado
@@ -1173,9 +1182,6 @@ export function GestorHorariosPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {dataFormatada}
-                          </p>
                         </div>
                         <Button
                           color="primary"
@@ -1343,6 +1349,7 @@ export function GestorHorariosPage() {
                         hoje.setHours(0, 0, 0, 0);
                         const isHoje = dia.data.getTime() === hoje.getTime();
                         const isPassado = dia.data < hoje;
+                        const naVisaoCliente = estaNaVisaoCliente(dia.data);
 
                         return (
                           <button
@@ -1355,6 +1362,10 @@ export function GestorHorariosPage() {
                                   : isPassado
                                     ? "bg-gray-800 text-gray-500"
                                     : "bg-gray-800 text-white hover:bg-gray-700"
+                            } ${
+                              naVisaoCliente && !isPassado
+                                ? "ring-2 ring-yellow-400 ring-offset-1 ring-offset-gray-900"
+                                : ""
                             }`}
                             onClick={() => handleOpenModalExcecao(dia.data, excecao)}
                             disabled={isPassado}
@@ -1364,8 +1375,30 @@ export function GestorHorariosPage() {
                           </button>
                         );
                       })}
-                    </div>
-                    <p className="text-xs text-gray-400 mt-4">* datas com exceção</p>
+                      </div>
+                      <div className="mt-6 pt-4 border-t border-gray-700">
+                        <h4 className="text-sm font-semibold text-white mb-3">Legendas:</h4>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded bg-blue-500 flex-shrink-0"></div>
+                            <p className="text-xs text-gray-300">
+                              Dia atual
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded border-2 border-yellow-400 ring-1 ring-yellow-400 ring-offset-1 ring-offset-gray-900 flex-shrink-0"></div>
+                            <p className="text-xs text-yellow-400">
+                              Dias disponíveis na Visão do Cliente (podem ter agendamentos)
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded bg-purple-500/30 border border-purple-500 flex-shrink-0"></div>
+                            <p className="text-xs text-gray-300">
+                              * Datas com exceção
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                   </div>
 
                   {/* Lista de Exceções */}
@@ -1460,6 +1493,38 @@ export function GestorHorariosPage() {
                   <h3 className="text-lg font-semibold text-white mb-4">
                     Grade de Disponibilidade (6 dias)
                   </h3>
+                  
+                  {/* Abas de Filtro por Barbeiro */}
+                  <div className="bg-gray-800 rounded-lg p-2 mb-4 border border-gray-700">
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          barbeiroSelecionado === null
+                            ? "bg-blue-500 text-white shadow-md"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        }`}
+                        type="button"
+                        onClick={() => setBarbeiroSelecionado(null)}
+                      >
+                        Todos os Barbeiros
+                      </button>
+                      {barbeirosAtivos.map((barbeiro) => (
+                        <button
+                          key={barbeiro.id}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            barbeiroSelecionado === barbeiro.id
+                              ? "bg-blue-500 text-white shadow-md"
+                              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                          }`}
+                          type="button"
+                          onClick={() => setBarbeiroSelecionado(barbeiro.id)}
+                        >
+                          {barbeiro.nome}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="overflow-x-auto">
                     <div className="grid grid-cols-6 gap-4 min-w-[800px]">
                       {gerarProximos6Dias().map((diaInfo, index) => {
@@ -1474,7 +1539,7 @@ export function GestorHorariosPage() {
                           SABADO: "Sáb",
                         };
                         const diaSemana = diaSemanaMap[diaInfo.diaSemana] || diaInfo.diaSemana;
-                        const slots = gerarSlotsHorario(diaInfo.horario);
+                        const slots = gerarSlotsHorario(diaInfo.horario, barbeiroSelecionado);
 
                         return (
                           <div key={index} className="bg-gray-800 rounded-lg p-3 border border-gray-700">
@@ -1482,22 +1547,70 @@ export function GestorHorariosPage() {
                               {diaSemana} {dataFormatada}
                             </div>
                             {diaInfo.horario && !diaInfo.horario.is_feriado ? (
-                              <div className="space-y-1 max-h-[400px] overflow-y-auto">
-                                {slots.map((slot, slotIndex) => (
-                                  <div
-                                    key={slotIndex}
-                                    className={`text-xs p-1 rounded text-center ${
-                                      slot.isAlmoco
-                                        ? "bg-gray-700 text-gray-400 line-through"
-                                        : slot.disponivel
-                                          ? "bg-green-500/20 text-green-400"
-                                          : "bg-red-500/20 text-red-400"
-                                    }`}
-                                  >
-                                    {slot.hora} {slot.isAlmoco ? "— almoço" : slot.disponivel ? "•" : "■"}
+                              <>
+                                <div className="space-y-1 max-h-[400px] overflow-y-auto mb-3">
+                                  {slots.map((slot, slotIndex) => (
+                                    <div
+                                      key={slotIndex}
+                                      className={`text-xs p-1 rounded text-center ${
+                                        slot.isSlotAlmoco
+                                          ? "bg-gray-700 text-gray-300 py-2 font-medium"
+                                          : slot.disponivel
+                                            ? "bg-green-500/20 text-green-400"
+                                            : "bg-red-500/20 text-red-400"
+                                      }`}
+                                    >
+                                      {slot.isSlotAlmoco ? (
+                                        <span>Almoço: {slot.hora}</span>
+                                      ) : (
+                                        <>
+                                          {slot.hora} {slot.disponivel ? "•" : "■"}
+                                        </>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                                
+                                {/* Lista de Barbeiros */}
+                                {diaInfo.horario.profissionais && diaInfo.horario.profissionais.length > 0 && (
+                                  <div className="pt-3 border-t border-gray-700">
+                                    <p className="text-xs text-gray-400 mb-2 font-medium">Barbeiros:</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {diaInfo.horario.profissionais.map((profissional) => {
+                                        const avatarUrl = getAvatarUrl(profissional.avatar);
+                                        return (
+                                          <div
+                                            key={profissional.id}
+                                            className="flex items-center gap-1.5 bg-gray-700/50 rounded-lg px-2 py-1 border border-gray-600/50"
+                                          >
+                                            {avatarUrl ? (
+                                              <img
+                                                alt={profissional.nome}
+                                                className="w-5 h-5 rounded-full object-cover border border-gray-600 flex-shrink-0"
+                                                src={avatarUrl}
+                                                onError={(e) => {
+                                                  e.currentTarget.style.display = "none";
+                                                  e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                                                }}
+                                              />
+                                            ) : null}
+                                            <div
+                                              className={`w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold border border-gray-600 flex-shrink-0 ${
+                                                avatarUrl ? "hidden" : ""
+                                              }`}
+                                            >
+                                              {getInitials(profissional.nome)}
+                                            </div>
+                                            <span className="text-white text-[10px] font-medium truncate max-w-[60px]">
+                                              {profissional.nome}
+                                            </span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
+                                )}
+                              </>
                             ) : (
                               <div className="text-center py-4">
                                 <div className="text-red-400 font-semibold">FECHADO</div>
@@ -1523,7 +1636,7 @@ export function GestorHorariosPage() {
                         <span className="text-gray-300 text-xs">ocupado</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 font-bold">—</span>
+                        <span className="text-gray-400 font-bold">Almoço</span>
                         <span className="text-gray-300 text-xs">intervalo</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -1573,17 +1686,8 @@ export function GestorHorariosPage() {
                         const diaInfo = DIAS_SEMANA.find(
                           (d) => d.value === selectedDia
                         );
-                        // Usa semana atual ou próxima se for domingo sem atendimento
-                        const hojeDate = new Date();
-                        const hojeDiaSemana = hojeDate.getDay();
-                        const semanaParaUsar = (hojeDiaSemana === 0 && !domingoTemAtendimento()) ? "proxima" : "atual";
-                        const dataDoDia = calcularDataDoDia(
-                          selectedDia,
-                          semanaParaUsar
-                        );
-                        const dataFormatada = `${String(dataDoDia.dia).padStart(2, "0")}/${String(dataDoDia.mes).padStart(2, "0")}/${dataDoDia.ano}`;
 
-                        return `Ajustar horário - ${diaInfo?.label || selectedDia} (${dataFormatada})`;
+                        return `Ajustar horário - ${diaInfo?.label || selectedDia}`;
                       })()
                     : "Ajustar horário"}
             </h2>
