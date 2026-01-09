@@ -581,21 +581,6 @@ export function GestorHorariosPage() {
     return horariosEnriquecidos.filter((h) => h.tipo_regra === "EXCECAO");
   }, [horariosEnriquecidos]);
 
-  // Função para verificar se uma data é passada
-  const isDataPassada = (data: { dia: number; mes: number; ano: number }): boolean => {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const dataComparar = new Date(data.ano, data.mes - 1, data.dia);
-    dataComparar.setHours(0, 0, 0, 0);
-    return dataComparar < hoje;
-  };
-
-  // Função para verificar se domingo tem atendimento (não é feriado)
-  const domingoTemAtendimento = (): boolean => {
-    const horarioDomingo = getHorarioByDia("DOMINGO", "atual");
-    return horarioDomingo ? !horarioDomingo.is_feriado : false;
-  };
-
   // Função para gerar dias do calendário
   const gerarDiasCalendario = (mes: number, ano: number) => {
     const primeiroDia = new Date(ano, mes, 1);
