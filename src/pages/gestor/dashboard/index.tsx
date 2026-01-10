@@ -13,6 +13,7 @@ import {
   DashboardStats,
 } from "@/contexts/GestorProvider/util";
 import { formatPrice } from "@/utils/format-price";
+import { useLoading } from "@/contexts/LoadingProvider";
 
 /**
  * Dashboard do Gestor
@@ -28,6 +29,7 @@ import { formatPrice } from "@/utils/format-price";
 export function GestorDashboardPage() {
   const { user } = useAuth();
   const { isGestor } = usePermissions();
+  const { withLoading } = useLoading();
   const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats>({
     totalClientes: 0,
@@ -40,18 +42,26 @@ export function GestorDashboardPage() {
 
   // Função para buscar dados do dashboard
   async function fetchDashboardData() {
+    // Obtém o ID da barbearia do usuário logado
+    const barbeariaId = user?.user?.barbeariaId;
+
+    if (!barbeariaId) {
+      setHasError(true);
+      setIsLoading(false);
+      addToast({
+        title: "Erro",
+        description: "ID da barbearia não encontrado. Verifique seu perfil.",
+        color: "danger",
+        timeout: 5000,
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
       setHasError(false);
 
-      // Obtém o ID da barbearia do usuário logado
-      const barbeariaId = user?.user?.barbeariaId;
-
-      if (!barbeariaId) {
-        throw new Error("ID da barbearia não encontrado");
-      }
-
-      const data = await getDashboardStats(barbeariaId);
+      const data = await withLoading(getDashboardStats(barbeariaId));
 
       setStats(data);
     } catch (error) {
@@ -59,10 +69,7 @@ export function GestorDashboardPage() {
       setHasError(true);
       addToast({
         title: "Erro",
-        description:
-          error instanceof Error && error.message.includes("barbearia")
-            ? "ID da barbearia não encontrado. Verifique seu perfil."
-            : "Falha ao carregar dados do dashboard. Tente novamente.",
+        description: "Falha ao carregar dados do dashboard. Tente novamente.",
         color: "danger",
         timeout: 5000,
       });
@@ -220,6 +227,27 @@ export function GestorDashboardPage() {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">
                   Configure os horários de funcionamento da barbearia
+                </p>
+              </div>
+            </PermissionGate>
+
+            {/* Gerenciar Agendamentos */}
+            <PermissionGate requiredPermissions={["manage_schedules"]}>
+              <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-white">
+                    Gerenciar Agendamentos
+                  </h2>
+                  <Button
+                    color="primary"
+                    size="sm"
+                    onPress={() => navigate("/gestor/agendamentos")}
+                  >
+                    Visualizar
+                  </Button>
+                </div>
+                <p className="text-gray-400 text-sm mb-4">
+                  Visualize a grade de disponibilidade e horários dos próximos 6 dias
                 </p>
               </div>
             </PermissionGate>

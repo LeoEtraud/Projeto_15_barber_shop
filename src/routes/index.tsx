@@ -20,6 +20,7 @@ import { GestorDashboardPage } from "@/pages/gestor/dashboard";
 import { GestorBarbeirosPage } from "@/pages/gestor/barbeiros";
 import { GestorServicosPage } from "@/pages/gestor/servicos";
 import { GestorHorariosPage } from "@/pages/gestor/horarios";
+import { GestorAgendamentosPage } from "@/pages/gestor/agendamentos";
 
 export function Router() {
   return (
@@ -156,6 +157,18 @@ export function Router() {
           </RoleProtectedRoute>
         }
         path="/gestor/horarios"
+      />
+      <Route
+        element={
+          <RoleProtectedRoute
+            accessDeniedMessage="Você precisa de permissão para visualizar agendamentos."
+            allowedRoles={[UserRole.GESTOR]}
+            requiredPermissions={["manage_schedules"]}
+          >
+            <GestorAgendamentosPage />
+          </RoleProtectedRoute>
+        }
+        path="/gestor/agendamentos"
       />
     </Routes>
   );

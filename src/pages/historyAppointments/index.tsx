@@ -10,15 +10,16 @@ import { Footer } from "@/components/Footer";
 import { formatPrice } from "@/utils/format-price";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
+import { useLoading } from "@/contexts/LoadingProvider";
 
 export function HistoryAppointmentsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { fetchAppointments, appointments } = useSchedule();
+  const { withLoading } = useLoading();
   const [filter, setFilter] = useState<"confirmados" | "realizados">(
     "confirmados"
   );
-  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filterStartDate, setFilterStartDate] = useState("");
@@ -28,17 +29,12 @@ export function HistoryAppointmentsPage() {
   useEffect(() => {
     const loadAppointments = async () => {
       if (user?.user?.id) {
-        setIsLoading(true);
         setHasError(false);
         try {
-          await fetchAppointments(user.user.id);
+          await withLoading(fetchAppointments(user.user.id));
         } catch {
           setHasError(true);
-        } finally {
-          setIsLoading(false);
         }
-      } else {
-        setIsLoading(false);
       }
     };
 
@@ -443,16 +439,8 @@ export function HistoryAppointmentsPage() {
             )}
           </div>
 
-          {/* Loading */}
-          {isLoading && (
-            <div className="bg-gray-900 rounded-lg p-8 text-center">
-              <div className="text-yellow-400 text-4xl mb-4">⏳</div>
-              <p className="text-white">Carregando agendamentos...</p>
-            </div>
-          )}
-
           {/* Error */}
-          {hasError && !isLoading && (
+          {hasError && (
             <div className="bg-red-900/50 border border-red-500 rounded-lg p-6 text-center">
               <div className="text-red-400 text-4xl mb-4">⚠️</div>
               <p className="text-red-200 mb-4">
@@ -463,14 +451,11 @@ export function HistoryAppointmentsPage() {
                 type="button"
                 onClick={async () => {
                   if (user?.user?.id) {
-                    setIsLoading(true);
                     setHasError(false);
                     try {
-                      await fetchAppointments(user.user.id);
+                      await withLoading(fetchAppointments(user.user.id));
                     } catch {
                       setHasError(true);
-                    } finally {
-                      setIsLoading(false);
                     }
                   }
                 }}
@@ -481,7 +466,7 @@ export function HistoryAppointmentsPage() {
           )}
 
           {/* Lista vazia */}
-          {!isLoading && !hasError && sortedAppointments.length === 0 && (
+          {!hasError && sortedAppointments.length === 0 && (
             <div className="bg-gray-900 rounded-lg p-8 text-center">
               <div className="text-gray-400 text-6xl mb-4">📅</div>
               <h3 className="text-white text-xl font-semibold mb-2">
@@ -507,7 +492,7 @@ export function HistoryAppointmentsPage() {
           )}
 
           {/* Lista de agendamentos */}
-          {!isLoading && !hasError && sortedAppointments.length > 0 && (
+          {!hasError && sortedAppointments.length > 0 && (
             <div className="space-y-4">
               {sortedAppointments.map((appointment, index) => {
                 const status = appointment.status?.toUpperCase();
@@ -605,8 +590,7 @@ export function HistoryAppointmentsPage() {
           )}
 
           {/* Contador de agendamentos - Apenas para Realizados */}
-          {!isLoading &&
-            !hasError &&
+          {!hasError &&
             sortedAppointments.length > 0 &&
             filter === "realizados" && (
               <div className="mt-6 bg-gray-900 rounded-lg p-6 text-center">

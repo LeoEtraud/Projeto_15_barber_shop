@@ -231,7 +231,7 @@ export function GestorServicosPage() {
       <div className="px-4 py-8 md:px-8 flex-1">
         <Helmet title="Gerenciar Serviços - Gestor" />
 
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           {/* Botão Voltar */}
           <button
             className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
@@ -245,18 +245,15 @@ export function GestorServicosPage() {
 
           {/* Banner */}
           <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-lg mb-6 shadow-sm relative overflow-hidden">
-            {/* Imagem de fundo */}
             <div className="absolute inset-0">
               <img
                 alt="Serviços"
                 className="w-full h-full object-cover object-right-center opacity-15"
                 src="/image-1.png"
               />
-              {/* Overlay sutil */}
               <div className="absolute inset-0 bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-rose-500/90" />
             </div>
 
-            {/* Conteúdo */}
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">

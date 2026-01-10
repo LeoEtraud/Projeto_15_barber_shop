@@ -63,7 +63,7 @@ export function ProfissionalDashboardPage() {
         setIsLoading(true);
         setHasError(false);
         try {
-          await fetchAppointmentsByProfessional(profissionalId);
+          await withLoading(fetchAppointmentsByProfessional(profissionalId));
         } catch {
           setHasError(true);
         } finally {
@@ -657,7 +657,7 @@ export function ProfissionalDashboardPage() {
                       setIsLoading(true);
                       setHasError(false);
                       try {
-                        await fetchAppointmentsByProfessional(profissionalId);
+                        await withLoading(fetchAppointmentsByProfessional(profissionalId));
                       } catch {
                         setHasError(true);
                       } finally {
@@ -952,7 +952,7 @@ export function ProfissionalDashboardPage() {
                       setIsLoading(true);
                       setHasError(false);
                       try {
-                        await fetchAppointmentsByProfessional(profissionalId);
+                        await withLoading(fetchAppointmentsByProfessional(profissionalId));
                       } catch {
                         setHasError(true);
                       } finally {
