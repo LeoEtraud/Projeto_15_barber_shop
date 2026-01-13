@@ -31,6 +31,106 @@ const rankByName = (nome: string) => {
   return idx === -1 ? KEY_ORDER.length + 1 : idx;
 };
 
+// Função para obter a imagem do serviço baseado no nome
+const getServiceImage = (serviceName: string, serviceImage?: string) => {
+  const apiUrl = import.meta.env.VITE_API;
+  const nomeNormalizado = normalize(serviceName);
+
+  // Log para debug
+  // eslint-disable-next-line no-console
+  console.log(
+    "getServiceImage - Serviço:",
+    serviceName,
+    "Nome normalizado:",
+    nomeNormalizado,
+    "serviceImage:",
+    serviceImage,
+    "apiUrl:",
+    apiUrl,
+  );
+
+  // Se o serviço já tem uma imagem específica da API válida, usa ela
+  // Caminho correto: /public/servicos/
+  if (serviceImage && serviceImage.trim() !== "" && apiUrl) {
+    const imageUrl = `${apiUrl}/public/servicos/${encodeURIComponent(serviceImage)}`;
+
+    // eslint-disable-next-line no-console
+    console.log("Usando serviceImage da API:", imageUrl);
+
+    return imageUrl;
+  }
+
+  // Se a API estiver configurada, usa as imagens da API baseado no nome
+  // Caminho correto: /public/servicos/
+  if (apiUrl) {
+    let imageUrl = "";
+
+    if (nomeNormalizado.includes("corte de cabelo")) {
+      imageUrl = `${apiUrl}/public/servicos/cabelo.jpg`;
+    } else if (nomeNormalizado.includes("barba")) {
+      imageUrl = `${apiUrl}/public/servicos/barba.jpg`;
+    } else if (
+      nomeNormalizado.includes("pe de cabelo") ||
+      nomeNormalizado.includes("pe-cabelo")
+    ) {
+      imageUrl = `${apiUrl}/public/servicos/pe-de-cabelo.jpg`;
+    } else if (
+      nomeNormalizado.includes("limpeza de pele") ||
+      nomeNormalizado.includes("limpeza-de-pele")
+    ) {
+      imageUrl = `${apiUrl}/public/servicos/limpeza-de-pele.jpg`;
+    }
+
+    if (imageUrl) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "URL da imagem da API (por nome):",
+        imageUrl,
+        "Serviço:",
+        serviceName,
+      );
+
+      return imageUrl;
+    } else {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "Nenhuma imagem encontrada para o serviço:",
+        serviceName,
+        "Nome normalizado:",
+        nomeNormalizado,
+      );
+    }
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn("VITE_API não está configurada. Usando imagens locais.");
+  }
+
+  // Fallback para imagens locais se a API não estiver configurada
+  if (nomeNormalizado.includes("corte de cabelo")) {
+    return "/barber-3.png";
+  }
+
+  if (nomeNormalizado.includes("barba")) {
+    return "/barber-4.png";
+  }
+
+  if (
+    nomeNormalizado.includes("pe de cabelo") ||
+    nomeNormalizado.includes("pe-cabelo")
+  ) {
+    return "/barber-3.png";
+  }
+
+  if (
+    nomeNormalizado.includes("limpeza de pele") ||
+    nomeNormalizado.includes("limpeza-de-pele")
+  ) {
+    return "/barber-5.png";
+  }
+
+  return "/barber-3.png";
+};
+
 export function ChoiceServicePage() {
   const navigate = useNavigate();
   const { fetchServices, services } = useSchedule();
@@ -43,23 +143,6 @@ export function ChoiceServicePage() {
   useEffect(() => {
     fetchServices();
   }, []);
-
-  // Debug: Verificar dados dos serviços
-  useEffect(() => {
-    if (services.length > 0) {
-      // eslint-disable-next-line no-console
-      console.log("Serviços carregados:", services);
-      // eslint-disable-next-line no-console
-      console.log(
-        "Primeiro serviço:",
-        services[0],
-        "Imagem:",
-        services[0]?.imagem
-      );
-      // eslint-disable-next-line no-console
-      console.log("VITE_API:", import.meta.env.VITE_API);
-    }
-  }, [services]);
 
   // Ordena no front conforme prioridade desejada
   const sortedServices = useMemo(() => {
@@ -183,9 +266,9 @@ export function ChoiceServicePage() {
                   key={service.id}
                   aria-pressed={isSelected}
                   className={[
-                    "rounded-lg shadow-lg transition-all border overflow-hidden flex",
+                    "group rounded-lg shadow-lg transition-all border overflow-hidden flex",
                     isSelected
-                      ? "border-green-400 hover:border-green-300 bg-gray-800"
+                      ? "border-green-400 hover:border-green-300 bg-gray-800 ring-2 ring-green-400/50"
                       : isDisabled
                         ? "border-gray-700 opacity-60 cursor-not-allowed bg-gray-900/50"
                         : "border-transparent hover:border-gray-600 hover:shadow-xl bg-gray-900",
@@ -231,24 +314,149 @@ export function ChoiceServicePage() {
                   </div>
 
                   {/* Imagem do lado direito */}
-                  <div className="w-1/2 relative overflow-hidden flex-shrink-0 bg-gray-700">
+                  <div className="w-24 h-24 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-700 to-gray-800 rounded-r-lg">
                     <img
                       alt={service.nome}
-                      className="w-full h-full object-cover"
+                      className={`w-full h-full object-cover transition-transform duration-300 ${
+                        isSelected ? "scale-105" : "group-hover:scale-105"
+                      }`}
                       decoding="async"
                       loading="lazy"
-                      src={
-                        service.imagem && import.meta.env.VITE_API
-                          ? `${import.meta.env.VITE_API}/servicos/${encodeURIComponent(service.imagem)}`
-                          : "/img-barber-icon.png"
-                      }
+                      src={getServiceImage(service.nome, service.imagem)}
                       onError={(e) => {
-                        // Fallback para uma imagem padrão se não carregar
-                        e.currentTarget.src = "/img-barber-icon.png";
+                        const apiUrl = import.meta.env.VITE_API;
+                        const nomeNormalizado = normalize(service.nome);
+
+                        const target = e.currentTarget as HTMLImageElement;
+                        const currentSrc = target.src;
+                        const imageName = service.imagem;
+
+                        // eslint-disable-next-line no-console
+                        console.error(
+                          "Erro ao carregar imagem:",
+                          currentSrc,
+                          "Serviço:",
+                          service.nome,
+                        );
+
+                        // Se tiver imagem específica e API configurada, tenta caminhos alternativos
+                        if (imageName && apiUrl) {
+                          // Tenta diferentes caminhos possíveis
+                          const alternativePaths = [
+                            `${apiUrl}/public/servicos/${encodeURIComponent(imageName)}`,
+                            `${apiUrl}/servicos/${encodeURIComponent(imageName)}`,
+                            `${apiUrl}/servicos/imagem/${encodeURIComponent(imageName)}`,
+                            `${apiUrl}/files/servicos/${encodeURIComponent(imageName)}`,
+                          ];
+
+                          // Verifica qual caminho já foi tentado
+                          const currentPathIndex = alternativePaths.findIndex(
+                            (path) =>
+                              currentSrc.includes(path.replace(apiUrl, "")),
+                          );
+
+                          // Tenta o próximo caminho disponível
+                          if (currentPathIndex < alternativePaths.length - 1) {
+                            const nextPath =
+                              alternativePaths[currentPathIndex + 1];
+
+                            // eslint-disable-next-line no-console
+                            console.log(
+                              "Tentando caminho alternativo:",
+                              nextPath,
+                            );
+                            target.src = nextPath;
+
+                            return;
+                          }
+                        }
+
+                        // Se for pé de cabelo e a primeira imagem falhou, tenta a alternativa
+                        if (
+                          (nomeNormalizado.includes("pe de cabelo") ||
+                            nomeNormalizado.includes("pe-cabelo")) &&
+                          apiUrl &&
+                          (currentSrc.includes("pe-de-cabelo.jpg") ||
+                            currentSrc.includes("pe-de-cabelo"))
+                        ) {
+                          const alternativeUrls = [
+                            `${apiUrl}/public/servicos/pe-cabelo.png`,
+                            `${apiUrl}/public/servicos/pe-de-cabelo.jpg`,
+                            `${apiUrl}/servicos/pe-cabelo.png`,
+                          ];
+
+                          // Tenta a primeira alternativa
+                          const alternativeUrl = alternativeUrls[0];
+
+                          // eslint-disable-next-line no-console
+                          console.log(
+                            "Tentando imagem alternativa:",
+                            alternativeUrl,
+                          );
+                          target.src = alternativeUrl;
+
+                          return;
+                        }
+
+                        // Se for limpeza de pele e a primeira imagem falhou, tenta alternativas
+                        if (
+                          (nomeNormalizado.includes("limpeza de pele") ||
+                            nomeNormalizado.includes("limpeza-de-pele")) &&
+                          apiUrl &&
+                          (currentSrc.includes("limpeza-de-pele") ||
+                            currentSrc.includes("limpeza-pele"))
+                        ) {
+                          const alternativeUrls = [
+                            `${apiUrl}/public/servicos/limpeza-de-pele.jpg`,
+                            `${apiUrl}/servicos/limpeza-de-pele.jpg`,
+                            `${apiUrl}/servicos/imagem/limpeza-de-pele.jpg`,
+                          ];
+
+                          // Tenta a primeira alternativa
+                          const alternativeUrl = alternativeUrls[0];
+
+                          // eslint-disable-next-line no-console
+                          console.log(
+                            "Tentando imagem alternativa para limpeza de pele:",
+                            alternativeUrl,
+                          );
+                          target.src = alternativeUrl;
+
+                          return;
+                        }
+
+                        // Fallback para uma imagem padrão local se não carregar
+                        // eslint-disable-next-line no-console
+                        console.log("Usando imagem padrão local");
+                        target.src = "/barber-3.png";
                       }}
                     />
-                    {/* Overlay sutil no hover */}
-                    <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+                    {/* Overlay gradiente para melhorar legibilidade */}
+                    <div
+                      className={`absolute inset-0 transition-opacity duration-300 ${
+                        isSelected
+                          ? "bg-green-500/20"
+                          : "bg-black/10 hover:bg-black/20"
+                      }`}
+                    />
+                    {/* Indicador visual quando selecionado */}
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                        <svg
+                          className="w-3 h-3 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M5 13l4 4L19 7"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={3}
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                 </button>
               );

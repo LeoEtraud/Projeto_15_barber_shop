@@ -1,7 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { ArrowLeftIcon, CalendarIcon } from "@heroicons/react/24/solid";
+import { addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
 import { IServices } from "@/contexts/ScheduleProvider/types";
@@ -20,6 +21,7 @@ export function ChoiceSchedulePage() {
 
   const { barber, selectedServices } = location.state || {};
 
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
 
@@ -316,6 +318,90 @@ export function ChoiceSchedulePage() {
     setSelectedTime(""); // Limpa o horário selecionado ao mudar a data
   };
 
+  // Função para abrir o calendário nativo
+  const handleOpenCalendar = () => {
+    if (dateInputRef.current) {
+      // Tenta usar showPicker() se disponível (navegadores modernos)
+      if (typeof dateInputRef.current.showPicker === "function") {
+        dateInputRef.current.showPicker();
+      } else {
+        // Fallback: clica no input para abrir o calendário
+        dateInputRef.current.click();
+      }
+    }
+  };
+
+  // Função para validar e processar data selecionada do calendário
+  const handleCalendarDateSelect = (dateString: string) => {
+    // Se a data foi limpa, reseta o estado para exibir os 6 cards padrão
+    if (!dateString) {
+      setSelectedDate("");
+      setSelectedTime("");
+
+      return;
+    }
+
+    // Converte a data do formato YYYY-MM-DD para Date
+    const selectedDateObj = new Date(dateString + "T00:00:00");
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    // Compara apenas as datas (sem horas)
+    const selectedDateOnly = new Date(
+      selectedDateObj.getFullYear(),
+      selectedDateObj.getMonth(),
+      selectedDateObj.getDate(),
+    );
+    const todayDateOnly = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+
+    // Verifica se a data é no passado (não inclui o dia atual)
+    if (selectedDateOnly < todayDateOnly) {
+      addToast({
+        title: "Data inválida",
+        description: "Não é possível selecionar uma data no passado.",
+        color: "warning",
+        timeout: 3000,
+      });
+      return;
+    }
+
+    // Verifica se é domingo (0 = domingo)
+
+    if (selectedDateObj.getDay() === 0) {
+      addToast({
+        title: "Data inválida",
+        description: "Não é possível agendar aos domingos.",
+        color: "warning",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    // Verifica se é hoje e todos os horários já passaram
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    if (dateString === todayString && isAllTimeSlotsPassed(dateString)) {
+      addToast({
+        title: "Data inválida",
+        description:
+          "Todos os horários de hoje já passaram. Selecione outra data.",
+        color: "warning",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    // Se passou todas as validações, seleciona a data
+    handleDateSelect(dateString);
+  };
+
   // Atualiza os horários disponíveis quando a data selecionada muda
   useEffect(() => {
     if (selectedDate) {
@@ -409,31 +495,140 @@ export function ChoiceSchedulePage() {
 
           {/* SELEÇÃO DE DATA */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-white mb-3">
-              Escolha a data
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {generateDates().map((date) => (
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-white">
+                Escolha a data
+              </h2>
+              <div className="relative">
+                <input
+                  ref={dateInputRef}
+                  className="absolute opacity-0 pointer-events-none"
+                  min={(() => {
+                    const today = new Date();
+                    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+                    // Se hoje é domingo ou todos os horários já passaram, o mínimo é amanhã
+                    if (
+                      today.getDay() === 0 ||
+                      isAllTimeSlotsPassed(todayString)
+                    ) {
+                      const tomorrow = new Date(today);
+
+                      tomorrow.setDate(today.getDate() + 1);
+
+                      // Se amanhã também for domingo, pula para segunda
+                      while (tomorrow.getDay() === 0) {
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                      }
+
+                      return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+                    }
+
+                    return todayString;
+                  })()}
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => handleCalendarDateSelect(e.target.value)}
+                />
                 <button
-                  key={date.value}
-                  className={`p-3 rounded-lg text-center transition-colors ${
-                    selectedDate === date.value
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-900 text-gray-300 hover:bg-gray-700"
-                  }`}
+                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 border border-blue-500 transition-colors shadow-md hover:shadow-lg"
+                  title="Abrir calendário"
                   type="button"
-                  onClick={() => handleDateSelect(date.value)}
+                  onClick={handleOpenCalendar}
                 >
-                  {/* Mobile: versão abreviada */}
-                  <div className="text-sm font-medium sm:hidden">
-                    {date.labelMobile}
-                  </div>
-                  {/* Desktop: versão completa */}
-                  <div className="hidden text-sm font-medium sm:block">
-                    {date.labelDesktop}
-                  </div>
+                  <CalendarIcon className="w-5 h-5 text-white" />
                 </button>
-              ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(() => {
+                const availableDates = generateDates();
+                const isSelectedDateInAvailable = availableDates.some(
+                  (date) => date.value === selectedDate,
+                );
+
+                // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
+                if (selectedDate && !isSelectedDateInAvailable) {
+                  const selectedDateObj = new Date(selectedDate + "T00:00:00");
+                  const day = String(selectedDateObj.getDate()).padStart(
+                    2,
+                    "0",
+                  );
+                  const month = String(selectedDateObj.getMonth() + 1).padStart(
+                    2,
+                    "0",
+                  );
+                  const shortDate = `${day}/${month}`;
+
+                  const weekdayLong = selectedDateObj.toLocaleDateString(
+                    "pt-BR",
+                    {
+                      weekday: "long",
+                    },
+                  );
+                  const weekdayShort = selectedDateObj.toLocaleDateString(
+                    "pt-BR",
+                    {
+                      weekday: "short",
+                    },
+                  );
+
+                  const weekdayLongCapitalized =
+                    weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
+                  const weekdayShortCapitalized =
+                    weekdayShort.charAt(0).toUpperCase() +
+                    weekdayShort.slice(1);
+
+                  const today = new Date();
+                  const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+                  const isToday = selectedDate === todayString;
+
+                  return (
+                    <button
+                      key={selectedDate}
+                      className="p-3 rounded-lg text-center transition-colors bg-blue-600 text-white"
+                      type="button"
+                      onClick={() => handleDateSelect(selectedDate)}
+                    >
+                      {/* Mobile: versão abreviada */}
+                      <div className="text-sm font-medium sm:hidden">
+                        {isToday
+                          ? `Hoje (${shortDate})`
+                          : `${weekdayShortCapitalized} (${shortDate})`}
+                      </div>
+                      {/* Desktop: versão completa */}
+                      <div className="hidden text-sm font-medium sm:block">
+                        {isToday
+                          ? `Hoje (${shortDate})`
+                          : `${weekdayLongCapitalized} (${shortDate})`}
+                      </div>
+                    </button>
+                  );
+                }
+
+                // Caso contrário, mostra as 6 datas disponíveis
+                return availableDates.map((date) => (
+                  <button
+                    key={date.value}
+                    className={`p-3 rounded-lg text-center transition-colors ${
+                      selectedDate === date.value
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                    }`}
+                    type="button"
+                    onClick={() => handleDateSelect(date.value)}
+                  >
+                    {/* Mobile: versão abreviada */}
+                    <div className="text-sm font-medium sm:hidden">
+                      {date.labelMobile}
+                    </div>
+                    {/* Desktop: versão completa */}
+                    <div className="hidden text-sm font-medium sm:block">
+                      {date.labelDesktop}
+                    </div>
+                  </button>
+                ));
+              })()}
             </div>
           </div>
 
