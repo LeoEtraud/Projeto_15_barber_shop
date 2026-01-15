@@ -76,9 +76,9 @@ export interface IContext {
   schedules: ISchedules[];
   fetchSchedules: (barbeiroId: string) => void;
   appointments: IAppointments[];
-  fetchAppointments: (id: string) => void;
+  fetchAppointments: (id: string) => Promise<void>;
   professionalAppointments: IAppointments[];
-  fetchAppointmentsByProfessional: (profissionalId: string) => void;
+  fetchAppointmentsByProfessional: (profissionalId: string) => Promise<void>;
 }
 
 export interface IHorarioFuncionamento {
@@ -95,6 +95,7 @@ export interface IHorarioFuncionamento {
   horario_almoco_fim?: string;
   is_feriado: boolean;
   profissionais?: IProfessionals[];
+  profissionais_ids?: string[];
   tipo_regra?: "PADRAO" | "EXCECAO";
   data_excecao?: string | null;
   data_criacao?: string;

@@ -31,7 +31,7 @@ export function HistoryAppointmentsPage() {
       if (user?.user?.id) {
         setHasError(false);
         try {
-          await withLoading(fetchAppointments(user.user.id));
+          await withLoading(fetchAppointments(user.user.id) as Promise<unknown>);
         } catch {
           setHasError(true);
         }
@@ -453,7 +453,7 @@ export function HistoryAppointmentsPage() {
                   if (user?.user?.id) {
                     setHasError(false);
                     try {
-                      await withLoading(fetchAppointments(user.user.id));
+                      await withLoading(fetchAppointments(user.user.id) as Promise<unknown>);
                     } catch {
                       setHasError(true);
                     }

@@ -7,7 +7,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { usePermissions } from "@/hooks/usePermissions";
 import { GetHorariosFuncionamento } from "@/contexts/ScheduleProvider/util";
-import { IHorarioFuncionamento } from "@/contexts/ScheduleProvider/types";
+import { IHorarioFuncionamento, IProfessionals } from "@/contexts/ScheduleProvider/types";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
@@ -83,7 +83,7 @@ export function GestorAgendamentosPage() {
     
     return horarios.map((horario) => {
       const profissionaisEnriquecidos = horario.profissionais_ids
-        ?.map((id) => professionalsArray.find((p) => p.id === id))
+        ?.map((id: string) => professionalsArray.find((p: IProfessionals) => p.id === id))
         .filter((p): p is NonNullable<typeof p> => p !== undefined) || [];
 
       return {
