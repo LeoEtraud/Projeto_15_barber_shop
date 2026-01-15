@@ -207,15 +207,10 @@ export function ChoiceServicePage() {
 
           {/* Banner */}
           <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
-            <OptimizedImage
+            <img
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-100"
-              height={160}
-              loading="eager"
-              priority="high"
-              sizes="(max-width: 768px) 100vw, 800px"
               src="/image-1.png"
-              width={800}
             />
             <div className="absolute bottom-0 left-0 p-4">
               <h1 className="text-2xl font-bold text-white drop-shadow-lg">
