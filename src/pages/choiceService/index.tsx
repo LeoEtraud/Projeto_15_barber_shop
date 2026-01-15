@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { formatPrice } from "@/utils/format-price";
 
@@ -36,28 +37,10 @@ const getServiceImage = (serviceName: string, serviceImage?: string) => {
   const apiUrl = import.meta.env.VITE_API;
   const nomeNormalizado = normalize(serviceName);
 
-  // Log para debug
-  // eslint-disable-next-line no-console
-  console.log(
-    "getServiceImage - Serviço:",
-    serviceName,
-    "Nome normalizado:",
-    nomeNormalizado,
-    "serviceImage:",
-    serviceImage,
-    "apiUrl:",
-    apiUrl,
-  );
-
   // Se o serviço já tem uma imagem específica da API válida, usa ela
   // Caminho correto: /public/servicos/
   if (serviceImage && serviceImage.trim() !== "" && apiUrl) {
-    const imageUrl = `${apiUrl}/public/servicos/${encodeURIComponent(serviceImage)}`;
-
-    // eslint-disable-next-line no-console
-    console.log("Usando serviceImage da API:", imageUrl);
-
-    return imageUrl;
+    return `${apiUrl}/public/servicos/${encodeURIComponent(serviceImage)}`;
   }
 
   // Se a API estiver configurada, usa as imagens da API baseado no nome
@@ -82,27 +65,8 @@ const getServiceImage = (serviceName: string, serviceImage?: string) => {
     }
 
     if (imageUrl) {
-      // eslint-disable-next-line no-console
-      console.log(
-        "URL da imagem da API (por nome):",
-        imageUrl,
-        "Serviço:",
-        serviceName,
-      );
-
       return imageUrl;
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn(
-        "Nenhuma imagem encontrada para o serviço:",
-        serviceName,
-        "Nome normalizado:",
-        nomeNormalizado,
-      );
     }
-  } else {
-    // eslint-disable-next-line no-console
-    console.warn("VITE_API não está configurada. Usando imagens locais.");
   }
 
   // Fallback para imagens locais se a API não estiver configurada
@@ -243,10 +207,15 @@ export function ChoiceServicePage() {
 
           {/* Banner */}
           <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
-            <img
+            <OptimizedImage
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-100"
+              height={160}
+              loading="eager"
+              priority="high"
+              sizes="(max-width: 768px) 100vw, 800px"
               src="/image-1.png"
+              width={800}
             />
             <div className="absolute bottom-0 left-0 p-4">
               <h1 className="text-2xl font-bold text-white drop-shadow-lg">
@@ -315,18 +284,21 @@ export function ChoiceServicePage() {
 
                   {/* Imagem do lado direito */}
                   <div className="w-24 h-24 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-gray-700 to-gray-800 rounded-r-lg">
-                    <img
+                    <OptimizedImage
                       alt={service.nome}
                       className={`w-full h-full object-cover transition-transform duration-300 ${
                         isSelected ? "scale-105" : "group-hover:scale-105"
                       }`}
-                      decoding="async"
+                      fallback="/barber-3.png"
+                      height={96}
                       loading="lazy"
+                      priority="low"
+                      sizes="96px"
                       src={getServiceImage(service.nome, service.imagem)}
+                      width={96}
                       onError={(e) => {
                         const apiUrl = import.meta.env.VITE_API;
                         const nomeNormalizado = normalize(service.nome);
-
                         const target = e.currentTarget as HTMLImageElement;
                         const currentSrc = target.src;
                         const imageName = service.imagem;
