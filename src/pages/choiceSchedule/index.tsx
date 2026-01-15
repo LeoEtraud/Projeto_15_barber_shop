@@ -321,12 +321,34 @@ export function ChoiceSchedulePage() {
   // Função para abrir o calendário nativo
   const handleOpenCalendar = () => {
     if (dateInputRef.current) {
+      // No mobile, o input precisa estar visível e clicável
+      // Remove temporariamente pointer-events-none se necessário
+      const wasPointerEventsNone = dateInputRef.current.style.pointerEvents === "none";
+      
+      if (wasPointerEventsNone) {
+        dateInputRef.current.style.pointerEvents = "auto";
+      }
+      
       // Tenta usar showPicker() se disponível (navegadores modernos)
       if (typeof dateInputRef.current.showPicker === "function") {
-        dateInputRef.current.showPicker();
+        try {
+          dateInputRef.current.showPicker();
+        } catch (error) {
+          // Se showPicker falhar, usa click como fallback
+          dateInputRef.current.click();
+        }
       } else {
         // Fallback: clica no input para abrir o calendário
         dateInputRef.current.click();
+      }
+      
+      // Restaura pointer-events-none após um delay (apenas no desktop)
+      if (wasPointerEventsNone && window.innerWidth > 768) {
+        setTimeout(() => {
+          if (dateInputRef.current) {
+            dateInputRef.current.style.pointerEvents = "none";
+          }
+        }, 100);
       }
     }
   };
@@ -502,7 +524,7 @@ export function ChoiceSchedulePage() {
               <div className="relative">
                 <input
                   ref={dateInputRef}
-                  className="absolute opacity-0 pointer-events-none"
+                  className="absolute opacity-0 w-full h-full cursor-pointer z-10 md:pointer-events-none pointer-events-auto"
                   min={(() => {
                     const today = new Date();
                     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -531,7 +553,7 @@ export function ChoiceSchedulePage() {
                   onChange={(e) => handleCalendarDateSelect(e.target.value)}
                 />
                 <button
-                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 border border-blue-500 transition-colors shadow-md hover:shadow-lg"
+                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 border border-blue-500 transition-colors shadow-md hover:shadow-lg relative z-0"
                   title="Abrir calendário"
                   type="button"
                   onClick={handleOpenCalendar}
