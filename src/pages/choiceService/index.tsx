@@ -1,12 +1,13 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
+import { useLoading } from "@/contexts/LoadingProvider";
 import { formatPrice } from "@/utils/format-price";
 
 // ---- helpers de ordenação ----
@@ -98,11 +99,13 @@ const getServiceImage = (serviceName: string, serviceImage?: string) => {
 export function ChoiceServicePage() {
   const navigate = useNavigate();
   const { fetchServices, services } = useSchedule();
+  const { show, hide } = useLoading();
   const location = useLocation() as {
     state?: { barber?: { id: string; nome: string } };
   };
   const barber = location.state?.barber;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const loadedImagesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     fetchServices();
@@ -124,6 +127,15 @@ export function ChoiceServicePage() {
       });
     });
   }, [services]);
+
+  // Mostra o loading quando os serviços são carregados
+  useEffect(() => {
+    if (sortedServices.length > 0) {
+      // Reset do rastreamento quando os serviços mudam
+      loadedImagesRef.current.clear();
+      show();
+    }
+  }, [sortedServices.length, show]);
 
   // FUNÇÃO DE ESCOLHA DE SERVIÇOS
   function toggleService(id: string, nome: string) {
@@ -396,6 +408,19 @@ export function ChoiceServicePage() {
                         // eslint-disable-next-line no-console
                         console.log("Usando imagem padrão local");
                         target.src = "/barber-3.png";
+                      }}
+                      onLoad={() => {
+                        // Marca esta imagem como carregada
+                        if (!loadedImagesRef.current.has(service.id)) {
+                          loadedImagesRef.current.add(service.id);
+                          // Verifica se todas as imagens foram carregadas
+                          if (
+                            loadedImagesRef.current.size ===
+                            sortedServices.length
+                          ) {
+                            hide();
+                          }
+                        }
                       }}
                     />
                     {/* Overlay gradiente para melhorar legibilidade */}

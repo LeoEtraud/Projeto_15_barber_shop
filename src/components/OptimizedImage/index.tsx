@@ -8,6 +8,7 @@ interface OptimizedImageProps {
   height?: number;
   fallback?: string;
   onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   priority?: "high" | "low" | "auto";
   sizes?: string;
   loading?: "lazy" | "eager";
@@ -29,6 +30,7 @@ export function OptimizedImage({
   height,
   fallback = "/barber-3.png",
   onError,
+  onLoad,
   priority = "auto",
   sizes,
   loading = "lazy",
@@ -56,8 +58,12 @@ export function OptimizedImage({
   // Se houver onError customizado, usa o src diretamente da prop para não interferir
   const finalSrc = onError ? src : optimizeImageUrl(imageSrc);
 
-  const handleLoad = () => {
+  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setIsLoading(false);
+    // Chama o callback externo se fornecido
+    if (onLoad) {
+      onLoad(e);
+    }
   };
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
