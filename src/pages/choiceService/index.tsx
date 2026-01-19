@@ -35,7 +35,7 @@ const rankByName = (nome: string) => {
 };
 
 // Função para obter a imagem do serviço baseado no nome
-const getServiceImage = (serviceName: string, serviceImage?: string) => {
+const getServiceImage = (serviceName: string, serviceImage?: string): string => {
   const apiUrl = import.meta.env.VITE_API;
 
   // Se o serviço já tem uma imagem específica da API válida, usa ela
@@ -57,7 +57,8 @@ const getServiceImage = (serviceName: string, serviceImage?: string) => {
   }
 
   // Se não houver imagem, usa a função utilitária para obter imagem padrão
-  return getServiceImageWithFallback(serviceImage, serviceName);
+  const fallbackImage = getServiceImageWithFallback(serviceImage, serviceName);
+  return fallbackImage || "/barber-3.png"; // Fallback padrão se retornar null
 };
 
 export function ChoiceServicePage() {
@@ -277,7 +278,8 @@ export function ChoiceServicePage() {
                           .replace(/\p{Diacritic}/gu, "")
                           .toLowerCase();
                         
-                        target.src = getServiceImageWithFallback(null, service.nome);
+                        const fallbackImage = getServiceImageWithFallback(null, service.nome);
+                        target.src = fallbackImage || "/barber-3.png";
                         
                         const imageName = getDefaultServiceImage(service.nome);
                         if (imageName && apiUrl) {

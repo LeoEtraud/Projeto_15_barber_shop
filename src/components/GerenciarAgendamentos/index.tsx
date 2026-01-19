@@ -6,21 +6,6 @@ import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
 
-// Função para obter as iniciais do barbeiro
-function getInitials(nomeCompleto: string): string {
-  const parts = nomeCompleto?.trim().split(" ") || [];
-
-  if (parts.length === 0) return "";
-
-  const first = parts[0]?.charAt(0)?.toUpperCase() || "";
-  const last =
-    parts.length > 1
-      ? parts[parts.length - 1]?.charAt(0)?.toUpperCase() || ""
-      : "";
-
-  return `${first}${last}`;
-}
-
 // Função para obter URL do avatar
 function getAvatarUrl(avatar: string | undefined): string | null {
   if (!avatar) return null;
