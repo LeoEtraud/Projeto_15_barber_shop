@@ -9,7 +9,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { formatPrice } from "@/utils/format-price";
-import { getServiceImageWithFallback } from "@/utils/defaultImages";
+import { getServiceImageWithFallback, getDefaultServiceImage } from "@/utils/defaultImages";
 
 // ---- helpers de ordenação ----
 const KEY_ORDER = [
@@ -270,7 +270,16 @@ export function ChoiceServicePage() {
                       onError={(e) => {
                         // Se a imagem falhar ao carregar, usa a imagem padrão
                         const target = e.currentTarget as HTMLImageElement;
+                        const currentSrc = target.src;
+                        const apiUrl = import.meta.env.VITE_API || "";
+                        const nomeNormalizado = (service.nome ?? "")
+                          .normalize("NFD")
+                          .replace(/\p{Diacritic}/gu, "")
+                          .toLowerCase();
+                        
                         target.src = getServiceImageWithFallback(null, service.nome);
+                        
+                        const imageName = getDefaultServiceImage(service.nome);
                         if (imageName && apiUrl) {
                           // Extrai o nome do arquivo do caminho completo se necessário
                           let fileName = imageName;

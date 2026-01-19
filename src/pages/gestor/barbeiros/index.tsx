@@ -260,20 +260,6 @@ const schema = yup.object().shape({
     .required("Função é obrigatória"),
 });
 
-// FUNÇÃO PARA OBTER AS INICIAIS DO PROFISSIONAL
-function getInitials(nomeCompleto: string) {
-  const parts = nomeCompleto?.trim().split(" ") || [];
-
-  if (parts.length === 0) return "";
-
-  const first = parts[0]?.charAt(0)?.toUpperCase() || "";
-  const last =
-    parts.length > 1
-      ? parts[parts.length - 1]?.charAt(0)?.toUpperCase() || ""
-      : "";
-
-  return `${first}${last}`;
-}
 
 // FUNÇÃO PARA OBTER APENAS NOME E SOBRENOME
 function getNomeSobrenome(nomeCompleto: string): string {
@@ -600,7 +586,7 @@ export function GestorBarbeirosPage() {
           telefone: data.telefone.replace(/\D/g, ""),
           data_nascimento: convertDateToAPI(data.data_nascimento),
           funcao: apiFuncaoValue,
-          avatar: avatarBase64,
+          avatar: avatarBase64 ?? undefined,
           barbeariaId: barbeariaId,
         });
 

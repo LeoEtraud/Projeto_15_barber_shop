@@ -56,7 +56,7 @@ export const getDefaultServiceImage = (serviceName: string): string | null => {
  * Retorna a imagem padrão para todos os barbeiros
  * Uma única imagem padrão ilustrativa para todos os barbeiros
  */
-export const getDefaultBarberImage = (barberName?: string): string => {
+export const getDefaultBarberImage = (_barberName?: string): string => {
   // Imagem padrão única ilustrativa para todos os barbeiros
   // A imagem está na pasta public/barbeiros/avatar do backend
   const apiUrl = import.meta.env.VITE_API || "";
