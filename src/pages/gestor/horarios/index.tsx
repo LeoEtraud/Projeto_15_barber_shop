@@ -25,6 +25,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useLoading } from "@/contexts/LoadingProvider";
+import { getDefaultBarberImage } from "@/utils/defaultImages";
 import {
   GetHorariosFuncionamento,
   UpdateHorarioFuncionamento,
@@ -1097,13 +1098,20 @@ export function GestorHorariosPage() {
                                           }}
                                         />
                                       ) : null}
-                                      <div
-                                        className={`w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold border-2 border-gray-600 flex-shrink-0 ${
-                                          avatarUrl ? "hidden" : ""
-                                        }`}
-                                      >
-                                        {getInitials(profissional.nome)}
-                                      </div>
+                                      {(() => {
+                                        if (avatarUrl) return null;
+                                        
+                                        return (
+                                          <img
+                                            alt={profissional.nome}
+                                            className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
+                                            src={getDefaultBarberImage(profissional.nome)}
+                                            onError={(e) => {
+                                              e.currentTarget.style.display = "none";
+                                            }}
+                                          />
+                                        );
+                                      })()}
                                       <span className="text-white text-xs font-medium truncate max-w-[100px]">
                                         {profissional.nome}
                                 </span>

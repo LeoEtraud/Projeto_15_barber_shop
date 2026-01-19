@@ -124,7 +124,7 @@ export async function UpdateProfessional(
     telefone?: string;
     data_nascimento?: string;
     funcao?: string;
-    avatar?: string;
+    avatar?: string | null;
     status?: string;
   }
 ) {
@@ -184,7 +184,7 @@ export async function UpdateService(
     nome?: string;
     preco?: string;
     duracao?: number;
-    imagem?: string;
+    imagem?: string | null;
     status?: string;
   }
 ) {

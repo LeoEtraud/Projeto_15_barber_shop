@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
+import { getDefaultBarberImage } from "@/utils/defaultImages";
 
 // Função para formatar data para comparação
 function formatarDataParaComparacao(data: Date): string {
@@ -1196,13 +1197,20 @@ export function GestorAgendamentosPage() {
                                   }}
                                 />
                               ) : null}
-                              <div
-                                className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold border border-gray-500 flex-shrink-0 ${
-                                  avatarUrl ? "hidden" : ""
-                                }`}
-                              >
-                                {barbeiro ? getInitials(barbeiro.nome) : ""}
-                              </div>
+                              {(() => {
+                                if (avatarUrl) return null;
+                                
+                                return (
+                                  <img
+                                    alt={barbeiro?.nome || ""}
+                                    className="w-6 h-6 rounded-full object-cover border border-gray-500 flex-shrink-0"
+                                    src={getDefaultBarberImage(barbeiro?.nome)}
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                );
+                              })()}
                               <span className="flex-1">
                                 {barbeiro?.nome || "Selecione um barbeiro"}
                               </span>

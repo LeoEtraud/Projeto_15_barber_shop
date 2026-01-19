@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Card,
@@ -33,12 +33,34 @@ import {
 } from "@/contexts/ScheduleProvider/util";
 import { formatPrice } from "@/utils/format-price";
 import { IServices } from "@/contexts/ScheduleProvider/types";
+import { getServiceImageWithFallback } from "@/utils/defaultImages";
+
+// ---- helpers de ordenação ----
+const KEY_ORDER = [
+  "corte de cabelo",
+  "barba",
+  "pe de cabelo",
+  "limpeza de pele",
+];
+
+const normalize = (s: string) =>
+  (s ?? "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+const rankByName = (nome: string) => {
+  const n = normalize(nome);
+  const idx = KEY_ORDER.findIndex((k) => n.includes(k));
+
+  // não encontrados vão para o fim
+  return idx === -1 ? KEY_ORDER.length + 1 : idx;
+};
 
 interface ServiceFormData {
   nome: string;
   preco: string;
   duracao: number;
-  imagem: string;
 }
 
 const schema = yup.object().shape({
@@ -51,7 +73,6 @@ const schema = yup.object().shape({
     .number()
     .min(1, "Duração deve ser no mínimo 1 minuto")
     .required("Duração é obrigatória"),
-  imagem: yup.string().url("URL inválida").optional(),
 });
 
 /**
@@ -78,6 +99,9 @@ export function GestorServicosPage() {
     null
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageRemoved, setImageRemoved] = useState<boolean>(false);
 
   const {
     control,
@@ -90,7 +114,6 @@ export function GestorServicosPage() {
       nome: "",
       preco: "",
       duracao: 30,
-      imagem: "",
     },
   });
 
@@ -100,6 +123,23 @@ export function GestorServicosPage() {
     }
   }, [isGestor]);
 
+  // Ordena os serviços conforme prioridade desejada
+  const sortedServices = useMemo(() => {
+    const list = Array.isArray(services) ? [...services] : [];
+
+    return list.sort((a, b) => {
+      const ra = rankByName(a.nome);
+      const rb = rankByName(b.nome);
+
+      if (ra !== rb) return ra - rb;
+
+      // desempate estável: por nome (sem acento/caixa)
+      return normalize(a.nome).localeCompare(normalize(b.nome), "pt-BR", {
+        sensitivity: "base",
+      });
+    });
+  }, [services]);
+
   const handleOpenModal = (service?: IServices) => {
     if (service) {
       setSelectedService(service);
@@ -107,24 +147,132 @@ export function GestorServicosPage() {
         nome: service.nome || "",
         preco: service.preco || "",
         duracao: service.duracao || 30,
-        imagem: service.imagem || "",
       });
+      // Define preview da imagem existente se houver
+      if (service.imagem && service.imagem.trim() !== "") {
+        const apiUrl = import.meta.env.VITE_API || "";
+
+        // Se a imagem já é uma URL completa, usa diretamente
+        if (service.imagem.startsWith("http")) {
+          setImagePreview(service.imagem);
+        } else if (service.imagem.startsWith("/servicos/imagem/")) {
+          // Se já tem o caminho completo relativo, adiciona apenas a API
+          setImagePreview(`${apiUrl}${service.imagem}`);
+        } else {
+          // Se é apenas o nome do arquivo, constrói o caminho completo
+          // Tenta diferentes caminhos possíveis (mesmo padrão da página do cliente)
+          const imageName = service.imagem.replace("/servicos/imagem/", "");
+          const possiblePaths = [
+            `${apiUrl}/servicos/imagem/${encodeURIComponent(imageName)}`,
+            `${apiUrl}/public/servicos/${encodeURIComponent(imageName)}`,
+            `${apiUrl}${service.imagem}`,
+          ];
+          setImagePreview(possiblePaths[0]); // Usa o primeiro caminho (padrão do backend)
+        }
+      } else {
+        // Se não houver imagem, não define preview (será mostrada a padrão no modal)
+        setImagePreview(null);
+        setImageRemoved(false); // Não foi removida, apenas não existe
+      }
+      setImageFile(null);
+      setImageRemoved(false);
     } else {
+      // Modo de criação - limpa tudo
       setSelectedService(null);
       reset({
         nome: "",
         preco: "",
         duracao: 30,
-        imagem: "",
       });
+      setImagePreview(null);
+      setImageFile(null);
+      setImageRemoved(false);
     }
     onOpen();
   };
 
   const handleCloseModal = () => {
     setSelectedService(null);
+    setImagePreview(null);
+    setImageFile(null);
+    setImageRemoved(false);
     reset();
     onClose();
+  };
+
+  // FUNÇÃO PARA CONVERTER ARQUIVO EM BASE64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+        } else {
+          reject(new Error("Erro ao converter arquivo"));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Erro ao ler arquivo"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // FUNÇÃO PARA HANDLEAR O UPLOAD DE IMAGEM
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    // Valida tipo de arquivo
+    if (!file.type.startsWith("image/")) {
+      addToast({
+        title: "Erro",
+        description: "Por favor, selecione apenas arquivos de imagem.",
+        color: "danger",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    // Valida tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      addToast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB.",
+        color: "danger",
+        timeout: 3000,
+      });
+
+      return;
+    }
+
+    try {
+      // Cria preview
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setImagePreview(event.target.result as string);
+          setImageRemoved(false); // Reset do flag quando nova imagem é selecionada
+        }
+      };
+
+      reader.readAsDataURL(file);
+      setImageFile(file);
+    } catch (error) {
+      console.error("Erro ao processar imagem:", error);
+      addToast({
+        title: "Erro",
+        description: "Erro ao processar a imagem. Tente novamente.",
+        color: "danger",
+        timeout: 3000,
+      });
+    }
   };
 
   const onSubmit = async (data: ServiceFormData) => {
@@ -134,14 +282,40 @@ export function GestorServicosPage() {
       // Remove caracteres não numéricos do preço, exceto vírgula e ponto
       const precoClean = data.preco.replace(/[^\d,.]/g, "").replace(",", ".");
 
+      // Converte imagem para base64 se houver arquivo selecionado
+      // Se a imagem foi removida intencionalmente, envia null para remover
+      // Se não houver nova imagem e não foi removida, não envia o campo (mantém a existente)
+      let imagemBase64: string | null | undefined = undefined;
+
+      if (imageFile) {
+        // Nova imagem selecionada
+        imagemBase64 = await convertFileToBase64(imageFile);
+        setImageRemoved(false); // Reset do flag de remoção
+      } else if (imageRemoved) {
+        // Imagem foi removida intencionalmente pelo usuário
+        imagemBase64 = null;
+      }
+      // Se imageFile for null e imageRemoved for false, não envia nada (mantém a existente)
+
       if (selectedService) {
         // Editar serviço
-        await UpdateService(selectedService.id, {
-          nome: data.nome,
+        const updateData: {
+          nome: string;
+          preco: string;
+          duracao: number;
+          imagem?: string | null;
+        } = {
+          nome: data.nome.trim(),
           preco: precoClean,
           duracao: data.duracao,
-          imagem: data.imagem || undefined,
-        });
+        };
+
+        // Adiciona imagem se houver nova imagem ou se foi removida (null)
+        if (imagemBase64 !== undefined) {
+          updateData.imagem = imagemBase64 ?? null;
+        }
+
+        await UpdateService(selectedService.id, updateData);
 
         addToast({
           title: "Sucesso",
@@ -152,10 +326,10 @@ export function GestorServicosPage() {
       } else {
         // Criar serviço
         await CreateService({
-          nome: data.nome,
+          nome: data.nome.trim(),
           preco: precoClean,
           duracao: data.duracao,
-          imagem: data.imagem || undefined,
+          imagem: imagemBase64 ?? undefined,
         });
 
         addToast({
@@ -168,16 +342,28 @@ export function GestorServicosPage() {
 
       await fetchServices();
       handleCloseModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar serviço:", error);
-      addToast({
-        title: "Erro",
-        description: selectedService
-          ? "Falha ao atualizar serviço. Tente novamente."
-          : "Falha ao cadastrar serviço. Tente novamente.",
-        color: "danger",
-        timeout: 5000,
-      });
+      
+      // Verifica se é erro de autenticação
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        const errorMessage = error?.response?.data?.error || "Erro de autenticação";
+        addToast({
+          title: "Erro de Autenticação",
+          description: errorMessage,
+          color: "danger",
+          timeout: 5000,
+        });
+      } else {
+        addToast({
+          title: "Erro",
+          description: selectedService
+            ? "Falha ao atualizar serviço. Tente novamente."
+            : "Falha ao cadastrar serviço. Tente novamente.",
+          color: "danger",
+          timeout: 5000,
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -280,14 +466,14 @@ export function GestorServicosPage() {
           </div>
 
           {/* Lista de Serviços */}
-          {services && services.length > 0 ? (
+          {sortedServices && sortedServices.length > 0 ? (
             <>
               {/* Título da Categoria */}
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-white">Serviços</h2>
                 <p className="text-gray-400 text-sm mt-1">
-                  {services.length}{" "}
-                  {services.length === 1
+                  {sortedServices.length}{" "}
+                  {sortedServices.length === 1
                     ? "serviço encontrado"
                     : "serviços encontrados"}
                 </p>
@@ -295,10 +481,28 @@ export function GestorServicosPage() {
 
               {/* Grid de Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {services.map((service) => {
+                {sortedServices.map((service) => {
                   const precoNum = parseFloat(
                     service.preco?.replace(",", ".") || "0"
                   );
+                  const defaultImage = getServiceImageWithFallback(
+                    null,
+                    service.nome
+                  );
+                  const serviceImageSrc =
+                    service.imagem && service.imagem.trim() !== ""
+                      ? service.imagem.startsWith("http")
+                        ? service.imagem
+                        : (() => {
+                            const apiUrl = import.meta.env.VITE_API || "";
+                            const imageName = service.imagem.replace(
+                              "/servicos/imagem/",
+                              ""
+                            );
+                            // Usa o mesmo padrão da página do cliente
+                            return `${apiUrl}/servicos/imagem/${encodeURIComponent(imageName)}`;
+                          })()
+                      : defaultImage || undefined;
 
                   return (
                     <Card
@@ -308,15 +512,40 @@ export function GestorServicosPage() {
                       <CardBody className="p-3">
                         <div className="flex items-start gap-3 mb-3">
                           {/* Imagem do Serviço */}
-                          {service.imagem ? (
+                          {serviceImageSrc ? (
                             <img
                               alt={service.nome}
-                              className="w-12 h-12 rounded-lg object-cover border-2 border-gray-700 flex-shrink-0"
-                              src={service.imagem}
+                              className="w-16 h-16 rounded-lg object-cover border-2 border-gray-700 flex-shrink-0"
+                              src={serviceImageSrc}
+                              onError={(e) => {
+                                // Se a imagem falhar ao carregar, esconde a imagem
+                                const target = e.currentTarget;
+                                if (target.dataset.fallbackApplied === "true") return;
+                                target.dataset.fallbackApplied = "true";
+                                // Se houver imagem padrão, tenta usar ela
+                                if (defaultImage) {
+                                  target.src = defaultImage;
+                                } else {
+                                  // Se não houver imagem padrão, esconde a imagem
+                                  target.style.display = "none";
+                                }
+                              }}
                             />
                           ) : (
-                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-lg font-bold border-2 border-gray-700 flex-shrink-0">
-                              ✂️
+                            <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center flex-shrink-0">
+                              <svg
+                                className="w-8 h-8 text-gray-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
                             </div>
                           )}
 
@@ -427,6 +656,187 @@ export function GestorServicosPage() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <ModalBody>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Upload de Imagem - PRIMEIRO CAMPO */}
+                <div className="w-full md:col-span-2">
+                  <label
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                    htmlFor="image-upload"
+                  >
+                    Imagem do Serviço (opcional)
+                  </label>
+                  <div className="flex flex-col items-center gap-4">
+                    {/* Preview da Imagem - Padrão retangular como nos cards */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="relative">
+                        {(() => {
+                          // Se não há serviço selecionado (modo criação), não mostra imagem
+                          if (!selectedService && !imagePreview) {
+                            return (
+                              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center">
+                                <svg
+                                  className="w-12 h-12 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            );
+                          }
+
+                          const defaultPreview = getServiceImageWithFallback(
+                            null,
+                            selectedService?.nome || ""
+                          );
+                          const previewSrc =
+                            imagePreview ||
+                            (selectedService && defaultPreview ? defaultPreview : null);
+                          const isDefaultImage = !imagePreview && selectedService && (!selectedService.imagem || selectedService.imagem.trim() === "") && defaultPreview !== null;
+
+                          // Se não houver imagem e não for um tipo com imagem padrão, mostra placeholder
+                          if (!previewSrc && !selectedService) {
+                            return (
+                              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center">
+                                <svg
+                                  className="w-12 h-12 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            );
+                          }
+
+                          // Se não houver imagem padrão para o tipo de serviço, mostra placeholder
+                          if (!previewSrc) {
+                            return (
+                              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center">
+                                <svg
+                                  className="w-12 h-12 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <>
+                              <img
+                                alt="Preview da imagem do serviço"
+                                className="w-32 h-32 rounded-lg object-cover border-2 border-gray-700"
+                                src={previewSrc}
+                                onError={(e) => {
+                                  // Se a imagem falhar ao carregar, esconde ou usa fallback
+                                  const target = e.currentTarget as HTMLImageElement;
+                                  if (target.dataset.fallbackApplied === "true") return;
+                                  target.dataset.fallbackApplied = "true";
+                                  
+                                  const serviceName = selectedService?.nome || "";
+                                  const fallbackImage = getServiceImageWithFallback(null, serviceName);
+                                  
+                                  if (fallbackImage) {
+                                    target.src = fallbackImage;
+                                  } else {
+                                    // Se não houver imagem padrão, esconde a imagem
+                                    target.style.display = "none";
+                                  }
+                                }}
+                              />
+                              {/* Botão de remover imagem - aparece quando há imagem customizada ou preview */}
+                              {(imagePreview || (selectedService && selectedService.imagem && selectedService.imagem.trim() !== "" && !isDefaultImage)) && (
+                                <button
+                                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
+                                  type="button"
+                                  onClick={() => {
+                                    setImagePreview(null);
+                                    setImageFile(null);
+                                    setImageRemoved(true); // Marca que a imagem foi removida intencionalmente
+                                    // Limpa o input file
+                                    const fileInput = document.getElementById(
+                                      "image-upload"
+                                    ) as HTMLInputElement;
+                                    if (fileInput) {
+                                      fileInput.value = "";
+                                    }
+                                  }}
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                      {/* Badge indicando imagem padrão abaixo da imagem - só aparece quando editando serviço com imagem padrão */}
+                      {(() => {
+                        const defaultPreview = getServiceImageWithFallback(
+                          null,
+                          selectedService?.nome || ""
+                        );
+                        const isDefaultImage = !imagePreview && selectedService && (!selectedService.imagem || selectedService.imagem.trim() === "") && defaultPreview !== null;
+                        return isDefaultImage ? (
+                          <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-md border border-blue-600 shadow-sm">
+                            Imagem Padrão
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+
+                    {/* Botão de Upload */}
+                    <label
+                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                      htmlFor="image-upload"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                        />
+                      </svg>
+                      Alterar imagem
+                    </label>
+                    <input
+                      accept="image/*"
+                      className="hidden"
+                      id="image-upload"
+                      type="file"
+                      onChange={handleImageChange}
+                    />
+                    <p className="text-xs text-gray-400 text-center">
+                      Formatos: PNG, JPG ou JPEG (máx. 5MB)
+                    </p>
+                  </div>
+                </div>
+
                 <Controller
                   control={control}
                   name="nome"
@@ -493,27 +903,6 @@ export function GestorServicosPage() {
                       onChange={(e) =>
                         field.onChange(parseInt(e.target.value) || 0)
                       }
-                    />
-                  )}
-                />
-
-                <Controller
-                  control={control}
-                  name="imagem"
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      classNames={{
-                        base: "w-full md:col-span-2",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
-                      }}
-                      errorMessage={errors.imagem?.message}
-                      isInvalid={!!errors.imagem}
-                      label="URL da Imagem (opcional)"
-                      placeholder="https://exemplo.com/imagem.jpg"
-                      type="url"
                     />
                   )}
                 />

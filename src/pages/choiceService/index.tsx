@@ -9,6 +9,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { formatPrice } from "@/utils/format-price";
+import { getServiceImageWithFallback } from "@/utils/defaultImages";
 
 // ---- helpers de ordenação ----
 const KEY_ORDER = [
@@ -36,64 +37,27 @@ const rankByName = (nome: string) => {
 // Função para obter a imagem do serviço baseado no nome
 const getServiceImage = (serviceName: string, serviceImage?: string) => {
   const apiUrl = import.meta.env.VITE_API;
-  const nomeNormalizado = normalize(serviceName);
 
   // Se o serviço já tem uma imagem específica da API válida, usa ela
-  // Caminho correto: /public/servicos/
+  // O backend salva como "/servicos/imagem/{fileName}" e serve em "/servicos/imagem/"
   if (serviceImage && serviceImage.trim() !== "" && apiUrl) {
-    return `${apiUrl}/public/servicos/${encodeURIComponent(serviceImage)}`;
-  }
-
-  // Se a API estiver configurada, usa as imagens da API baseado no nome
-  // Caminho correto: /public/servicos/
-  if (apiUrl) {
-    let imageUrl = "";
-
-    if (nomeNormalizado.includes("corte de cabelo")) {
-      imageUrl = `${apiUrl}/public/servicos/cabelo.jpg`;
-    } else if (nomeNormalizado.includes("barba")) {
-      imageUrl = `${apiUrl}/public/servicos/barba.jpg`;
-    } else if (
-      nomeNormalizado.includes("pe de cabelo") ||
-      nomeNormalizado.includes("pe-cabelo")
-    ) {
-      imageUrl = `${apiUrl}/public/servicos/pe-de-cabelo.jpg`;
-    } else if (
-      nomeNormalizado.includes("limpeza de pele") ||
-      nomeNormalizado.includes("limpeza-de-pele")
-    ) {
-      imageUrl = `${apiUrl}/public/servicos/limpeza-de-pele.jpg`;
+    // Se já é uma URL completa, usa diretamente
+    if (serviceImage.startsWith("http")) {
+      return serviceImage;
     }
-
-    if (imageUrl) {
-      return imageUrl;
+    
+    // Se começa com "/servicos/imagem/", adiciona apenas a API
+    if (serviceImage.startsWith("/servicos/imagem/")) {
+      return `${apiUrl}${serviceImage}`;
     }
+    
+    // Se é apenas o nome do arquivo, constrói o caminho completo
+    const imageName = serviceImage.replace("/servicos/imagem/", "");
+    return `${apiUrl}/servicos/imagem/${encodeURIComponent(imageName)}`;
   }
 
-  // Fallback para imagens locais se a API não estiver configurada
-  if (nomeNormalizado.includes("corte de cabelo")) {
-    return "/barber-3.png";
-  }
-
-  if (nomeNormalizado.includes("barba")) {
-    return "/barber-4.png";
-  }
-
-  if (
-    nomeNormalizado.includes("pe de cabelo") ||
-    nomeNormalizado.includes("pe-cabelo")
-  ) {
-    return "/barber-3.png";
-  }
-
-  if (
-    nomeNormalizado.includes("limpeza de pele") ||
-    nomeNormalizado.includes("limpeza-de-pele")
-  ) {
-    return "/barber-5.png";
-  }
-
-  return "/barber-3.png";
+  // Se não houver imagem, usa a função utilitária para obter imagem padrão
+  return getServiceImageWithFallback(serviceImage, serviceName);
 };
 
 export function ChoiceServicePage() {
@@ -304,34 +268,29 @@ export function ChoiceServicePage() {
                       src={getServiceImage(service.nome, service.imagem)}
                       width={96}
                       onError={(e) => {
-                        const apiUrl = import.meta.env.VITE_API;
-                        const nomeNormalizado = normalize(service.nome);
+                        // Se a imagem falhar ao carregar, usa a imagem padrão
                         const target = e.currentTarget as HTMLImageElement;
-                        const currentSrc = target.src;
-                        const imageName = service.imagem;
-
-                        // eslint-disable-next-line no-console
-                        console.error(
-                          "Erro ao carregar imagem:",
-                          currentSrc,
-                          "Serviço:",
-                          service.nome,
-                        );
-
-                        // Se tiver imagem específica e API configurada, tenta caminhos alternativos
+                        target.src = getServiceImageWithFallback(null, service.nome);
                         if (imageName && apiUrl) {
-                          // Tenta diferentes caminhos possíveis
+                          // Extrai o nome do arquivo do caminho completo se necessário
+                          let fileName = imageName;
+                          if (imageName.startsWith("/servicos/imagem/")) {
+                            fileName = imageName.replace("/servicos/imagem/", "");
+                          }
+                          
+                          // Tenta diferentes caminhos possíveis (priorizando o caminho correto)
                           const alternativePaths = [
-                            `${apiUrl}/public/servicos/${encodeURIComponent(imageName)}`,
-                            `${apiUrl}/servicos/${encodeURIComponent(imageName)}`,
-                            `${apiUrl}/servicos/imagem/${encodeURIComponent(imageName)}`,
-                            `${apiUrl}/files/servicos/${encodeURIComponent(imageName)}`,
+                            `${apiUrl}/servicos/imagem/${encodeURIComponent(fileName)}`,
+                            `${apiUrl}${imageName.startsWith("/") ? imageName : `/servicos/imagem/${imageName}`}`,
+                            `${apiUrl}/public/servicos/${encodeURIComponent(fileName)}`,
+                            `${apiUrl}/servicos/${encodeURIComponent(fileName)}`,
                           ];
 
                           // Verifica qual caminho já foi tentado
                           const currentPathIndex = alternativePaths.findIndex(
                             (path) =>
-                              currentSrc.includes(path.replace(apiUrl, "")),
+                              currentSrc.includes(path.replace(apiUrl, "")) ||
+                              currentSrc === path,
                           );
 
                           // Tenta o próximo caminho disponível

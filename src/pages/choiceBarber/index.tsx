@@ -7,6 +7,7 @@ import { StarIcon as StarIconOutline } from "@heroicons/react/24/outline";
 
 import { Header } from "@/components/Header";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
+import { getDefaultBarberImage } from "@/utils/defaultImages";
 
 export function ChoiceBarberPage() {
   const navigate = useNavigate();
@@ -63,17 +64,44 @@ export function ChoiceBarberPage() {
                   })
                 }
               >
-                <img
-                  alt={`Barbeiro ${barber.nome}`}
-                  className="h-16 w-14 rounded-md object-cover"
-                  src={
-                    barber.avatar &&
-                    `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
-                  }
-                  onError={(e) => {
-                    e.currentTarget.src = "/img-barber-icon.png";
-                  }}
-                />
+                {(() => {
+                  const avatarUrl = barber.avatar && barber.avatar.trim() !== ""
+                    ? barber.avatar.startsWith("data:image")
+                      ? barber.avatar
+                      : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
+                    : null;
+                  
+                  return avatarUrl ? (
+                    <img
+                      alt={`Barbeiro ${barber.nome}`}
+                      className="h-16 w-14 rounded-md object-cover"
+                      src={avatarUrl}
+                      onError={(e) => {
+                        // Se a imagem falhar, mostra o ícone de usuário
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                        const fallback = target.nextElementSibling as HTMLElement;
+                        if (fallback) {
+                          fallback.classList.remove("hidden");
+                        }
+                      }}
+                    />
+                  ) : null;
+                })()}
+                {(() => {
+                  if (barber.avatar && barber.avatar.trim() !== "") return null;
+                  
+                  return (
+                    <img
+                      alt={`Barbeiro ${barber.nome}`}
+                      className="h-16 w-14 rounded-md object-cover"
+                      src={getDefaultBarberImage(barber.nome)}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  );
+                })()}
                 <div className="flex-1">
                   <div className="text-white font-medium">{barber.nome}</div>
                   <div className="text-xs text-gray-400">

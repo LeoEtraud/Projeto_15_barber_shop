@@ -4,6 +4,7 @@ import { IHorarioFuncionamento, IProfessionals } from "@/contexts/ScheduleProvid
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
+import { getDefaultBarberImage } from "@/utils/defaultImages";
 
 // Função para obter as iniciais do barbeiro
 function getInitials(nomeCompleto: string): string {
@@ -331,13 +332,20 @@ export function GerenciarAgendamentos() {
                                     }}
                                   />
                                 ) : null}
-                                <div
-                                  className={`w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold border border-gray-600 flex-shrink-0 ${
-                                    avatarUrl ? "hidden" : ""
-                                  }`}
-                                >
-                                  {getInitials(profissional.nome)}
-                                </div>
+                                {(() => {
+                                  if (avatarUrl) return null;
+                                  
+                                  return (
+                                    <img
+                                      alt={profissional.nome}
+                                      className="w-5 h-5 rounded-full object-cover border border-gray-600 flex-shrink-0"
+                                      src={getDefaultBarberImage(profissional.nome)}
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                      }}
+                                    />
+                                  );
+                                })()}
                                 <span className="text-white text-[10px] font-medium truncate max-w-[60px]">
                                   {profissional.nome}
                                 </span>

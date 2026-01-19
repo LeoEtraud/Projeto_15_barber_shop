@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Button,
   Card,
@@ -32,6 +32,7 @@ import {
   UpdateProfessional,
   DeleteProfessional,
 } from "@/contexts/ScheduleProvider/util";
+import { getDefaultBarberImage } from "@/utils/defaultImages";
 import { formatPhone, formatDate } from "@/utils/format-Cpf-Phone";
 import { IBarbers, IProfessionals } from "@/contexts/ScheduleProvider/types";
 
@@ -142,7 +143,23 @@ const schema = yup.object().shape({
       /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
       "Email inválido"
     )
-    .required("Email é obrigatório"),
+    .required("Email é obrigatório")
+    .test(
+      "email-unico",
+      "Já existe uma conta cadastrada com este E-mail.",
+      function (value) {
+        if (!value) return true;
+        const { professionals, selectedBarberId } = this.options.context as { 
+          professionals: (IBarbers | IProfessionals)[]; 
+          selectedBarberId?: string;
+        };
+        const normalizedEmail = value.trim().toLowerCase();
+        const emailExists = professionals.some(
+          (p) => p.email?.toLowerCase() === normalizedEmail && p.id !== selectedBarberId
+        );
+        return !emailExists;
+      }
+    ),
   telefone: yup
     .string()
     .required("Telefone é obrigatório")
@@ -164,7 +181,26 @@ const schema = yup.object().shape({
       const ddd = parseInt(digits.substring(0, 2), 10);
 
       return ddd >= 11 && ddd <= 99;
-    }),
+    })
+    .test(
+      "telefone-unico",
+      "Já existe um profissional cadastrado com este número de contato.",
+      function (value) {
+        if (!value) return true;
+        const { professionals, selectedBarberId } = this.options.context as { 
+          professionals: (IBarbers | IProfessionals)[]; 
+          selectedBarberId?: string;
+        };
+        const cleanedPhone = value.replace(/\D/g, "");
+        const phoneExists = professionals.some(
+          (p) => {
+            const pPhone = (p.telefone || "").replace(/\D/g, "");
+            return pPhone === cleanedPhone && p.id !== selectedBarberId;
+          }
+        );
+        return !phoneExists;
+      }
+    ),
   data_nascimento: yup
     .string()
     .required("Data de nascimento é obrigatória")
@@ -285,7 +321,14 @@ export function GestorBarbeirosPage() {
   const [selectedTab, setSelectedTab] = useState<FuncaoType>("Barbeiros");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageRemoved, setImageRemoved] = useState<boolean>(false);
   const [isActive, setIsActive] = useState(true);
+
+  // Memoiza o contexto para atualizar quando professionals ou selectedBarber mudarem
+  const formContext = useMemo(() => ({
+    professionals,
+    selectedBarberId: selectedBarber?.id,
+  }), [professionals, selectedBarber?.id]);
 
   const {
     control,
@@ -294,6 +337,7 @@ export function GestorBarbeirosPage() {
     formState: { errors },
   } = useForm<BarberFormData>({
     resolver: yupResolver(schema),
+    context: formContext,
     defaultValues: {
       nome: "",
       email: "",
@@ -370,12 +414,14 @@ export function GestorBarbeirosPage() {
       });
 
       // Define preview da imagem existente
-      if (barber.avatar) {
+      if (barber.avatar && barber.avatar.trim() !== "") {
         const avatarUrl = getAvatarUrl(barber.avatar);
-
         setImagePreview(avatarUrl);
+        setImageRemoved(false);
       } else {
+        // Se não houver imagem, não define preview (será mostrado o ícone no modal)
         setImagePreview(null);
+        setImageRemoved(false);
       }
 
       // Define o status
@@ -393,9 +439,11 @@ export function GestorBarbeirosPage() {
         funcao: "" as "",
       });
       setImagePreview(null);
+      setImageRemoved(false);
       setIsActive(true); // Por padrão, novo profissional é ativo
     }
     setImageFile(null);
+    setImageRemoved(false);
     onOpen();
   };
 
@@ -403,6 +451,7 @@ export function GestorBarbeirosPage() {
     setSelectedBarber(null);
     setImagePreview(null);
     setImageFile(null);
+    setImageRemoved(false);
     setIsActive(true);
     reset();
     onClose();
@@ -445,6 +494,7 @@ export function GestorBarbeirosPage() {
       reader.onload = (event) => {
         if (event.target?.result) {
           setImagePreview(event.target.result as string);
+          setImageRemoved(false); // Reset do flag quando nova imagem é selecionada
         }
       };
 
@@ -481,23 +531,45 @@ export function GestorBarbeirosPage() {
       const apiFuncaoValue = getApiValue(funcaoValue);
 
       // Converte imagem para base64 se houver arquivo selecionado
-      let avatarBase64: string | undefined;
+      // Se a imagem foi removida intencionalmente, envia null para remover
+      // Se não houver nova imagem e não foi removida, não envia o campo (mantém a existente)
+      let avatarBase64: string | null | undefined = undefined;
 
       if (imageFile) {
+        // Nova imagem selecionada
         avatarBase64 = await convertFileToBase64(imageFile);
+        setImageRemoved(false); // Reset do flag de remoção
+      } else if (imageRemoved) {
+        // Imagem foi removida intencionalmente pelo usuário
+        avatarBase64 = null;
       }
+      // Se imageFile for null e imageRemoved for false, não envia nada (mantém a existente)
 
       if (selectedBarber) {
         // Editar profissional
-        await UpdateProfessional(selectedBarber.id, {
+        const updateData: {
+          nome: string;
+          email: string;
+          telefone: string;
+          data_nascimento: string;
+          funcao: string;
+          avatar?: string | null;
+          status: string;
+        } = {
           nome: data.nome.trim(),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
           data_nascimento: data.data_nascimento,
           funcao: apiFuncaoValue,
-          avatar: avatarBase64,
           status: isActive ? "ATIVO" : "INATIVO",
-        });
+        };
+
+        // Adiciona avatar se houver nova imagem ou se foi removida (null)
+        if (avatarBase64 !== undefined) {
+          updateData.avatar = avatarBase64;
+        }
+
+        await UpdateProfessional(selectedBarber.id, updateData);
 
         addToast({
           title: "Sucesso",
@@ -541,14 +613,31 @@ export function GestorBarbeirosPage() {
       }
 
       await fetchProfessionals();
+      
+      // Se a imagem foi removida, limpa o preview para garantir que será mostrado o ícone
+      if (imageRemoved) {
+        setImagePreview(null);
+      }
+      
       handleCloseModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar profissional:", error);
+      
+      // Extrai a mensagem de erro do backend
+      let errorMessage = selectedBarber
+        ? "Falha ao atualizar profissional. Tente novamente."
+        : "Falha ao cadastrar profissional. Tente novamente.";
+      
+      // Verifica se há uma mensagem de erro específica do backend
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       addToast({
         title: "Erro",
-        description: selectedBarber
-          ? "Falha ao atualizar profissional. Tente novamente."
-          : "Falha ao cadastrar profissional. Tente novamente.",
+        description: errorMessage,
         color: "danger",
         timeout: 5000,
       });
@@ -740,24 +829,46 @@ export function GestorBarbeirosPage() {
                         <CardBody className="p-3">
                           <div className="flex items-start gap-3 mb-3">
                             {/* Avatar */}
-                            {barber.avatar ? (
-                              <img
-                                alt={barber.nome}
-                                className="w-16 h-16 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
-                                src={
-                                  barber.avatar.startsWith("data:image")
-                                    ? barber.avatar
-                                    : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar || "")}`
-                                }
-                                onError={(e) => {
-                                  e.currentTarget.src = "/img-barber-icon.png";
-                                }}
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-base font-bold border-2 border-gray-700 flex-shrink-0">
-                                {getInitials(barber.nome)}
-                              </div>
-                            )}
+                            {(() => {
+                              const avatarUrl = barber.avatar && barber.avatar.trim() !== ""
+                                ? barber.avatar.startsWith("data:image")
+                                  ? barber.avatar
+                                  : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar || "")}`
+                                : null;
+                              
+                              return avatarUrl ? (
+                                <img
+                                  alt={barber.nome}
+                                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
+                                  src={avatarUrl}
+                                  onError={(e) => {
+                                    // Se a imagem falhar, mostra o ícone de usuário
+                                    const target = e.currentTarget;
+                                    target.style.display = "none";
+                                    const fallback = target.nextElementSibling as HTMLElement;
+                                    if (fallback) {
+                                      fallback.classList.remove("hidden");
+                                    }
+                                  }}
+                                />
+                              ) : null;
+                            })()}
+                            {(() => {
+                              const hasAvatar = barber.avatar && barber.avatar.trim() !== "";
+                              if (hasAvatar) return null;
+                              
+                              return (
+                                <img
+                                  alt={barber.nome}
+                                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
+                                  src={getDefaultBarberImage(barber.nome)}
+                                  onError={(e) => {
+                                    // Se a imagem padrão falhar, esconde o elemento
+                                    e.currentTarget.style.display = "none";
+                                  }}
+                                />
+                              );
+                            })()}
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
@@ -852,76 +963,136 @@ export function GestorBarbeirosPage() {
           <form onSubmit={handleSubmit(onSubmit)}>
             <ModalBody>
               {/* Upload de Imagem */}
-              <div className="flex flex-col items-center justify-center mb-6">
-                <div className="relative">
-                  {/* Preview da Imagem */}
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        alt="Preview do avatar"
-                        className="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-lg"
-                        src={imagePreview}
-                      />
-                      <button
-                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
-                        type="button"
-                        onClick={() => {
-                          setImagePreview(null);
-                          setImageFile(null);
-                        }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="w-32 h-32 rounded-full bg-gray-700 border-4 border-gray-600 flex items-center justify-center">
-                      <svg
-                        className="w-16 h-16 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                        />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-
-                {/* Botão de Upload */}
+              <div className="mb-6">
                 <label
-                  className="mt-4 cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white  rounded-lg transition-colors"
+                  className="block text-sm font-medium text-gray-300 mb-2"
                   htmlFor="avatar-upload"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      d="M12 4v16m8-8H4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                    />
-                  </svg>
-                  {imagePreview ? "Alterar Imagem" : "Adicionar Imagem"}
+                  Foto do Profissional (opcional)
                 </label>
-                <input
-                  accept="image/*"
-                  className="hidden"
-                  id="avatar-upload"
-                  type="file"
-                  onChange={handleImageChange}
-                />
-                <p className="text-xs text-gray-400 mt-2">
-                  Formatos: JPG, PNG, GIF (máx. 5MB)
-                </p>
+                <div className="flex flex-col items-center gap-4">
+                  {/* Preview da Imagem - Padrão circular como nos cards */}
+                  <div className="relative">
+                    {(() => {
+                      // Se não há profissional selecionado (modo criação), mostra apenas ícone de usuário
+                      if (!selectedBarber && !imagePreview) {
+                        return (
+                          <div className="w-32 h-32 rounded-full bg-gray-700 border-2 border-gray-700 flex items-center justify-center">
+                            <svg
+                              className="w-16 h-16 text-gray-400"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </div>
+                        );
+                      }
+
+                      const previewUrl = imagePreview ||
+                        (selectedBarber && !imageRemoved
+                          ? selectedBarber.avatar && selectedBarber.avatar.trim() !== "" && !selectedBarber.avatar.startsWith("data:image")
+                            ? `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(selectedBarber.avatar)}`
+                            : null
+                          : null);
+                      
+                      const hasImageToRemove = imagePreview || (selectedBarber && selectedBarber.avatar && selectedBarber.avatar.trim() !== "");
+                      
+                      return previewUrl ? (
+                        <>
+                          <img
+                            alt="Preview do avatar"
+                            className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                            src={previewUrl}
+                            onError={(e) => {
+                              // Se a imagem falhar, mostra o ícone de usuário
+                              const target = e.currentTarget;
+                              target.style.display = "none";
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) {
+                                fallback.classList.remove("hidden");
+                              }
+                            }}
+                          />
+                          {/* Botão de remover imagem - aparece quando há imagem customizada ou preview */}
+                          {hasImageToRemove && (
+                            <button
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
+                              type="button"
+                              onClick={() => {
+                                setImagePreview(null);
+                                setImageFile(null);
+                                setImageRemoved(true);
+                                // Limpa o input file
+                                const fileInput = document.getElementById(
+                                  "avatar-upload"
+                                ) as HTMLInputElement;
+                                if (fileInput) {
+                                  fileInput.value = "";
+                                }
+                              }}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </>
+                      ) : null;
+                    })()}
+                    {(() => {
+                      // Só mostra a imagem padrão quando estiver editando um profissional existente sem imagem
+                      // No modo de criação (!selectedBarber), não mostra a imagem padrão
+                      const shouldShowDefault = !imagePreview && selectedBarber && (!selectedBarber.avatar || selectedBarber.avatar.trim() === "" || imageRemoved);
+                      if (!shouldShowDefault) return null;
+                      
+                      return (
+                        <img
+                          alt="Imagem padrão do barbeiro"
+                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                          src={getDefaultBarberImage(selectedBarber?.nome)}
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      );
+                    })()}
+                  </div>
+
+                  {/* Botão de Upload */}
+                  <label
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                    htmlFor="avatar-upload"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                      />
+                    </svg>
+                    Alterar imagem
+                  </label>
+                  <input
+                    accept="image/*"
+                    className="hidden"
+                    id="avatar-upload"
+                    type="file"
+                    onChange={handleImageChange}
+                  />
+                  <p className="text-xs text-gray-400 text-center">
+                    Formatos: PNG, JPG ou JPEG (máx. 5MB)
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
