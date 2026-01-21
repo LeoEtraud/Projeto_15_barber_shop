@@ -91,7 +91,12 @@ export function ChoiceSchedulePage() {
 
   // FUNÇÃO PARA GERAR PRÓXIMOS 6 DIAS DISPONÍVEIS (EXCETO DOMINGO)
   const generateDates = () => {
-    const dates = [];
+    const dates: Array<{
+      value: string;
+      labelDesktop: string;
+      labelMobile: string;
+      isToday: boolean;
+    }> = [];
     const today = new Date();
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
