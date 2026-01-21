@@ -1166,6 +1166,7 @@ export function GestorBarbeirosPage() {
                       inputMode="numeric"
                       label="Telefone"
                       maxLength={15}
+                      pattern="[0-9]*"
                       placeholder="(00) 00000-0000"
                       type="tel"
                       value={formatPhone(field.value || "")}

@@ -346,6 +346,7 @@ export function UserProfilePage() {
                         inputMode="numeric"
                         label="Nº de contato"
                         maxLength={15}
+                        pattern="[0-9]*"
                         size="sm"
                         type="tel"
                         {...field}

@@ -219,6 +219,7 @@ export function CreateAccount() {
                   }
                   label="Telefone"
                   maxLength={15}
+                  pattern="[0-9]*"
                   size="sm"
                   type="tel"
                   {...field}
