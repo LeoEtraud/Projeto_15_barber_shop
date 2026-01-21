@@ -195,3 +195,4 @@ Com essa estrutura de banco de dados e fluxo de processos, seu SaaS pode oferece
 - Implementar para que o atendente da barbearia confirme o atendimento do agendamento após o serviço. ❌
 - Corrigir alteração de telefone para verificar se já existe número cadastrado tanto na model (cliente e profissional) ❌.
 - Implementar recebimento de notificações no app quando os clientes agendarem serviços ❌.
+- Implementar status de ATIVO/INATIVO ao serviços ❌.

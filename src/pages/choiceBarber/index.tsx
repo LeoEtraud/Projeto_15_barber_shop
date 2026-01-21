@@ -60,7 +60,13 @@ export function ChoiceBarberPage() {
                 type="button"
                 onClick={() =>
                   navigate("/choice-service", {
-                    state: { barber: { id: barber.id, nome: barber.nome } },
+                    state: {
+                      barber: {
+                        id: barber.id,
+                        nome: barber.nome,
+                        id_barbearia: barber.id_barbearia,
+                      },
+                    },
                   })
                 }
               >

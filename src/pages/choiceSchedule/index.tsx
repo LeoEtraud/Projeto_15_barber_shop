@@ -5,26 +5,30 @@ import { ArrowLeftIcon, CalendarIcon } from "@heroicons/react/24/solid";
 import { addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
-import { IServices } from "@/contexts/ScheduleProvider/types";
+import {
+  IHorarioFuncionamento,
+  IServices,
+} from "@/contexts/ScheduleProvider/types";
 import { formatPrice } from "@/utils/format-price";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
+import { GetHorariosFuncionamento } from "@/contexts/ScheduleProvider/util";
 
 export function ChoiceSchedulePage() {
   const navigate = useNavigate();
   const { fetchSchedules, schedules } = useSchedule();
   const location = useLocation() as {
     state?: {
-      barber?: { id: string; nome: string };
+      barber?: { id: string; nome: string; id_barbearia: string };
       selectedServices?: IServices[];
     };
   };
 
   const { barber, selectedServices } = location.state || {};
+  const barbeariaId = barber?.id_barbearia;
 
   const dateInputRef = useRef<HTMLInputElement>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
-
   // Estado para armazenar os horários disponíveis (incluindo ocupado/livre/passado)
   const [availableTimeSlots, setAvailableTimeSlots] = useState<
     {
@@ -33,6 +37,9 @@ export function ChoiceSchedulePage() {
       isPast: boolean;
       turno: "manha" | "tarde" | "noite";
     }[]
+  >([]);
+  const [horariosFuncionamento, setHorariosFuncionamento] = useState<
+    IHorarioFuncionamento[]
   >([]);
 
   // SOMA TOTAL DA DURAÇÃO DOS SERVIÇOS
@@ -45,59 +52,42 @@ export function ChoiceSchedulePage() {
     [selectedServices]
   );
 
-  // FUNÇÃO PARA VERIFICAR SE TODOS OS HORÁRIOS DO DIA ATUAL JÁ PASSARAM
-  const isAllTimeSlotsPassed = useCallback(
-    (dateString: string) => {
-      const now = new Date();
-      const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  // Carrega horários de funcionamento da barbearia do barbeiro selecionado
+  useEffect(() => {
+    let isMounted = true;
 
-      // Só verifica se for o dia atual
-      if (dateString !== todayString) return false;
+    if (!barbeariaId) {
+      setHorariosFuncionamento([]);
+      return;
+    }
 
-      const step = totalDuration >= 60 ? 60 : 30;
-
-      // Gera todos os horários do dia atual (09h-12h30 e 14h-19h30)
-      // Primeiro período: 09h até 12h30
-      for (let hour = 9; hour <= 12; hour++) {
-        const maxMinute = hour === 12 ? 30 : 60;
-
-        for (let minute = 0; minute < maxMinute; minute += step) {
-          // Pula se for depois das 12h30
-          if (hour === 12 && minute > 30) break;
-
-          const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-          const timeSlotStart = new Date(`${dateString}T${time}:00`).getTime();
-
-          // Se encontrar pelo menos um horário que ainda não passou, retorna false
-          if (timeSlotStart >= now.getTime()) {
-            return false;
-          }
+    GetHorariosFuncionamento(barbeariaId)
+      .then((response) => {
+        const horariosDaAPI =
+          response?.hoursFunctionment || response?.horarios || response || [];
+        if (isMounted) {
+          setHorariosFuncionamento(
+            Array.isArray(horariosDaAPI) ? horariosDaAPI : []
+          );
         }
-      }
-
-      // Segundo período: 14h até 19h30
-      for (let hour = 14; hour <= 19; hour++) {
-        const maxMinute = hour === 19 ? 30 : 60;
-
-        for (let minute = 0; minute < maxMinute; minute += step) {
-          // Pula se for depois das 19h30
-          if (hour === 19 && minute > 30) break;
-
-          const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-          const timeSlotStart = new Date(`${dateString}T${time}:00`).getTime();
-
-          // Se encontrar pelo menos um horário que ainda não passou, retorna false
-          if (timeSlotStart >= now.getTime()) {
-            return false;
-          }
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar horários de funcionamento:", error);
+        if (isMounted) {
+          setHorariosFuncionamento([]);
+          addToast({
+            title: "Erro",
+            description: "Falha ao carregar horários de funcionamento.",
+            color: "danger",
+            timeout: 4000,
+          });
         }
-      }
+      });
 
-      // Se chegou até aqui, todos os horários já passaram
-      return true;
-    },
-    [totalDuration]
-  );
+    return () => {
+      isMounted = false;
+    };
+  }, [barbeariaId]);
 
   // FUNÇÃO PARA GERAR PRÓXIMOS 6 DIAS DISPONÍVEIS (EXCETO DOMINGO)
   const generateDates = () => {
@@ -106,17 +96,24 @@ export function ChoiceSchedulePage() {
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
     let dayOffset = 0;
+    // Evita loop infinito enquanto horários ainda não carregaram
+    if (horariosFuncionamento.length === 0) {
+      return dates;
+    }
+    const maxIterations = 370;
+    let iterations = 0;
 
     // Continua até ter 6 dias válidos
-    while (dates.length < 6) {
+    while (dates.length < 6 && iterations < maxIterations) {
+      iterations++;
       const date = new Date(today);
 
       date.setDate(today.getDate() + dayOffset);
 
-      // Verifica se é domingo e pula
-      if (date.getDay() === 0) {
+      const horario = getHorarioEfetivo(date);
+      if (!horario || horario.is_feriado) {
         dayOffset++;
-        continue; // 0 representa o domingo
+        continue;
       }
 
       const year = date.getFullYear();
@@ -128,6 +125,12 @@ export function ChoiceSchedulePage() {
 
       // Se for hoje e todos os horários já passaram, pula este dia
       if (isToday && isAllTimeSlotsPassed(dateString)) {
+        dayOffset++;
+        continue;
+      }
+
+      // Se não há nenhum slot disponível para a data, pula
+      if (!hasSlotsForDate(date)) {
         dayOffset++;
         continue;
       }
@@ -172,13 +175,149 @@ export function ChoiceSchedulePage() {
   const getTurno = (time: string): "manha" | "tarde" | "noite" => {
     const [hour] = time.split(":").map(Number);
 
-    if (hour >= 9 && hour < 12) return "manha";
-    if (hour === 12) return "manha"; // 12:00 e 12:30 ainda são manhã
-    if (hour >= 14 && hour < 18) return "tarde";
-    if (hour >= 18) return "noite"; // 18:00 até 19:30
+    if (hour < 12) return "manha";
+    if (hour < 18) return "tarde";
+    if (hour >= 18) return "noite";
 
     return "manha"; // fallback
   };
+
+  const parseTimeToMinutes = (time: string) => {
+    const [hour, minute] = time.split(":").map(Number);
+    return hour * 60 + minute;
+  };
+
+  const minutesToTime = (minutes: number) => {
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+    return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  };
+
+  const isOverlappingInterval = (
+    start: number,
+    end: number,
+    intervalStart: number,
+    intervalEnd: number
+  ) => start < intervalEnd && end > intervalStart;
+
+  const getDiaSemana = (date: Date) => {
+    const diaSemanaMap: Record<number, string> = {
+      0: "DOMINGO",
+      1: "SEGUNDA",
+      2: "TERCA",
+      3: "QUARTA",
+      4: "QUINTA",
+      5: "SEXTA",
+      6: "SABADO",
+    };
+    return diaSemanaMap[date.getDay()];
+  };
+
+  const getHorarioEfetivo = (date: Date) => {
+    const diaSemana = getDiaSemana(date);
+    const dataComparar = new Date(date);
+    dataComparar.setHours(0, 0, 0, 0);
+
+    const horariosDoDia = horariosFuncionamento.filter(
+      (h) => h.dia_da_semana === diaSemana
+    );
+
+    if (horariosDoDia.length === 0) return undefined;
+
+    const excecao = horariosDoDia.find((h) => {
+      if (h.tipo_regra !== "EXCECAO" || !h.data_excecao) return false;
+      const dataExcecao = new Date(h.data_excecao);
+      dataExcecao.setHours(0, 0, 0, 0);
+      return (
+        dataExcecao.getDate() === dataComparar.getDate() &&
+        dataExcecao.getMonth() === dataComparar.getMonth() &&
+        dataExcecao.getFullYear() === dataComparar.getFullYear()
+      );
+    });
+
+    if (excecao) return excecao;
+
+    const padrao = horariosDoDia.find((h) => h.tipo_regra === "PADRAO");
+    return padrao || horariosDoDia[0];
+  };
+
+  const hasSlotsForDate = (date: Date) => {
+    const horario = getHorarioEfetivo(date);
+    if (!horario || horario.is_feriado) return false;
+
+    const abertura = parseTimeToMinutes(horario.horario_abertura);
+    const fechamento = parseTimeToMinutes(horario.horario_fechamento);
+    const duracao = totalDuration > 0 ? totalDuration : 30;
+    const step = 30;
+
+    const almocoInicio = horario.tem_almoco && horario.horario_almoco_inicio
+      ? parseTimeToMinutes(horario.horario_almoco_inicio)
+      : null;
+    const almocoFim = horario.tem_almoco && horario.horario_almoco_fim
+      ? parseTimeToMinutes(horario.horario_almoco_fim)
+      : null;
+
+    for (let start = abertura; start + duracao <= fechamento; start += step) {
+      const end = start + duracao;
+      if (
+        almocoInicio !== null &&
+        almocoFim !== null &&
+        isOverlappingInterval(start, end, almocoInicio, almocoFim)
+      ) {
+        continue;
+      }
+      return true;
+    }
+
+    return false;
+  };
+
+  // FUNÇÃO PARA VERIFICAR SE TODOS OS HORÁRIOS DO DIA ATUAL JÁ PASSARAM
+  const isAllTimeSlotsPassed = useCallback(
+    (dateString: string) => {
+      const now = new Date();
+      const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+      // Só verifica se for o dia atual
+      if (dateString !== todayString) return false;
+
+      const horario = getHorarioEfetivo(new Date(`${dateString}T00:00:00`));
+      if (!horario || horario.is_feriado) return true;
+
+      const abertura = parseTimeToMinutes(horario.horario_abertura);
+      const fechamento = parseTimeToMinutes(horario.horario_fechamento);
+      const duracao = totalDuration > 0 ? totalDuration : 30;
+      const step = 30;
+
+      const almocoInicio =
+        horario.tem_almoco && horario.horario_almoco_inicio
+          ? parseTimeToMinutes(horario.horario_almoco_inicio)
+          : null;
+      const almocoFim =
+        horario.tem_almoco && horario.horario_almoco_fim
+          ? parseTimeToMinutes(horario.horario_almoco_fim)
+          : null;
+
+      for (let start = abertura; start + duracao <= fechamento; start += step) {
+        const end = start + duracao;
+        if (
+          almocoInicio !== null &&
+          almocoFim !== null &&
+          isOverlappingInterval(start, end, almocoInicio, almocoFim)
+        ) {
+          continue;
+        }
+        const time = minutesToTime(start);
+        const timeSlotStart = new Date(`${dateString}T${time}:00`).getTime();
+        if (timeSlotStart >= now.getTime()) {
+          return false;
+        }
+      }
+
+      return true;
+    },
+    [totalDuration, horariosFuncionamento]
+  );
 
   // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS
   const generateTimeSlots = useCallback(() => {
@@ -188,12 +327,27 @@ export function ChoiceSchedulePage() {
       isPast: boolean;
       turno: "manha" | "tarde" | "noite";
     }[] = [];
-    const step = totalDuration >= 60 ? 60 : 30;
-
     // Obtém a data e hora atual
     const now = new Date();
     const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const isToday = selectedDate === todayString;
+
+    if (!selectedDate) return slots;
+
+    const horario = getHorarioEfetivo(new Date(`${selectedDate}T00:00:00`));
+    if (!horario || horario.is_feriado) return slots;
+
+    const abertura = parseTimeToMinutes(horario.horario_abertura);
+    const fechamento = parseTimeToMinutes(horario.horario_fechamento);
+    const duracao = totalDuration > 0 ? totalDuration : 30;
+    const step = 30;
+
+    const almocoInicio = horario.tem_almoco && horario.horario_almoco_inicio
+      ? parseTimeToMinutes(horario.horario_almoco_inicio)
+      : null;
+    const almocoFim = horario.tem_almoco && horario.horario_almoco_fim
+      ? parseTimeToMinutes(horario.horario_almoco_fim)
+      : null;
 
     // Filtra os horários ocupados com base nos agendamentos existentes
     // Agora tratamos tudo como horário LOCAL do navegador (Fortaleza)
@@ -214,103 +368,36 @@ export function ChoiceSchedulePage() {
         return { start, end };
       });
 
-    // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS PARA O DIA
-    // Primeiro período: 09h até 12h30
-    for (let hour = 9; hour <= 12; hour++) {
-      const maxMinute = hour === 12 ? 30 : 60;
-
-      for (let minute = 0; minute < maxMinute; minute += step) {
-        // Pula se for depois das 12h30
-        if (hour === 12 && minute > 30) break;
-
-        const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
-
-        // Cria o horário no timezone local para comparação
-        // O horário é interpretado como horário local (não UTC)
-        const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
-        const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
-
-        // Verifica se o horário extrapola o limite (não permite agendamento que termine depois das 12h30)
-        const timeSlotEndHour = new Date(timeSlotEnd).getHours();
-        const timeSlotEndMinute = new Date(timeSlotEnd).getMinutes();
-
-        if (
-          timeSlotEndHour > 12 ||
-          (timeSlotEndHour === 12 && timeSlotEndMinute > 30)
-        ) {
-          continue; // Pula este horário se o serviço terminaria depois das 12h30
-        }
-
-        // Verifica se o horário está ocupado
-        const isOccupied = occupiedTimes.some(({ start, end }) => {
-          // Verifica se o horário selecionado se sobrepõe a algum horário ocupado
-          return (
-            (timeSlotStart >= start && timeSlotStart < end) || // O início do horário se sobrepõe
-            (timeSlotEnd > start && timeSlotEnd <= end) || // O fim do horário se sobrepõe
-            (timeSlotStart <= start && timeSlotEnd >= end) // O horário selecionado cobre o horário ocupado
-          );
-        });
-
-        // Verifica se o horário já passou (apenas para hoje)
-        const isPast = isToday && timeSlotStart < now.getTime();
-
-        // Determina o turno
-        const turno = getTurno(time);
-
-        // Armazena o horário e se está ocupado, passado ou não
-        slots.push({ time, isOccupied, isPast, turno });
+    for (let start = abertura; start + duracao <= fechamento; start += step) {
+      const end = start + duracao;
+      if (
+        almocoInicio !== null &&
+        almocoFim !== null &&
+        isOverlappingInterval(start, end, almocoInicio, almocoFim)
+      ) {
+        continue;
       }
-    }
 
-    // Segundo período: 14h até 19h30 (intervalo de almoço entre 12h30 e 14h)
-    for (let hour = 14; hour <= 19; hour++) {
-      const maxMinute = hour === 19 ? 30 : 60;
+      const time = minutesToTime(start);
+      const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime();
+      const timeSlotEnd = timeSlotStart + duracao * 60000;
 
-      for (let minute = 0; minute < maxMinute; minute += step) {
-        // Pula se for depois das 19h30
-        if (hour === 19 && minute > 30) break;
+      const isOccupied = occupiedTimes.some(({ start: occStart, end: occEnd }) => {
+        return (
+          (timeSlotStart >= occStart && timeSlotStart < occEnd) ||
+          (timeSlotEnd > occStart && timeSlotEnd <= occEnd) ||
+          (timeSlotStart <= occStart && timeSlotEnd >= occEnd)
+        );
+      });
 
-        const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+      const isPast = isToday && timeSlotStart < now.getTime();
+      const turno = getTurno(time);
 
-        // Cria o horário no timezone local para comparação
-        // O horário é interpretado como horário local (não UTC)
-        const timeSlotStart = new Date(`${selectedDate}T${time}:00`).getTime(); // Começo do horário selecionado
-        const timeSlotEnd = timeSlotStart + step * 60000; // Adiciona a duração do serviço (30 ou 60 minutos)
-
-        // Verifica se o horário extrapola o limite (não permite agendamento que termine depois das 19h30)
-        const timeSlotEndHour = new Date(timeSlotEnd).getHours();
-        const timeSlotEndMinute = new Date(timeSlotEnd).getMinutes();
-
-        if (
-          timeSlotEndHour > 19 ||
-          (timeSlotEndHour === 19 && timeSlotEndMinute > 30)
-        ) {
-          continue; // Pula este horário se o serviço terminaria depois das 19h30
-        }
-
-        // Verifica se o horário está ocupado
-        const isOccupied = occupiedTimes.some(({ start, end }) => {
-          // Verifica se o horário selecionado se sobrepõe a algum horário ocupado
-          return (
-            (timeSlotStart >= start && timeSlotStart < end) || // O início do horário se sobrepõe
-            (timeSlotEnd > start && timeSlotEnd <= end) || // O fim do horário se sobrepõe
-            (timeSlotStart <= start && timeSlotEnd >= end) // O horário selecionado cobre o horário ocupado
-          );
-        });
-
-        // Verifica se o horário já passou (apenas para hoje)
-        const isPast = isToday && timeSlotStart < now.getTime();
-
-        // Determina o turno
-        const turno = getTurno(time);
-
-        // Armazena o horário e se está ocupado, passado ou não
-        slots.push({ time, isOccupied, isPast, turno });
-      }
+      slots.push({ time, isOccupied, isPast, turno });
     }
 
     return slots;
-  }, [selectedDate, schedules, totalDuration]);
+  }, [selectedDate, schedules, totalDuration, horariosFuncionamento]);
 
   // Atualiza os horários disponíveis ao selecionar uma data
   const handleDateSelect = (date: string) => {
@@ -392,12 +479,11 @@ export function ChoiceSchedulePage() {
       return;
     }
 
-    // Verifica se é domingo (0 = domingo)
-
-    if (selectedDateObj.getDay() === 0) {
+    const horario = getHorarioEfetivo(selectedDateObj);
+    if (!horario || horario.is_feriado) {
       addToast({
         title: "Data inválida",
-        description: "Não é possível agendar aos domingos.",
+        description: "A barbearia não atende nesta data.",
         color: "warning",
         timeout: 3000,
       });
@@ -417,6 +503,16 @@ export function ChoiceSchedulePage() {
         timeout: 3000,
       });
 
+      return;
+    }
+
+    if (!hasSlotsForDate(selectedDateObj)) {
+      addToast({
+        title: "Data inválida",
+        description: "Não há horários disponíveis para esta data.",
+        color: "warning",
+        timeout: 3000,
+      });
       return;
     }
 
@@ -528,24 +624,6 @@ export function ChoiceSchedulePage() {
                   min={(() => {
                     const today = new Date();
                     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-                    // Se hoje é domingo ou todos os horários já passaram, o mínimo é amanhã
-                    if (
-                      today.getDay() === 0 ||
-                      isAllTimeSlotsPassed(todayString)
-                    ) {
-                      const tomorrow = new Date(today);
-
-                      tomorrow.setDate(today.getDate() + 1);
-
-                      // Se amanhã também for domingo, pula para segunda
-                      while (tomorrow.getDay() === 0) {
-                        tomorrow.setDate(tomorrow.getDate() + 1);
-                      }
-
-                      return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
-                    }
-
                     return todayString;
                   })()}
                   type="date"

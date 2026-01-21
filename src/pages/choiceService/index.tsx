@@ -66,7 +66,7 @@ export function ChoiceServicePage() {
   const { fetchServices, services } = useSchedule();
   const { show, hide } = useLoading();
   const location = useLocation() as {
-    state?: { barber?: { id: string; nome: string } };
+    state?: { barber?: { id: string; nome: string; id_barbearia: string } };
   };
   const barber = location.state?.barber;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

@@ -1,5 +1,6 @@
 export interface IBarbers {
   id: string;
+  id_barbearia: string;
   nome: string;
   telefone: string;
   email: string;
