@@ -10,7 +10,7 @@ import { XCircleIcon } from "@heroicons/react/24/solid";
 
 import eye_slash from "@/assets/eye-slash.svg";
 import eye from "@/assets/eye.svg";
-import { formatPhone, normalizeName } from "@/utils/format-Cpf-Phone";
+import { formatPhone } from "@/utils/format-Cpf-Phone";
 import { Header } from "@/components/Header";
 import { useUser } from "@/contexts/UserProvider/useUser";
 import { IUser, PasswordForm } from "@/contexts/UserProvider/types";
