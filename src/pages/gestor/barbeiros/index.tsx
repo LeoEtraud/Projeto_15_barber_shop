@@ -340,6 +340,31 @@ export function GestorBarbeirosPage() {
     }
   }, [isGestor]);
 
+  // Atualiza selectedBarber quando a lista de profissionais é atualizada
+  useEffect(() => {
+    if (selectedBarber && professionals.length > 0) {
+      const updatedBarber = professionals.find(p => p.id === selectedBarber.id);
+      if (updatedBarber) {
+        // Só atualiza se os dados realmente mudaram
+        const avatarChanged = updatedBarber.avatar !== selectedBarber.avatar;
+        
+        if (avatarChanged || updatedBarber.nome !== selectedBarber.nome || updatedBarber.status !== selectedBarber.status) {
+          setSelectedBarber(updatedBarber);
+          
+          // Atualiza o preview da imagem apenas se não houver nova imagem selecionada
+          if (!imageFile && !imageRemoved) {
+            if (updatedBarber.avatar && updatedBarber.avatar.trim() !== "") {
+              const avatarUrl = getAvatarUrl(updatedBarber.avatar);
+              setImagePreview(avatarUrl);
+            } else {
+              setImagePreview(null);
+            }
+          }
+        }
+      }
+    }
+  }, [professionals, selectedBarber?.id]);
+
   // FUNÇÃO PARA COMPRIMIR IMAGEM
   const compressImage = (file: File, maxWidth: number = 800, maxHeight: number = 800, quality: number = 0.8): Promise<File> => {
     return new Promise((resolve, reject) => {
@@ -434,19 +459,30 @@ export function GestorBarbeirosPage() {
   };
 
   // FUNÇÃO PARA OBTER URL DO AVATAR
-  const getAvatarUrl = (avatar: string | undefined): string | null => {
-    if (!avatar) return null;
+  const getAvatarUrl = (avatar: string | undefined | null): string | null => {
+    if (!avatar || avatar.trim() === "") return null;
 
     // Se o avatar já é base64, retorna diretamente
     if (avatar.startsWith("data:image")) {
       return avatar;
     }
 
+    // Se já é uma URL completa, retorna diretamente
+    if (avatar.startsWith("http://") || avatar.startsWith("https://")) {
+      return avatar;
+    }
+
     const apiUrl = import.meta.env.VITE_API;
 
-    if (!apiUrl) return null;
+    if (!apiUrl) {
+      console.warn("[Frontend] VITE_API não configurado, não é possível construir URL do avatar");
+      return null;
+    }
 
-    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+    // Remove barras iniciais se houver
+    const cleanAvatar = avatar.replace(/^\/+/, "");
+    
+    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(cleanAvatar)}`;
   };
 
   // FUNÇÃO PARA ABRIR O MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL
@@ -701,11 +737,16 @@ export function GestorBarbeirosPage() {
         });
       }
 
+      // Busca os profissionais atualizados
       await fetchProfessionals();
       
       // Se a imagem foi removida, limpa o preview para garantir que será mostrado o ícone
       if (imageRemoved) {
         setImagePreview(null);
+        setImageFile(null);
+      } else if (imageFile) {
+        // Se uma nova imagem foi selecionada, mantém o preview
+        // O useEffect vai atualizar quando os profissionais forem carregados
       }
       
       handleCloseModal();
