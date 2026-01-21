@@ -816,11 +816,7 @@ export function GestorBarbeirosPage() {
                           <div className="flex items-start gap-3 mb-3">
                             {/* Avatar */}
                             {(() => {
-                              const avatarUrl = barber.avatar && barber.avatar.trim() !== ""
-                                ? barber.avatar.startsWith("data:image")
-                                  ? barber.avatar
-                                  : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar || "")}`
-                                : null;
+                              const avatarUrl = getAvatarUrl(barber.avatar);
                               
                               return avatarUrl ? (
                                 <img
@@ -933,10 +929,13 @@ export function GestorBarbeirosPage() {
           footer: "bg-gray-900 border-t border-gray-700",
           closeButton:
             "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
+          wrapper: "items-center justify-center",
         }}
         isOpen={isOpen}
+        placement="center"
         size="2xl"
         onClose={handleCloseModal}
+        scrollBehavior="inside"
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
@@ -950,12 +949,6 @@ export function GestorBarbeirosPage() {
             <ModalBody>
               {/* Upload de Imagem */}
               <div className="mb-6">
-                <label
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                  htmlFor="avatar-upload"
-                >
-                  Foto do Profissional (opcional)
-                </label>
                 <div className="flex flex-col items-center gap-4">
                   {/* Preview da Imagem - Padrão circular como nos cards */}
                   <div className="relative">
@@ -982,8 +975,10 @@ export function GestorBarbeirosPage() {
 
                       const previewUrl = imagePreview ||
                         (selectedBarber && !imageRemoved
-                          ? selectedBarber.avatar && selectedBarber.avatar.trim() !== "" && !selectedBarber.avatar.startsWith("data:image")
-                            ? `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(selectedBarber.avatar)}`
+                          ? selectedBarber.avatar && selectedBarber.avatar.trim() !== ""
+                            ? selectedBarber.avatar.startsWith("data:image")
+                              ? selectedBarber.avatar
+                              : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(selectedBarber.avatar)}`
                             : null
                           : null);
                       
@@ -1088,6 +1083,7 @@ export function GestorBarbeirosPage() {
                   render={({ field }) => (
                     <Input
                       {...field}
+                      autoFocus
                       isRequired
                       classNames={{
                         base: "w-full md:col-span-2",
@@ -1134,6 +1130,7 @@ export function GestorBarbeirosPage() {
                       maxLength={60}
                       placeholder="Digite o email"
                       type="email"
+                      onFocus={(e) => e.target.focus()}
                       onChange={(e) => {
                         const value = e.target.value;
 
@@ -1168,6 +1165,7 @@ export function GestorBarbeirosPage() {
                       maxLength={15}
                       placeholder="(00) 00000-0000"
                       type="tel"
+                      onFocus={(e) => e.target.focus()}
                       value={formatPhone(field.value || "")}
                       onChange={(e) => {
                         const formatted = formatPhone(e.target.value);
@@ -1199,6 +1197,7 @@ export function GestorBarbeirosPage() {
                       label="Data de Nascimento"
                       maxLength={10}
                       placeholder="DD/MM/AAAA"
+                      onFocus={(e) => e.target.focus()}
                       value={field.value ? formatDate(field.value) : ""}
                       onChange={(e) => {
                         // Remove tudo que não é número
@@ -1226,6 +1225,7 @@ export function GestorBarbeirosPage() {
                         required
                         className="w-full p-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                         id="funcao-select"
+                        onFocus={(e) => e.target.focus()}
                       >
                         <option value="">Selecione uma função</option>
                         {FUNCOES.map((funcao) => (
