@@ -176,95 +176,6 @@ export function GestorAgendamentosPage() {
     );
   }, [professionals]);
 
-  // Função para gerar agendamentos mockados para teste (Léo Balata)
-  const gerarAgendamentosMockados = (): IAppointments[] => {
-    // Verifica se é o barbeiro Léo Balata
-    const barbeiroSelecionadoObj = barbeirosAtivos.find(
-      (b) => b.id === barbeiroSelecionado
-    );
-    const isLeoBalata =
-      barbeiroSelecionadoObj?.nome?.toLowerCase().includes("léo") ||
-      barbeiroSelecionadoObj?.nome?.toLowerCase().includes("leo") ||
-      barbeiroSelecionadoObj?.nome?.toLowerCase().includes("balata");
-
-    if (!isLeoBalata) {
-      return [];
-    }
-
-    // Gera datas para os próximos 6 dias
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    const agendamentosMockados: IAppointments[] = [];
-
-    // Agendamentos para hoje
-    const hojeFormatado = formatarData(hoje);
-    agendamentosMockados.push({
-      id: "mock-1",
-      data: hojeFormatado,
-      horario: "09:00 - 09:30",
-      valor: 30,
-      cliente: { nome: "João Silva" },
-      status: "CONFIRMADO",
-      servicos: ["Corte de cabelo"],
-    });
-    agendamentosMockados.push({
-      id: "mock-2",
-      data: hojeFormatado,
-      horario: "14:00 - 15:00",
-      valor: 60,
-      cliente: { nome: "Maria Santos" },
-      status: "CONFIRMADO",
-      servicos: ["Corte de cabelo", "Barba"],
-    });
-
-    // Agendamentos para amanhã
-    const amanha = new Date(hoje);
-    amanha.setDate(hoje.getDate() + 1);
-    const amanhaFormatado = formatarData(amanha);
-    agendamentosMockados.push({
-      id: "mock-3",
-      data: amanhaFormatado,
-      horario: "10:00 - 10:30",
-      valor: 30,
-      cliente: { nome: "Pedro Oliveira" },
-      status: "CONFIRMADO",
-      servicos: ["Corte de cabelo"],
-    });
-    agendamentosMockados.push({
-      id: "mock-4",
-      data: amanhaFormatado,
-      horario: "15:30 - 16:00",
-      valor: 30,
-      cliente: { nome: "Ana Costa" },
-      status: "CONFIRMADO",
-      servicos: ["Pé de cabelo"],
-    });
-
-    // Agendamentos para depois de amanhã
-    const depoisAmanha = new Date(hoje);
-    depoisAmanha.setDate(hoje.getDate() + 2);
-    const depoisAmanhaFormatado = formatarData(depoisAmanha);
-    agendamentosMockados.push({
-      id: "mock-5",
-      data: depoisAmanhaFormatado,
-      horario: "11:00 - 11:30",
-      valor: 30,
-      cliente: { nome: "Carlos Mendes" },
-      status: "CONFIRMADO",
-      servicos: ["Barba"],
-    });
-    agendamentosMockados.push({
-      id: "mock-6",
-      data: depoisAmanhaFormatado,
-      horario: "16:00 - 17:00",
-      valor: 60,
-      cliente: { nome: "Fernanda Lima" },
-      status: "CONFIRMADO",
-      servicos: ["Corte de cabelo", "Limpeza de pele"],
-    });
-
-    return agendamentosMockados;
-  };
 
   // Selecionar primeiro barbeiro automaticamente se houver
   useEffect(() => {
@@ -365,13 +276,9 @@ export function GestorAgendamentosPage() {
 
   // Organizar agendamentos por data
   const agendamentosPorData = useMemo(() => {
-    // Busca agendamentos mockados se for Léo Balata
-    const agendamentosMockados = gerarAgendamentosMockados();
-
-    // Combina agendamentos reais com mockados
+    // Usa apenas agendamentos reais
     const todosAgendamentos = [
       ...(Array.isArray(professionalAppointments) ? professionalAppointments : []),
-      ...agendamentosMockados,
     ];
 
     if (todosAgendamentos.length === 0) {
@@ -401,7 +308,7 @@ export function GestorAgendamentosPage() {
     });
 
     return mapa;
-  }, [professionalAppointments, barbeiroSelecionado, barbeirosAtivos]);
+  }, [professionalAppointments]);
 
   // Função para gerar slots de horário com agendamentos
   const gerarSlotsComAgendamentos = (
