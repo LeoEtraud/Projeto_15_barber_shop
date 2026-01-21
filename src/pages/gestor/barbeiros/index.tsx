@@ -366,8 +366,15 @@ export function GestorBarbeirosPage() {
   }, [professionals, selectedBarber?.id]);
 
   // FUNÇÃO PARA COMPRIMIR IMAGEM
-  const compressImage = (file: File, maxWidth: number = 800, maxHeight: number = 800, quality: number = 0.8): Promise<File> => {
+  const compressImage = (file: File, maxWidth: number = 800, maxHeight: number = 800, quality: number = 0.7): Promise<File> => {
     return new Promise((resolve, reject) => {
+      // Se a imagem já for pequena (< 200KB), não comprime
+      if (file.size < 200 * 1024) {
+        console.log("[Frontend] Imagem já é pequena, pulando compressão");
+        resolve(file);
+        return;
+      }
+
       const reader = new FileReader();
 
       reader.onload = (e) => {
@@ -378,16 +385,21 @@ export function GestorBarbeirosPage() {
           let height = img.height;
 
           // Calcula novas dimensões mantendo proporção
-          if (width > height) {
-            if (width > maxWidth) {
-              height = (height * maxWidth) / width;
-              width = maxWidth;
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
             }
           } else {
-            if (height > maxHeight) {
-              width = (width * maxHeight) / height;
-              height = maxHeight;
-            }
+            // Se a imagem já é menor que o máximo, não redimensiona
+            // Mas ainda pode comprimir pela qualidade
           }
 
           canvas.width = width;
@@ -399,21 +411,36 @@ export function GestorBarbeirosPage() {
             return;
           }
 
+          // Melhora a qualidade de renderização
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+
           ctx.drawImage(img, 0, 0, width, height);
 
+          // Tenta diferentes formatos para melhor compressão
+          const mimeType = file.type === "image/png" ? "image/jpeg" : file.type || "image/jpeg";
+          
           canvas.toBlob(
             (blob) => {
               if (!blob) {
                 reject(new Error("Erro ao comprimir imagem"));
                 return;
               }
-              const compressedFile = new File([blob], file.name, {
-                type: file.type,
+              
+              // Se a imagem comprimida for maior que a original, usa a original
+              if (blob.size > file.size) {
+                console.log("[Frontend] Imagem comprimida ficou maior, usando original");
+                resolve(file);
+                return;
+              }
+
+              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + (mimeType === "image/jpeg" ? ".jpg" : ".png"), {
+                type: mimeType,
                 lastModified: Date.now(),
               });
               resolve(compressedFile);
             },
-            file.type,
+            mimeType,
             quality
           );
         };

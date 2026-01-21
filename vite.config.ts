@@ -26,17 +26,17 @@ export default defineConfig({
         description: "Descrição do seu aplicativo",
         icons: [
           {
-            src: "barber2.png",
+            src: "logo_ia.png",
             sizes: "192x192",
             type: "image/png",
           },
           {
-            src: "barber2.png",
+            src: "logo_ia.png",
             sizes: "512x512",
             type: "image/png",
           },
           {
-            src: "barber2.png",
+            src: "logo_ia.png",
             sizes: "512x512",
             type: "image/png",
             purpose: "any maskable",
