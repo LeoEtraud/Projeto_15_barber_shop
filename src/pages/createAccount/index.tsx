@@ -12,7 +12,7 @@ import eye_slash from "../../assets/eye-slash.svg";
 import eye from "../../assets/eye.svg";
 
 import { useLoading } from "@/contexts/LoadingProvider";
-import { formatPhone } from "@/utils/format-Cpf-Phone";
+import { formatPhone, normalizeName } from "@/utils/format-Cpf-Phone";
 import { SendCreateUser } from "@/contexts/AuthProvider/util";
 import { SignInFormData } from "@/contexts/AuthProvider/types";
 
@@ -70,6 +70,7 @@ export function CreateAccount() {
     try {
       const payload: SignInFormData = {
         ...data,
+        nome: normalizeName(data.nome || ""),
         telefone: (data.telefone || "").replace(/\D/g, ""),
       };
 

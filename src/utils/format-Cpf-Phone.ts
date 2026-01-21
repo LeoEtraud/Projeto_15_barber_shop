@@ -34,3 +34,24 @@ export function formatDate(input: any) {
   // Limita o valor a 10 caracteres no máximo (formato DD/MM/AAAA)
   return value.substring(0, 10);
 }
+
+// FUNÇÃO PARA NORMALIZAR NOMES (Title Case)
+// Converte strings em caixa alta para apenas iniciais maiúsculas
+export function normalizeName(name: string): string {
+  if (!name || typeof name !== "string") return name;
+
+  // Remove espaços extras e divide em palavras
+  const words = name.trim().split(/\s+/);
+
+  // Processa cada palavra
+  const normalizedWords = words.map((word) => {
+    // Se a palavra está toda em maiúscula, converte para Title Case
+    if (word === word.toUpperCase() && word.length > 1) {
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }
+    // Se já está em formato misto, mantém como está
+    return word;
+  });
+
+  return normalizedWords.join(" ");
+}

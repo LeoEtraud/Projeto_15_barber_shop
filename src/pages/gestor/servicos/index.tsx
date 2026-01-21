@@ -34,6 +34,7 @@ import {
 import { formatPrice } from "@/utils/format-price";
 import { IServices } from "@/contexts/ScheduleProvider/types";
 import { getServiceImageWithFallback } from "@/utils/defaultImages";
+import { normalizeName } from "@/utils/format-Cpf-Phone";
 
 // ---- helpers de ordenação ----
 const KEY_ORDER = [
@@ -305,7 +306,7 @@ export function GestorServicosPage() {
           duracao: number;
           imagem?: string | null;
         } = {
-          nome: data.nome.trim(),
+          nome: normalizeName(data.nome.trim()),
           preco: precoClean,
           duracao: data.duracao,
         };
@@ -326,7 +327,7 @@ export function GestorServicosPage() {
       } else {
         // Criar serviço
         await CreateService({
-          nome: data.nome.trim(),
+          nome: normalizeName(data.nome.trim()),
           preco: precoClean,
           duracao: data.duracao,
           imagem: imagemBase64 ?? undefined,

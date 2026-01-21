@@ -56,7 +56,7 @@ export function ChoiceBarberPage() {
             {barbers.map((barber) => (
               <button
                 key={barber.id}
-                className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 shadow hover:shadow-md transition-shadow text-left relative"
+                className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 border border-transparent hover:border-gray-600 transition-all duration-300 shadow-lg hover:shadow-xl text-left relative"
                 type="button"
                 onClick={() =>
                   navigate("/choice-service", {
@@ -111,7 +111,9 @@ export function ChoiceBarberPage() {
                 <div className="flex-1">
                   <div className="text-white font-medium">{barber.nome}</div>
                   <div className="text-xs text-gray-400">
-                    {barber.qtd_atendimentos} atendimentos
+                    {barber.qtd_atendimentos && barber.qtd_atendimentos > 1
+                      ? barber.qtd_atendimentos + " atendimentos"
+                      : null}
                   </div>
                   <div className="mt-1 flex items-center gap-1">
                     {Array.from({ length: 5 }, (_, i) =>

@@ -33,7 +33,7 @@ import {
   DeleteProfessional,
 } from "@/contexts/ScheduleProvider/util";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
-import { formatPhone, formatDate } from "@/utils/format-Cpf-Phone";
+import { formatPhone, formatDate, normalizeName } from "@/utils/format-Cpf-Phone";
 import { IBarbers, IProfessionals } from "@/contexts/ScheduleProvider/types";
 
 interface BarberFormData {
@@ -542,7 +542,7 @@ export function GestorBarbeirosPage() {
           avatar?: string | null;
           status: string;
         } = {
-          nome: data.nome.trim(),
+          nome: normalizeName(data.nome.trim()),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
           data_nascimento: data.data_nascimento,
@@ -581,7 +581,7 @@ export function GestorBarbeirosPage() {
         }
 
         await CreateProfessional({
-          nome: data.nome.trim(),
+          nome: normalizeName(data.nome.trim()),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
           data_nascimento: convertDateToAPI(data.data_nascimento),
@@ -1163,9 +1163,11 @@ export function GestorBarbeirosPage() {
                       }}
                       errorMessage={errors.telefone?.message}
                       isInvalid={!!errors.telefone}
+                      inputMode="numeric"
                       label="Telefone"
                       maxLength={15}
                       placeholder="(00) 00000-0000"
+                      type="tel"
                       value={formatPhone(field.value || "")}
                       onChange={(e) => {
                         const formatted = formatPhone(e.target.value);

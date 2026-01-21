@@ -3,6 +3,7 @@ import { addToast } from "@heroui/react";
 
 import { IContext, IUser, IUserProvider, UpdatePasswordPayload } from "./types";
 import { getUser, updateUserPassword, updateUserProfile } from "./util";
+import { normalizeName } from "@/utils/format-Cpf-Phone";
 
 export const UserContext = createContext<IContext>({} as IContext);
 
@@ -62,6 +63,7 @@ export const UserProvider = ({ children }: IUserProvider) => {
     try {
       const payload = {
         ...data,
+        nome: normalizeName(data.nome || ""),
         telefone: (data.telefone || "").replace(/\D/g, ""),
       };
 
