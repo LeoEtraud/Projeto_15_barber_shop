@@ -85,8 +85,10 @@ export function ChoiceBarberPage() {
                       onError={(e) => {
                         // Se a imagem falhar, mostra o ícone de usuário
                         const target = e.currentTarget;
+
                         target.style.display = "none";
                         const fallback = target.nextElementSibling as HTMLElement;
+
                         if (fallback) {
                           fallback.classList.remove("hidden");
                         }

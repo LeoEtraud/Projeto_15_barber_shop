@@ -340,6 +340,78 @@ export function GestorBarbeirosPage() {
     }
   }, [isGestor]);
 
+  // FUNÇÃO PARA COMPRIMIR IMAGEM
+  const compressImage = (file: File, maxWidth: number = 800, maxHeight: number = 800, quality: number = 0.8): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Calcula novas dimensões mantendo proporção
+          if (width > height) {
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Erro ao criar contexto do canvas"));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Erro ao comprimir imagem"));
+                return;
+              }
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            },
+            file.type,
+            quality
+          );
+        };
+
+        img.onerror = () => {
+          reject(new Error("Erro ao carregar imagem"));
+        };
+
+        if (typeof e.target?.result === "string") {
+          img.src = e.target.result;
+        } else {
+          reject(new Error("Erro ao ler arquivo"));
+        }
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Erro ao ler arquivo"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
   // FUNÇÃO PARA CONVERTER ARQUIVO EM BASE64
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -522,12 +594,31 @@ export function GestorBarbeirosPage() {
       let avatarBase64: string | null | undefined = undefined;
 
       if (imageFile) {
-        // Nova imagem selecionada
-        avatarBase64 = await convertFileToBase64(imageFile);
-        setImageRemoved(false); // Reset do flag de remoção
+        try {
+          // Nova imagem selecionada - comprime antes de converter
+          console.log("[Frontend] Comprimindo imagem, tamanho original:", imageFile.size, "bytes");
+          const compressedFile = await compressImage(imageFile);
+          console.log("[Frontend] Imagem comprimida, tamanho:", compressedFile.size, "bytes");
+          
+          console.log("[Frontend] Convertendo imagem para base64");
+          avatarBase64 = await convertFileToBase64(compressedFile);
+          console.log("[Frontend] Imagem convertida, tamanho base64:", avatarBase64?.length, "caracteres");
+          setImageRemoved(false); // Reset do flag de remoção
+        } catch (error) {
+          console.error("[Frontend] Erro ao processar imagem:", error);
+          addToast({
+            title: "Erro",
+            description: "Erro ao processar a imagem. Tente novamente.",
+            color: "danger",
+            timeout: 3000,
+          });
+          setIsSubmitting(false);
+          return;
+        }
       } else if (imageRemoved) {
         // Imagem foi removida intencionalmente pelo usuário
         avatarBase64 = null;
+        console.log("[Frontend] Imagem removida pelo usuário");
       }
       // Se imageFile for null e imageRemoved for false, não envia nada (mantém a existente)
 
@@ -555,6 +646,11 @@ export function GestorBarbeirosPage() {
           updateData.avatar = avatarBase64;
         }
 
+        console.log("[Frontend] Enviando dados para atualizar profissional:", {
+          ...updateData,
+          avatar: updateData.avatar ? (typeof updateData.avatar === 'string' && updateData.avatar.startsWith('data:image') ? `base64 (${updateData.avatar.length} chars)` : updateData.avatar) : "não enviado",
+        });
+
         await UpdateProfessional(selectedBarber.id, updateData);
 
         addToast({
@@ -580,7 +676,7 @@ export function GestorBarbeirosPage() {
           return;
         }
 
-        await CreateProfessional({
+        const createData = {
           nome: normalizeName(data.nome.trim()),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
@@ -588,7 +684,14 @@ export function GestorBarbeirosPage() {
           funcao: apiFuncaoValue,
           avatar: avatarBase64 ?? undefined,
           barbeariaId: barbeariaId,
+        };
+        
+        console.log("[Frontend] Enviando dados para criar profissional:", {
+          ...createData,
+          avatar: avatarBase64 ? `base64 (${avatarBase64.length} chars)` : "não enviado",
         });
+        
+        await CreateProfessional(createData);
 
         addToast({
           title: "Sucesso",
@@ -1083,7 +1186,6 @@ export function GestorBarbeirosPage() {
                   render={({ field }) => (
                     <Input
                       {...field}
-                      autoFocus
                       isRequired
                       classNames={{
                         base: "w-full md:col-span-2",
