@@ -3,7 +3,11 @@ import { addToast } from "@heroui/react";
 
 import { IContext, IUser, IUserProvider, UpdatePasswordPayload } from "./types";
 import { getUser, updateUserPassword, updateUserProfile } from "./util";
-import { normalizeName } from "@/utils/format-Cpf-Phone";
+import {
+  normalizeName,
+  convertDateToInputFormat,
+  convertDateToAPIFormat,
+} from "@/utils/format-Cpf-Phone";
 
 export const UserContext = createContext<IContext>({} as IContext);
 
@@ -28,12 +32,17 @@ export const UserProvider = ({ children }: IUserProvider) => {
       const userData = response?.user || response;
 
       if (userData && (userData.nome || userData.email)) {
+        // Converte a data de DD/MM/AAAA para YYYY-MM-DD para o input date
+        const dataNascimentoConvertida = userData.data_nascimento
+          ? convertDateToInputFormat(userData.data_nascimento)
+          : "";
+
         const data: IUser = {
           id: id, // Usar o id que foi passado como parâmetro
           nome: userData.nome || "",
           email: userData.email || "",
           telefone: userData.telefone || "",
-          data_nascimento: userData.data_nascimento || "",
+          data_nascimento: dataNascimentoConvertida,
         };
 
         setUserdata(data);
@@ -61,10 +70,16 @@ export const UserProvider = ({ children }: IUserProvider) => {
   // FUNÇÃO PARA ALTERAR OS DADOS DO USUÁRIO
   async function onSubmitFormProfile(data: IUser) {
     try {
+      // Converte a data de YYYY-MM-DD para DD/MM/AAAA para enviar à API
+      const dataNascimentoConvertida = data.data_nascimento
+        ? convertDateToAPIFormat(data.data_nascimento)
+        : "";
+
       const payload = {
         ...data,
         nome: normalizeName(data.nome || ""),
         telefone: (data.telefone || "").replace(/\D/g, ""),
+        data_nascimento: dataNascimentoConvertida,
       };
 
       await updateUserProfile(payload);

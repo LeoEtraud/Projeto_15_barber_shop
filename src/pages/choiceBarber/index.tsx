@@ -46,7 +46,7 @@ export function ChoiceBarberPage() {
             />
             <div className="absolute bottom-0 left-0 p-4">
               <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-                Escolha um barbeiro
+                Escolha um profissional
               </h1>
             </div>
           </div>

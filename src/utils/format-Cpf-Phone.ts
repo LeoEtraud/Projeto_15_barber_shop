@@ -35,6 +35,53 @@ export function formatDate(input: any) {
   return value.substring(0, 10);
 }
 
+// FUNÇÃO PARA CONVERTER DATA DE DD/MM/AAAA PARA YYYY-MM-DD (formato do input date)
+export function convertDateToInputFormat(dateStr: string): string {
+  if (!dateStr) return "";
+
+  // Se já está no formato YYYY-MM-DD, retorna como está
+  if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return dateStr;
+  }
+
+  // Tenta fazer parse do formato DD/MM/AAAA
+  if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+    const [day, month, year] = dateStr.split("/");
+    return `${year}-${month}-${day}`;
+  }
+
+  // Remove caracteres não numéricos
+  const digits = dateStr.replace(/\D/g, "");
+
+  // Se não tem 8 dígitos, retorna string vazia
+  if (digits.length !== 8) return "";
+
+  const day = digits.substring(0, 2);
+  const month = digits.substring(2, 4);
+  const year = digits.substring(4, 8);
+
+  return `${year}-${month}-${day}`;
+}
+
+// FUNÇÃO PARA CONVERTER DATA DE YYYY-MM-DD PARA DD/MM/AAAA (formato da API)
+export function convertDateToAPIFormat(dateStr: string): string {
+  if (!dateStr) return "";
+
+  // Se já está no formato DD/MM/AAAA, retorna como está
+  if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+    return dateStr;
+  }
+
+  // Remove caracteres não numéricos
+  const parts = dateStr.split("-");
+
+  if (parts.length !== 3) return dateStr;
+
+  const [year, month, day] = parts;
+
+  return `${day}/${month}/${year}`;
+}
+
 // FUNÇÃO PARA NORMALIZAR NOMES (Title Case)
 // Converte strings em caixa alta para apenas iniciais maiúsculas
 export function normalizeName(name: string): string {

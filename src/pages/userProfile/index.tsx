@@ -10,7 +10,7 @@ import { XCircleIcon } from "@heroicons/react/24/solid";
 
 import eye_slash from "@/assets/eye-slash.svg";
 import eye from "@/assets/eye.svg";
-import { formatPhone } from "@/utils/format-Cpf-Phone";
+import { formatPhone, convertDateToInputFormat } from "@/utils/format-Cpf-Phone";
 import { Header } from "@/components/Header";
 import { useUser } from "@/contexts/UserProvider/useUser";
 import { IUser, PasswordForm } from "@/contexts/UserProvider/types";
@@ -43,16 +43,34 @@ export function UserProfilePage() {
   }, [id]);
 
   // Usar dados do contexto de autenticação se não houver dados específicos carregados
-  const currentUser =
-    userData ||
-    (user?.user as
+  const currentUser = useMemo(() => {
+    if (userData) {
+      return userData;
+    }
+    
+    const authUser = user?.user as
       | {
           nome: string;
           email: string;
           telefone: string;
           data_nascimento?: string;
         }
-      | undefined);
+      | undefined;
+
+    if (authUser) {
+      // Converte a data se vier do contexto de autenticação
+      const dataNascimentoConvertida = authUser.data_nascimento
+        ? convertDateToInputFormat(authUser.data_nascimento)
+        : "";
+
+      return {
+        ...authUser,
+        data_nascimento: dataNascimentoConvertida,
+      };
+    }
+
+    return undefined;
+  }, [userData, user?.user]);
 
   const defaultValues = useMemo<IUser>(
     () => ({
@@ -62,7 +80,7 @@ export function UserProfilePage() {
       telefone: currentUser?.telefone || "",
       data_nascimento: currentUser?.data_nascimento || "",
     }),
-    [currentUser]
+    [currentUser, user?.user?.id, id]
   );
 
   const schema_user = yup.object().shape({
@@ -169,12 +187,17 @@ export function UserProfilePage() {
   // Atualiza o formulário quando os dados do usuário mudarem
   useEffect(() => {
     if (currentUser) {
+      // Garante que a data esteja no formato correto para o input
+      const dataNascimentoFormatada = currentUser.data_nascimento
+        ? convertDateToInputFormat(currentUser.data_nascimento)
+        : "";
+
       reset_user({
         id: user?.user?.id ?? (id as string) ?? "",
         nome: currentUser.nome || "",
         email: currentUser.email || "",
         telefone: currentUser.telefone || "",
-        data_nascimento: currentUser.data_nascimento || "",
+        data_nascimento: dataNascimentoFormatada,
       });
     }
   }, [currentUser, reset_user, user?.user?.id, id]);
