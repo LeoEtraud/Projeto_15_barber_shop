@@ -70,7 +70,7 @@ export function ChoiceBarberPage() {
             {barbers.map((barber) => (
               <button
                 key={barber.id}
-                className="flex items-center gap-3 rounded-lg p-4 border border-transparent transition-all duration-300 shadow-lg hover:shadow-xl text-left relative"
+                className="flex items-center gap-3 rounded-lg p-4 border-2 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] text-left relative"
                 style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
                 type="button"
                 onClick={() =>
@@ -85,9 +85,11 @@ export function ChoiceBarberPage() {
                   })
                 }
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--border-secondary)";
+                  e.currentTarget.style.backgroundColor = "var(--bg-card-hover)";
+                  e.currentTarget.style.borderColor = "var(--accent-amber)";
                 }}
                 onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--bg-card)";
                   e.currentTarget.style.borderColor = "var(--border-primary)";
                 }}
               >

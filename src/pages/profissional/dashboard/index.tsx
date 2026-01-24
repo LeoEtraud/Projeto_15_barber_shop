@@ -551,10 +551,10 @@ export function ProfissionalDashboardPage() {
         <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold mb-2 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               Dashboard do Profissional
             </h1>
-            <p className="text-white">
+            <p className="transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               Bem-vindo,{" "}
               <span className="text-yellow-400 font-bold">
                 {user?.user?.nome}
@@ -567,7 +567,7 @@ export function ProfissionalDashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 rounded-xl p-6 border border-yellow-500/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-gray-300 text-sm font-medium">
+                <h3 className="text-sm font-medium transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Agendamentos Hoje
                 </h3>
                 <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center">
@@ -581,7 +581,7 @@ export function ProfissionalDashboardPage() {
 
             <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/10 rounded-xl p-6 border border-blue-500/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-gray-300 text-sm font-medium">
+                <h3 className="text-sm font-medium transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Agendamentos da Semana
                 </h3>
                 <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -595,7 +595,7 @@ export function ProfissionalDashboardPage() {
 
             <div className="bg-gradient-to-br from-green-500/20 to-green-600/10 rounded-xl p-6 border border-green-500/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-gray-300 text-sm font-medium">
+                <h3 className="text-sm font-medium transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Total Confirmados
                 </h3>
                 <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
@@ -609,7 +609,7 @@ export function ProfissionalDashboardPage() {
 
             <div className="bg-gradient-to-br from-slate-500/20 to-slate-600/10 rounded-xl p-6 border border-slate-500/30 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-gray-300 text-sm font-medium">
+                <h3 className="text-sm font-medium transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Total Realizados
                 </h3>
                 <div className="w-10 h-10 rounded-lg bg-slate-500/20 flex items-center justify-center">
@@ -707,7 +707,7 @@ export function ProfissionalDashboardPage() {
                           ? "border-green-500 hover:border-green-400 shadow-lg shadow-green-500/30 hover:scale-[1.02]"
                           : isNextAppointment
                             ? "border-yellow-400 hover:border-yellow-300 shadow-lg shadow-yellow-400/30 hover:scale-[1.02]"
-                            : "border-gray-700 hover:border-yellow-400 hover:shadow-lg"
+                            : "hover:border-yellow-400 hover:shadow-lg"
                       }`}
                     >
                       {/* Etiqueta "Atendimento em andamento" ou "Próximo atendimento" */}
@@ -809,7 +809,7 @@ export function ProfissionalDashboardPage() {
 
                           {/* Cliente - Abaixo da data/horário e serviço */}
                           {appointment.cliente?.nome && (
-                            <div className="pt-2 border-t border-gray-700">
+                            <div className="pt-2 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
                               <p className="text-white text-xs truncate">
                                 <span className="text-gray-400">Cliente: </span>
                                 {appointment.cliente.nome}

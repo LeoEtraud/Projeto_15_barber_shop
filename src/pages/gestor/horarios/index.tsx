@@ -888,7 +888,7 @@ export function GestorHorariosPage() {
     return (
       <section className="min-h-screen flex flex-col items-center justify-center transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
         <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
-        <p className="text-gray-400">
+        <p className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
           Apenas gestores podem acessar esta página.
         </p>
       </section>
@@ -912,9 +912,8 @@ export function GestorHorariosPage() {
         <div className="mx-auto max-w-6xl">
           {/* Botão Voltar */}
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
@@ -935,10 +934,10 @@ export function GestorHorariosPage() {
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h1 className="text-xl md:text-2xl font-medium text-white mb-1">
+                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Horários de Funcionamento
                   </h1>
-                  <p className="text-white/80 text-xs md:text-sm font-light">
+                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     Configure os horários de funcionamento da sua barbearia
                   </p>
                 </div>
@@ -947,14 +946,15 @@ export function GestorHorariosPage() {
           </div>
 
           {/* Abas de Navegação */}
-          <div className="bg-gray-900 rounded-lg p-2 mb-6 border border-gray-700">
+          <div className="rounded-lg p-2 mb-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
             <div className="flex flex-wrap gap-2">
               <button
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   abaAtiva === "padrao"
                     ? "bg-blue-500 text-white shadow-md"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "hover:bg-[var(--bg-hover)]"
                 }`}
+                style={abaAtiva === "padrao" ? undefined : { backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
                 type="button"
                 onClick={() => setAbaAtiva("padrao")}
               >
@@ -964,8 +964,9 @@ export function GestorHorariosPage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   abaAtiva === "excecoes"
                     ? "bg-blue-500 text-white shadow-md"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "hover:bg-[var(--bg-hover)]"
                 }`}
+                style={abaAtiva === "excecoes" ? undefined : { backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
                 type="button"
                 onClick={() => setAbaAtiva("excecoes")}
               >
@@ -1009,7 +1010,7 @@ export function GestorHorariosPage() {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-semibold text-white">
+                            <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                               {dia.label}
                             </h3>
                             {horario?.is_feriado && (
@@ -1050,7 +1051,7 @@ export function GestorHorariosPage() {
                               <span className="text-blue-400 font-bold text-base">
                                 {horario.horario_abertura || "N/A"}
                                 </span>
-                              <span className="text-gray-500">-</span>
+                              <span className="transition-colors duration-300" style={{ color: "var(--text-tertiary)" }}>-</span>
                               <span className="text-blue-400 font-bold text-base">
                                 {horario.horario_fechamento || "N/A"}
                             </span>
@@ -1060,8 +1061,8 @@ export function GestorHorariosPage() {
 
                           {/* Lista de Barbeiros - Não exibir se for feriado */}
                           {!horario.is_feriado && (
-                            <div className="pt-2 border-t border-gray-700">
-                              <span className="text-gray-400 block mb-2 text-[10px] uppercase tracking-wide">
+                            <div className="pt-2 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
+                              <span className="block mb-2 text-[10px] uppercase tracking-wide transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                                 Barbeiros{" "}
                           {horario.profissionais &&
                               horario.profissionais.length > 0
@@ -1112,7 +1113,7 @@ export function GestorHorariosPage() {
                                           />
                                         );
                                       })()}
-                                      <span className="text-white text-xs font-medium truncate max-w-[100px]">
+                                      <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                                         {profissional.nome}
                                 </span>
                               </div>
@@ -1129,7 +1130,7 @@ export function GestorHorariosPage() {
                         </div>
                       ) : (
                         <div className="text-center py-3">
-                          <p className="text-gray-400 text-xs">
+                              <p className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                             Não configurado
                           </p>
                         </div>

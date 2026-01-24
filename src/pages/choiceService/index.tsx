@@ -206,13 +206,31 @@ export function ChoiceServicePage() {
                   key={service.id}
                   aria-pressed={isSelected}
                   className={[
-                    "group rounded-lg shadow-lg transition-all border overflow-hidden flex",
+                    "group rounded-lg shadow-lg transition-all border-2 overflow-hidden flex hover:scale-[1.02]",
                     isSelected
-                      ? "border-green-400 hover:border-green-300 ring-2 ring-green-400/50"
+                      ? "border-green-500 ring-2 ring-green-500/30 shadow-green-500/20"
                       : isDisabled
-                        ? "opacity-60 cursor-not-allowed"
-                        : "border-transparent hover:shadow-xl",
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:shadow-xl",
                   ].join(" ")}
+                  style={isSelected 
+                    ? { backgroundColor: "var(--bg-card)", borderColor: "#22c55e" }
+                    : isDisabled
+                      ? { backgroundColor: "var(--bg-tertiary)", borderColor: "var(--border-secondary)", opacity: 0.5 }
+                      : { backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }
+                  }
+                  onMouseEnter={(e) => {
+                    if (!isSelected && !isDisabled) {
+                      e.currentTarget.style.backgroundColor = "var(--bg-card-hover)";
+                      e.currentTarget.style.borderColor = "var(--accent-amber)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected && !isDisabled) {
+                      e.currentTarget.style.backgroundColor = "var(--bg-card)";
+                      e.currentTarget.style.borderColor = "var(--border-primary)";
+                    }
+                  }}
                   disabled={isDisabled}
                   title={
                     isDisabled
@@ -225,25 +243,25 @@ export function ChoiceServicePage() {
                   {/* Conteúdo do lado esquerdo */}
                   <div className="flex-1 p-2.5 flex flex-col justify-between min-h-0">
                     <div className="min-w-0">
-                      <div className="mb-1 text-left">
+                      <div className="mb-1.5 text-left">
                         <div className="font-semibold text-sm leading-tight line-clamp-2 text-left transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                           {service.nome}
                         </div>
                       </div>
 
-                      <div className="flex justify-between items-center gap-1.5 mb-1">
-                        <span className="text-green-300 font-bold text-sm">
+                      <div className="flex justify-between items-center gap-2 mb-1.5">
+                        <span className="text-green-500 font-bold text-base">
                           {formatPrice(Number(service.preco))}
                         </span>
-                        <span className="text-green-200 text-[10px] font-medium px-1 py-0.5 rounded whitespace-nowrap transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)" }}>
+                        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-colors duration-300 bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/40">
                           {service.duracao} min
                         </span>
                       </div>
 
                       {isSelected && (
                         <div className="mb-1">
-                          <span className="text-[9px] px-1 py-0.5 rounded-full bg-green-600 text-white border border-green-300/50 shadow-lg inline-block">
-                            Selecionado
+                          <span className="text-[9px] px-2 py-0.5 rounded-full bg-green-500 text-white font-semibold shadow-md inline-block">
+                            ✓ Selecionado
                           </span>
                         </div>
                       )}

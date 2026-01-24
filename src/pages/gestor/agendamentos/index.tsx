@@ -642,9 +642,8 @@ export function GestorAgendamentosPage() {
         <div className="mx-auto max-w-6xl">
           {/* Botão Voltar */}
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate("/gestor/dashboard")}
           >
@@ -665,10 +664,10 @@ export function GestorAgendamentosPage() {
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h1 className="text-xl md:text-2xl font-medium text-white mb-1">
+                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Agendamentos
                   </h1>
-                  <p className="text-white/80 text-xs md:text-sm font-light">
+                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     Visualize e gerencie os agendamentos dos barbeiros
                   </p>
                 </div>
@@ -677,22 +676,24 @@ export function GestorAgendamentosPage() {
           </div>
 
           {/* Conteúdo */}
-          <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-lg font-semibold text-white mb-4">
+          <div className="rounded-lg p-4 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+            <h3 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               Agendamentos por Barbeiro
             </h3>
 
             {/* Select de Barbeiros Customizado */}
-            <div className="bg-gray-800 rounded-lg p-3 mb-4 border border-gray-700 max-w-xs">
+            <div className="rounded-lg p-3 mb-4 border max-w-xs transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
               <label
-                className="block text-xs font-medium text-gray-300 mb-1.5"
+                className="block text-xs font-medium mb-1.5 transition-colors duration-300"
+                style={{ color: "var(--text-secondary)" }}
                 htmlFor="barbeiro-select"
               >
                 Selecione o Barbeiro:
               </label>
               <div className="relative">
                 <button
-                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center gap-2"
+                  className="w-full border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center gap-2 transition-colors duration-300"
+                  style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-primary)", borderColor: "var(--border-secondary)" }}
                   onClick={() => setSelectAberto(!selectAberto)}
                   type="button"
                 >
@@ -754,7 +755,7 @@ export function GestorAgendamentosPage() {
                     </>
                   ) : (
                     <>
-                      <span className="flex-1 text-left text-gray-400">
+                      <span className="flex-1 text-left transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                         Selecione um barbeiro
                       </span>
                       <svg
@@ -887,11 +888,11 @@ export function GestorAgendamentosPage() {
                         <div className="flex justify-between items-center mb-2 text-[10px]">
                           <div className="flex items-center gap-0.5">
                             <span className="text-green-400 font-bold text-xs">●</span>
-                            <span className="text-gray-300">{disponiveis}</span>
+                            <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{disponiveis}</span>
                           </div>
                           <div className="flex items-center gap-0.5">
                             <span className="text-red-400 font-bold text-xs">●</span>
-                            <span className="text-gray-300">{agendados}</span>
+                            <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{agendados}</span>
                           </div>
                         </div>
 
@@ -902,7 +903,8 @@ export function GestorAgendamentosPage() {
                                 return (
                                   <div
                                     key={slotIndex}
-                                    className="bg-gray-700 text-gray-300 py-1 px-1.5 rounded text-center text-[10px] font-medium"
+                                    className="py-1 px-1.5 rounded text-center text-[10px] font-medium transition-colors duration-300"
+                                    style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}
                                   >
                                     Almoço: {slot.hora}
                                   </div>
@@ -920,11 +922,11 @@ export function GestorAgendamentosPage() {
                                     <div className="text-red-400 font-semibold text-[10px] mb-0.5">
                                       {slot.hora}
                                     </div>
-                                    <div className="text-white text-[10px] font-medium mb-0.5 line-clamp-1">
+                                    <div className="text-[10px] font-medium mb-0.5 line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                                       {slot.agendamento.cliente?.nome || "Cliente não informado"}
                                     </div>
                                     {slot.agendamento.servicos && slot.agendamento.servicos.length > 0 && (
-                                      <div className="text-gray-300 text-[9px] line-clamp-1">
+                                      <div className="text-[9px] line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                                         {slot.agendamento.servicos.join(", ")}
                                       </div>
                                     )}
@@ -946,7 +948,7 @@ export function GestorAgendamentosPage() {
                           <div className="text-center py-3">
                             <div className="text-red-400 font-semibold text-xs">FECHADO</div>
                             {diaInfo.horario?.is_feriado && (
-                              <div className="text-gray-400 text-[10px] mt-0.5">(Feriado)</div>
+                              <div className="text-[10px] mt-0.5 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>(Feriado)</div>
                             )}
                           </div>
                         )}

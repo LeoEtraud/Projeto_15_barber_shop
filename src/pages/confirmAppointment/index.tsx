@@ -351,7 +351,7 @@ export function ConfirmAppointmentPage() {
   // TELA PRINCIPAL
   // ===========================
   return (
-    <section className="min-h-screen bg-gray-800">
+    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
 
       <div className="p-4 pb-10 md:px-8">
@@ -359,23 +359,22 @@ export function ConfirmAppointmentPage() {
 
         <div className="mx-auto max-w-2xl">
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
             <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
           </button>
 
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
             <img
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Confirmar Agendamento
               </h1>
             </div>
@@ -385,36 +384,36 @@ export function ConfirmAppointmentPage() {
           {/*   RESUMO DO AGENDAMENTO          */}
           {/* ================================ */}
           {selectedServices && selectedServices.length > 0 && (
-            <div className="bg-gray-900 rounded-lg p-4 mb-6">
-              <h3 className="text-white font-medium mb-4">
+            <div className="rounded-lg p-4 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="font-medium mb-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Resumo do Agendamento
               </h3>
 
-              <div className="space-y-2 mb-4 pb-4 border-b border-gray-700 text-sm">
+              <div className="space-y-2 mb-4 pb-4 border-b text-sm transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
                 {barber && (
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Barbeiro:</span>
-                    <span className="text-white font-medium">
+                    <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Barbeiro:</span>
+                    <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                       {barber.nome}
                     </span>
                   </div>
                 )}
 
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Data:</span>
-                  <span className="text-white font-medium">
+                  <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Data:</span>
+                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     {formatDate(selectedDate)}
                   </span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Horário:</span>
-                  <span className="text-white font-medium">{selectedTime}</span>
+                  <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Horário:</span>
+                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>{selectedTime}</span>
                 </div>
               </div>
 
               <div className="mb-4">
-                <h4 className="text-xs font-medium text-gray-400 mb-3 uppercase">
+                <h4 className="text-xs font-medium mb-3 uppercase transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   {selectedServices.length > 1
                     ? "Serviços Contratados:"
                     : "Serviço Contratado:"}
@@ -424,7 +423,8 @@ export function ConfirmAppointmentPage() {
                   {selectedServices.map((service, index) => (
                     <div
                       key={service.id}
-                      className="bg-gray-800 rounded-lg p-3"
+                      className="rounded-lg p-3 transition-colors duration-300"
+                      style={{ backgroundColor: "var(--bg-secondary)" }}
                     >
                       <div className="flex justify-between items-start mb-1">
                         <span className="text-yellow-400 text-sm font-medium">
@@ -435,7 +435,7 @@ export function ConfirmAppointmentPage() {
                         </span>
                       </div>
 
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                         Duração: {service.duracao} min
                       </div>
                     </div>
@@ -443,16 +443,16 @@ export function ConfirmAppointmentPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t border-gray-700">
+              <div className="space-y-2 pt-4 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Tempo total:</span>
-                  <span className="text-white font-medium">
+                  <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Tempo total:</span>
+                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     {totalDuration} min
                   </span>
                 </div>
 
                 <div className="flex justify-between text-base">
-                  <span className="text-white font-semibold">
+                  <span className="font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Total a pagar:
                   </span>
                   <span className="text-green-400 font-bold">
@@ -467,8 +467,8 @@ export function ConfirmAppointmentPage() {
           {/*   QR CODE PIX GERADO             */}
           {/* ================================ */}
           {(pixQrCode || pixCode) && (
-            <div className="bg-gray-900 rounded-lg p-6 mb-6">
-              <h3 className="text-white font-medium mb-4 text-center">
+            <div className="rounded-lg p-6 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="font-medium mb-4 text-center transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 {pixQrCode
                   ? "Escaneie o QR Code para pagar"
                   : pixCode
@@ -501,12 +501,12 @@ export function ConfirmAppointmentPage() {
                 {/* CHAVE PIX */}
                 {pixCode && (
                   <div className="w-full space-y-3">
-                    <p className="block text-sm text-gray-400 mb-2 text-center">
+                    <p className="block text-sm mb-2 text-center transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                       Código PIX (copie e cole no app do banco)
                     </p>
 
-                    <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                      <p className="text-white text-sm break-all font-mono">
+                    <div className="rounded-lg p-4 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
+                      <p className="text-sm break-all font-mono transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                         {pixCode}
                       </p>
                     </div>
@@ -526,14 +526,14 @@ export function ConfirmAppointmentPage() {
                 )}
 
                 <div className="text-center space-y-2">
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     Valor:{" "}
                     <span className="text-green-400 font-bold">
                       {formatPrice(totalPrice)}
                     </span>
                   </p>
 
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     Status:{" "}
                     <span
                       className={`font-medium ${
