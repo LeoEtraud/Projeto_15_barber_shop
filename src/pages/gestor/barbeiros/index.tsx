@@ -584,7 +584,9 @@ export function GestorBarbeirosPage() {
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     // Valida tipo de arquivo
     if (!file.type.startsWith("image/")) {
@@ -616,8 +618,9 @@ export function GestorBarbeirosPage() {
 
       reader.onload = (event) => {
         if (event.target?.result) {
-          setImagePreview(event.target.result as string);
-          setImageRemoved(false); // Reset do flag quando nova imagem é selecionada
+          const preview = event.target.result as string;
+          setImagePreview(preview);
+          setImageRemoved(false);
         }
       };
 
@@ -1141,113 +1144,86 @@ export function GestorBarbeirosPage() {
                 <div className="flex flex-col items-center gap-4">
                   {/* Preview da Imagem - Padrão circular como nos cards */}
                   <div className="relative">
-                    {(() => {
-                      // Se não há profissional selecionado (modo criação), mostra imagem padrão
-                      if (!selectedBarber && !imagePreview) {
-                        return (
-                          <>
-                            <img
-                              alt="Imagem padrão de perfil"
-                              className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                              src="/barbeiros/icons-perfil.png"
-                              onError={(e) => {
-                                // Se a imagem falhar, mostra o ícone de usuário como fallback
-                                const target = e.currentTarget;
-                                target.style.display = "none";
-                                const fallback = target.nextElementSibling as HTMLElement;
-                                if (fallback) {
-                                  fallback.classList.remove("hidden");
-                                }
-                              }}
-                            />
-                            {/* Fallback: ícone de usuário caso a imagem não carregue */}
-                            <div className="w-32 h-32 rounded-full border-2 flex items-center justify-center hidden transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)", borderColor: "var(--border-primary)" }}>
-                              <svg
-                                className="w-16 h-16 transition-colors duration-300"
-                                style={{ color: "var(--text-tertiary)" }}
-                                fill="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            </div>
-                          </>
-                        );
-                      }
+                    {/* Mostra preview da nova imagem selecionada */}
+                    {imagePreview && (
+                      <>
+                        <img
+                          alt="Preview do avatar"
+                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                          src={imagePreview}
+                        />
+                        <button
+                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
+                          type="button"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setImageFile(null);
+                            setImageRemoved(true);
+                            const fileInput = document.getElementById(
+                              "avatar-upload"
+                            ) as HTMLInputElement;
+                            if (fileInput) {
+                              fileInput.value = "";
+                            }
+                          }}
+                        >
+                          ×
+                        </button>
+                      </>
+                    )}
 
-                      const previewUrl = imagePreview ||
-                        (selectedBarber && !imageRemoved
-                          ? selectedBarber.avatar && selectedBarber.avatar.trim() !== ""
-                            ? selectedBarber.avatar.startsWith("data:image")
+                    {/* Mostra avatar existente (modo edição) */}
+                    {!imagePreview && selectedBarber && selectedBarber.avatar && selectedBarber.avatar.trim() !== "" && !imageRemoved && (
+                      <>
+                        <img
+                          alt="Avatar atual"
+                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                          src={
+                            selectedBarber.avatar.startsWith("data:image")
                               ? selectedBarber.avatar
                               : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(selectedBarber.avatar)}`
-                            : null
-                          : null);
-                      
-                      const hasImageToRemove = imagePreview || (selectedBarber && selectedBarber.avatar && selectedBarber.avatar.trim() !== "");
-                      
-                      return previewUrl ? (
-                        <>
-                          <img
-                            alt="Preview do avatar"
-                            className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                            src={previewUrl}
-                            onError={(e) => {
-                              // Se a imagem falhar, mostra o ícone de usuário
-                              const target = e.currentTarget;
-                              target.style.display = "none";
-                              const fallback = target.nextElementSibling as HTMLElement;
-                              if (fallback) {
-                                fallback.classList.remove("hidden");
-                              }
-                            }}
-                          />
-                          {/* Botão de remover imagem - aparece quando há imagem customizada ou preview */}
-                          {hasImageToRemove && (
-                            <button
-                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
-                              type="button"
-                              onClick={() => {
-                                setImagePreview(null);
-                                setImageFile(null);
-                                setImageRemoved(true);
-                                // Limpa o input file
-                                const fileInput = document.getElementById(
-                                  "avatar-upload"
-                                ) as HTMLInputElement;
-                                if (fileInput) {
-                                  fileInput.value = "";
-                                }
-                              }}
-                            >
-                              ×
-                            </button>
-                          )}
-                        </>
-                      ) : null;
-                    })()}
-                    {(() => {
-                      // Só mostra a imagem padrão quando estiver editando um profissional existente sem imagem
-                      // No modo de criação (!selectedBarber), não mostra a imagem padrão
-                      const shouldShowDefault = !imagePreview && selectedBarber && (!selectedBarber.avatar || selectedBarber.avatar.trim() === "" || imageRemoved);
-                      if (!shouldShowDefault) return null;
-                      
-                      return (
-                        <img
-                          alt="Imagem padrão do barbeiro"
-                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                          src={getDefaultBarberImage(selectedBarber?.nome)}
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
+                          }
                         />
-                      );
-                    })()}
+                        <button
+                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
+                          type="button"
+                          onClick={() => {
+                            setImagePreview(null);
+                            setImageFile(null);
+                            setImageRemoved(true);
+                            const fileInput = document.getElementById(
+                              "avatar-upload"
+                            ) as HTMLInputElement;
+                            if (fileInput) {
+                              fileInput.value = "";
+                            }
+                          }}
+                        >
+                          ×
+                        </button>
+                      </>
+                    )}
+
+                    {/* Mostra imagem padrão do barbeiro (modo edição sem avatar ou removido) */}
+                    {!imagePreview && selectedBarber && (!selectedBarber.avatar || selectedBarber.avatar.trim() === "" || imageRemoved) && (
+                      <img
+                        alt="Imagem padrão do barbeiro"
+                        className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                        src={getDefaultBarberImage(selectedBarber?.nome)}
+                      />
+                    )}
+
+                    {/* Mostra imagem padrão (modo criação) */}
+                    {!imagePreview && !selectedBarber && (
+                      <img
+                        alt="Imagem padrão de perfil"
+                        className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                        src="/barbeiros/icons-perfil.png"
+                        onError={(e) => {
+                          e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'/%3E%3C/svg%3E";
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Botão de Upload */}
