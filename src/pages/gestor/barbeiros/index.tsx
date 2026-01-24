@@ -1114,22 +1114,42 @@ export function GestorBarbeirosPage() {
       {/* MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL */}
       <Modal
         classNames={{
-          base: "border transition-colors duration-300",
+          base: "border transition-colors duration-300 max-h-[95vh] my-2",
           header:
             "bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 border-b border-teal-500/30",
-          body: "py-6 transition-colors duration-300",
+          body: "py-6 transition-colors duration-300 overflow-y-auto max-h-[calc(95vh-200px)]",
           footer: "border-t transition-colors duration-300",
           closeButton:
             "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
-          wrapper: "items-center justify-center",
+          wrapper: "items-start md:items-center justify-center overflow-y-auto p-2 md:p-4",
         }}
         isOpen={isOpen}
         placement="center"
         size="2xl"
         onClose={handleCloseModal}
         scrollBehavior="inside"
+        motionProps={{
+          variants: {
+            enter: {
+              y: 0,
+              opacity: 1,
+              transition: {
+                duration: 0.3,
+                ease: "easeOut",
+              },
+            },
+            exit: {
+              y: -20,
+              opacity: 0,
+              transition: {
+                duration: 0.2,
+                ease: "easeIn",
+              },
+            },
+          },
+        }}
       >
-        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+        <ModalContent className="transition-colors duration-300 mx-2 md:mx-0" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               {selectedBarber

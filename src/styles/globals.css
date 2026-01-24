@@ -198,3 +198,45 @@ select option {
   background-color: var(--input-bg) !important;
   color: var(--input-text) !important;
 }
+
+/* Previne problemas de layout em mobile quando o teclado virtual aparece */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari específico */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* Previne zoom automático no iOS */
+  }
+}
+
+/* Estilos para modais em dispositivos móveis */
+@media (max-width: 768px) {
+  /* Garante que modais funcionem bem com teclado virtual */
+  [role="dialog"] {
+    position: fixed !important;
+    max-height: 95vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Previne resize issues no mobile */
+  html {
+    height: -webkit-fill-available;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Ajusta inputs para não causar zoom indesejado */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
