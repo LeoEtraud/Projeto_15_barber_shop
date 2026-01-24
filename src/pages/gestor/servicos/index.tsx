@@ -402,7 +402,7 @@ export function GestorServicosPage() {
 
   if (!isGestor) {
     return (
-      <section className="min-h-screen bg-gray-800 flex flex-col text-white items-center justify-center">
+      <section className="min-h-screen flex flex-col items-center justify-center transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
         <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
         <p className="text-gray-400">
           Apenas gestores podem acessar esta página.
@@ -412,7 +412,7 @@ export function GestorServicosPage() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">
@@ -421,9 +421,8 @@ export function GestorServicosPage() {
         <div className="mx-auto max-w-6xl">
           {/* Botão Voltar */}
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
@@ -444,10 +443,10 @@ export function GestorServicosPage() {
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h1 className="text-xl md:text-2xl font-medium text-white mb-1">
+                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Serviços
                   </h1>
-                  <p className="text-white/80 text-xs md:text-sm font-light">
+                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     Gerencie os serviços oferecidos pela sua barbearia
                   </p>
                 </div>
@@ -471,8 +470,8 @@ export function GestorServicosPage() {
             <>
               {/* Título da Categoria */}
               <div className="mb-4">
-                <h2 className="text-xl font-semibold text-white">Serviços</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>Serviços</h2>
+                <p className="text-sm mt-1 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   {sortedServices.length}{" "}
                   {sortedServices.length === 1
                     ? "serviço encontrado"
@@ -508,7 +507,8 @@ export function GestorServicosPage() {
                   return (
                     <Card
                       key={service.id}
-                      className="bg-gray-900 border border-gray-700 hover:border-orange-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
+                      className="border hover:border-orange-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
+                      style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
                     >
                       <CardBody className="p-3">
                         <div className="flex items-start gap-3 mb-3">
@@ -516,7 +516,8 @@ export function GestorServicosPage() {
                           {serviceImageSrc ? (
                             <img
                               alt={service.nome}
-                              className="w-16 h-16 rounded-lg object-cover border-2 border-gray-700 flex-shrink-0"
+                              className="w-16 h-16 rounded-lg object-cover border-2 flex-shrink-0 transition-colors duration-300"
+                              style={{ borderColor: "var(--border-primary)" }}
                               src={serviceImageSrc}
                               onError={(e) => {
                                 // Se a imagem falhar ao carregar, esconde a imagem
@@ -533,9 +534,10 @@ export function GestorServicosPage() {
                               }}
                             />
                           ) : (
-                            <div className="w-16 h-16 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center flex-shrink-0">
+                            <div className="w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-colors duration-300" style={{ borderColor: "var(--border-secondary)", backgroundColor: "var(--bg-tertiary)" }}>
                               <svg
-                                className="w-8 h-8 text-gray-500"
+                                className="w-8 h-8 transition-colors duration-300"
+                                style={{ color: "var(--text-tertiary)" }}
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -551,18 +553,18 @@ export function GestorServicosPage() {
                           )}
 
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-base font-semibold text-white mb-1.5 truncate">
+                            <h3 className="text-base font-semibold mb-1.5 truncate transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                               {service.nome}
                             </h3>
                             <div className="flex items-center gap-3 text-xs">
                               <div>
-                                <span className="text-gray-400">Preço: </span>
+                                <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Preço: </span>
                                 <span className="text-green-400 font-semibold">
                                   {formatPrice(precoNum)}
                                 </span>
                               </div>
                               <div>
-                                <span className="text-gray-400">Duração: </span>
+                                <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Duração: </span>
                                 <span className="text-blue-400 font-semibold">
                                   {service.duracao} min
                                 </span>
@@ -577,11 +579,12 @@ export function GestorServicosPage() {
                           >
                             <Button
                               fullWidth
-                              className="text-white"
+                              className="transition-colors duration-300"
+                              style={{ color: "var(--text-primary)" }}
                               color="primary"
                               size="sm"
                               startContent={
-                                <PencilIcon className="w-4 h-4 text-white" />
+                                <PencilIcon className="w-4 h-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }} />
                               }
                               variant="flat"
                               onPress={() => handleOpenModal(service)}
@@ -594,7 +597,8 @@ export function GestorServicosPage() {
                           >
                             <Button
                               fullWidth
-                              className="text-white"
+                              className="transition-colors duration-300"
+                              style={{ color: "var(--text-primary)" }}
                               color="danger"
                               size="sm"
                               startContent={<TrashIcon className="w-4 h-4" />}
@@ -615,8 +619,8 @@ export function GestorServicosPage() {
               </div>
             </>
           ) : (
-            <div className="bg-gray-900 rounded-lg p-12 text-center border border-gray-700">
-              <p className="text-gray-400 text-lg mb-4">
+            <div className="rounded-lg p-12 text-center border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <p className="text-lg mb-4 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 Nenhum serviço cadastrado
               </p>
               <PermissionGate requiredPermissions={["manage_services"]}>
@@ -636,21 +640,21 @@ export function GestorServicosPage() {
       {/* Modal de Cadastro/Edição */}
       <Modal
         classNames={{
-          base: "bg-gray-900 border border-gray-700",
+          base: "border transition-colors duration-300",
           header:
             "bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 border-b border-orange-500/30",
-          body: "bg-gray-900 py-6",
-          footer: "bg-gray-900 border-t border-gray-700",
+          body: "py-6 transition-colors duration-300",
+          footer: "border-t transition-colors duration-300",
           closeButton:
-            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
+            "transition-colors duration-300 hover:bg-white/20 focus:bg-white/20",
         }}
         isOpen={isOpen}
         size="2xl"
         onClose={handleCloseModal}
       >
-        <ModalContent>
+        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               {selectedService ? "Editar Serviço" : "Adicionar Serviço"}
             </h2>
           </ModalHeader>
@@ -659,13 +663,7 @@ export function GestorServicosPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Upload de Imagem - PRIMEIRO CAMPO */}
                 <div className="w-full md:col-span-2">
-                  <label
-                    className="block text-sm font-medium text-gray-300 mb-2"
-                    htmlFor="image-upload"
-                  >
-                    Imagem do Serviço (opcional)
-                  </label>
-                  <div className="flex flex-col items-center gap-4">
+                  <div className="flex flex-col items-center gap-10">
                     {/* Preview da Imagem - Padrão retangular como nos cards */}
                     <div className="flex flex-col items-center gap-2">
                       <div className="relative">
@@ -673,9 +671,10 @@ export function GestorServicosPage() {
                           // Se não há serviço selecionado (modo criação), não mostra imagem
                           if (!selectedService && !imagePreview) {
                             return (
-                              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center">
+                              <div className="w-32 h-32 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors duration-300" style={{ borderColor: "var(--border-secondary)", backgroundColor: "var(--bg-tertiary)" }}>
                                 <svg
-                                  className="w-12 h-12 text-gray-500"
+                                  className="w-12 h-12 transition-colors duration-300"
+                                  style={{ color: "var(--text-tertiary)" }}
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -703,9 +702,10 @@ export function GestorServicosPage() {
                           // Se não houver imagem e não for um tipo com imagem padrão, mostra placeholder
                           if (!previewSrc && !selectedService) {
                             return (
-                              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center">
+                              <div className="w-32 h-32 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors duration-300" style={{ borderColor: "var(--border-secondary)", backgroundColor: "var(--bg-tertiary)" }}>
                                 <svg
-                                  className="w-12 h-12 text-gray-500"
+                                  className="w-12 h-12 transition-colors duration-300"
+                                  style={{ color: "var(--text-tertiary)" }}
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -724,9 +724,10 @@ export function GestorServicosPage() {
                           // Se não houver imagem padrão para o tipo de serviço, mostra placeholder
                           if (!previewSrc) {
                             return (
-                              <div className="w-32 h-32 rounded-lg border-2 border-dashed border-gray-600 bg-gray-800 flex items-center justify-center">
+                              <div className="w-32 h-32 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors duration-300" style={{ borderColor: "var(--border-secondary)", backgroundColor: "var(--bg-tertiary)" }}>
                                 <svg
-                                  className="w-12 h-12 text-gray-500"
+                                  className="w-12 h-12 transition-colors duration-300"
+                                  style={{ color: "var(--text-tertiary)" }}
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -765,6 +766,12 @@ export function GestorServicosPage() {
                                   }
                                 }}
                               />
+                              {/* Badge indicando imagem padrão - posicionado centralizado na parte inferior */}
+                              {isDefaultImage && (
+                                <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-md border border-blue-600 shadow-sm z-10 whitespace-nowrap">
+                                  Imagem Padrão
+                                </span>
+                              )}
                               {/* Botão de remover imagem - aparece quando há imagem customizada ou preview */}
                               {(imagePreview || (selectedService && selectedService.imagem && selectedService.imagem.trim() !== "" && !isDefaultImage)) && (
                                 <button
@@ -790,51 +797,40 @@ export function GestorServicosPage() {
                           );
                         })()}
                       </div>
-                      {/* Badge indicando imagem padrão abaixo da imagem - só aparece quando editando serviço com imagem padrão */}
-                      {(() => {
-                        const defaultPreview = getServiceImageWithFallback(
-                          null,
-                          selectedService?.nome || ""
-                        );
-                        const isDefaultImage = !imagePreview && selectedService && (!selectedService.imagem || selectedService.imagem.trim() === "") && defaultPreview !== null;
-                        return isDefaultImage ? (
-                          <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-md border border-blue-600 shadow-sm">
-                            Imagem Padrão
-                          </span>
-                        ) : null;
-                      })()}
                     </div>
 
-                    {/* Botão de Upload */}
-                    <label
-                      className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                      htmlFor="image-upload"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    {/* Botão de Upload e Texto de Formatos */}
+                    <div className="flex flex-col items-center gap-1">
+                      <label
+                        className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                        htmlFor="image-upload"
                       >
-                        <path
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                        />
-                      </svg>
-                      Alterar imagem
-                    </label>
-                    <input
-                      accept="image/*"
-                      className="hidden"
-                      id="image-upload"
-                      type="file"
-                      onChange={handleImageChange}
-                    />
-                    <p className="text-xs text-gray-400 text-center">
-                      Formatos: PNG, JPG ou JPEG (máx. 5MB)
-                    </p>
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                          />
+                        </svg>
+                        {selectedService ? "Alterar imagem" : "Adicionar imagem"}
+                      </label>
+                      <input
+                        accept="image/*"
+                        className="hidden"
+                        id="image-upload"
+                        type="file"
+                        onChange={handleImageChange}
+                      />
+                      <p className="text-xs text-gray-400 text-center">
+                        Formatos: PNG, JPG ou JPEG (máx. 5MB)
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -847,9 +843,9 @@ export function GestorServicosPage() {
                       isRequired
                       classNames={{
                         base: "w-full md:col-span-2",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
                       }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
@@ -868,9 +864,9 @@ export function GestorServicosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
                       }}
                       errorMessage={errors.preco?.message}
                       isInvalid={!!errors.preco}
@@ -890,9 +886,9 @@ export function GestorServicosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
                       }}
                       endContent={<span className="text-gray-400">min</span>}
                       errorMessage={errors.duracao?.message}
@@ -913,7 +909,7 @@ export function GestorServicosPage() {
               <Button
                 color="danger"
                 isDisabled={isSubmitting}
-                variant="light"
+                variant="solid"
                 onPress={handleCloseModal}
               >
                 Cancelar
@@ -955,19 +951,20 @@ export function GestorServicosPage() {
           </ModalBody>
           <ModalFooter>
             <Button
-              color="default"
+              color="danger"
               isDisabled={isSubmitting}
-              variant="light"
+              variant="solid"
               onPress={onDeleteClose}
             >
-              Cancelar
+              Não
             </Button>
             <Button
-              color="danger"
+              color="primary"
               isLoading={isSubmitting}
+              variant="solid"
               onPress={handleDelete}
             >
-              Excluir
+              Sim
             </Button>
           </ModalFooter>
         </ModalContent>

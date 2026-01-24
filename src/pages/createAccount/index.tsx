@@ -126,7 +126,12 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="name"
-                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                style={{
+                  backgroundColor: "var(--input-bg)",
+                  borderColor: "var(--input-border)",
+                  color: "var(--input-text)",
+                }}
                 description="Informe seu nome completo"
                 errorMessage={fieldState.error?.message}
                 id="nome"
@@ -153,7 +158,12 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="bday"
-                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                style={{
+                  backgroundColor: "var(--input-bg)",
+                  borderColor: "var(--input-border)",
+                  color: "var(--input-text)",
+                }}
                 description="Selecione sua data de nascimento"
                 errorMessage={fieldState.error?.message}
                 id="data_nascimento"
@@ -181,7 +191,12 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="email"
-                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                style={{
+                  backgroundColor: "var(--input-bg)",
+                  borderColor: "var(--input-border)",
+                  color: "var(--input-text)",
+                }}
                 description="Informe um e-mail válido para login"
                 errorMessage={fieldState.error?.message || "Insira um e-mail válido."}
                 id="email"
@@ -209,7 +224,12 @@ export function CreateAccount() {
                 <Input
                   isRequired
                   autoComplete="tel"
-                  className="w-full p-3 rounded-lg text-black focus:outline-none"
+                  className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                style={{
+                  backgroundColor: "var(--input-bg)",
+                  borderColor: "var(--input-border)",
+                  color: "var(--input-text)",
+                }}
                   description="Informe seu número com DDD (ex: (98) 99999-9999)"
                   errorMessage={showError ? message : undefined}
                   id="telefone"
@@ -239,7 +259,12 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="new-password"
-                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                style={{
+                  backgroundColor: "var(--input-bg)",
+                  borderColor: "var(--input-border)",
+                  color: "var(--input-text)",
+                }}
                 description="Mínimo de 6 caracteres"
                 endContent={
                   field.value && (

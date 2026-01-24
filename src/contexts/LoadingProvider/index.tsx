@@ -54,6 +54,8 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
             <CircularProgress
               aria-label="Loading..."
               color="primary"
+              label="Carregando..."   
+              className="text-white font-bold"
               size="md"
             />
           </div>

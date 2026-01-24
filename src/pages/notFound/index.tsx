@@ -7,22 +7,23 @@ export function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col items-center justify-center text-white px-4">
+    <section className="min-h-screen flex flex-col items-center justify-center px-4 transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Helmet title="Erro 404" />
 
       <div className="flex flex-col items-center justify-center gap-6 max-w-lg text-center">
         <img
           alt="Animação de página não encontrada"
-          className="max-w-80 w-60 h-auto border-gray-500 border-2 bg-gray-100 rounded-3xl"
+          className="max-w-80 w-60 h-auto border-2 rounded-3xl transition-colors duration-300"
+          style={{ borderColor: "var(--border-primary)", backgroundColor: "var(--bg-card)" }}
           src={animation}
         />
 
         <div className="space-y-4">
-          <h1 className="text-3xl font-bold text-white">
+          <h1 className="text-3xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
             Página não encontrada
           </h1>
 
-          <p className="text-gray-300 text-lg">
+          <p className="text-lg transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
             A página que você está procurando não existe ou foi movida.
           </p>
         </div>

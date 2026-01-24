@@ -277,40 +277,47 @@ export function UserProfilePage() {
   }, [user?.user.nome]);
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       {/* COMPONENTE CABEÇALHO */}
       <Header />
 
       {/* Conteúdo principal */}
       <div className="flex items-center justify-center flex-1 px-4 py-8 md:px-8">
-        <div className="relative bg-gray-900 rounded-xl shadow-2xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-4xl">
+        <div className="relative rounded-xl shadow-2xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-4xl transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <Helmet title="Perfil" />
           <ToastProvider placement={"top-right"} toastOffset={60} />
 
           <button
             aria-label="Fechar"
-            className="absolute right-4 top-4 h-9 w-9 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+            className="absolute right-4 top-4 h-9 w-9 flex items-center justify-center rounded-full transition-all duration-200 hover:bg-[var(--bg-hover)]"
+            style={{ color: "var(--text-secondary)" }}
             title="Fechar"
             type="button"
             onClick={() => navigate(-1)}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--text-primary)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--text-secondary)";
+            }}
           >
             <XCircleIcon className="w-7 h-7" />
           </button>
 
           {/* Header do Perfil */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 pb-6 border-b border-gray-700">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 pb-6 border-b transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
             <div className="flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none">
               {initials}
             </div>
             <div className="flex flex-col items-center sm:items-start gap-2 flex-1">
-              <h1 className="text-3xl font-bold text-white">
+              <h1 className="text-3xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 {currentUser?.nome || "Meu Perfil"}
               </h1>
             </div>
           </div>
 
           {/*   FORMULÁRIO DE ATUALIZAÇÃO DE DADOS  */}
-          <Card className="bg-gray-800 border border-gray-700 shadow-lg">
+          <Card className="border shadow-lg transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
             <CardBody className="gap-6 p-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
@@ -328,7 +335,7 @@ export function UserProfilePage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl text-white font-semibold">
+                <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                   Informações Pessoais
                 </h2>
               </div>
@@ -346,7 +353,12 @@ export function UserProfilePage() {
                       <Input
                         isRequired
                         autoComplete="name"
-                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                         id="nome"
                         label="Nome"
                         maxLength={60}
@@ -364,7 +376,12 @@ export function UserProfilePage() {
                       <Input
                         isRequired
                         autoComplete="tel"
-                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                         id="telefone"
                         inputMode="numeric"
                         label="Nº de contato"
@@ -388,7 +405,12 @@ export function UserProfilePage() {
                         <Input
                           isRequired
                           autoComplete="email"
-                          className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                           errorMessage={errors_user.email?.message}
                           id="email"
                           isInvalid={!!errors_user.email}
@@ -409,7 +431,12 @@ export function UserProfilePage() {
                         <Input
                           isRequired
                           autoComplete="bday"
-                          className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                           errorMessage={errors_user.data_nascimento?.message}
                           id="data_nascimento"
                           isInvalid={!!errors_user.data_nascimento}
@@ -451,7 +478,7 @@ export function UserProfilePage() {
           </Card>
 
           {/*   FORMULÁRIO DE ATUALIZAÇÃO DE SENHA  */}
-          <Card className="bg-gray-800 border border-gray-700 shadow-lg">
+          <Card className="border shadow-lg transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
             <CardBody className="gap-6 p-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-yellow-600/20 flex items-center justify-center">
@@ -469,12 +496,12 @@ export function UserProfilePage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl text-white font-semibold">
+                <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                   Segurança da Conta
                 </h2>
               </div>
 
-              <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-lg p-4 flex gap-3">
+              <div className="bg-yellow-900/20 border border-yellow-700/30 rounded-lg p-4 flex gap-3 transition-colors duration-300">
                 <svg
                   className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5"
                   fill="currentColor"
@@ -486,7 +513,7 @@ export function UserProfilePage() {
                     fillRule="evenodd"
                   />
                 </svg>
-                <p className="text-yellow-200 text-sm">
+                <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Por segurança, você precisará fazer login novamente após
                   alterar sua senha.
                 </p>
@@ -506,7 +533,12 @@ export function UserProfilePage() {
                       render={({ field }) => (
                         <Input
                           isRequired
-                          className="w-full p-3 rounded-lg text-black focus:outline-none"
+                          className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                           errorMessage={errors.senha_atual?.message}
                           id="senha_atual"
                           isInvalid={!!errors.senha_atual}
@@ -547,7 +579,12 @@ export function UserProfilePage() {
                     render={({ field }) => (
                       <Input
                         isRequired
-                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                         errorMessage={errors.nova_senha?.message}
                         id="nova_senha"
                         isInvalid={!!errors.nova_senha}
@@ -583,7 +620,12 @@ export function UserProfilePage() {
                     render={({ field }) => (
                       <Input
                         isRequired
-                        className="w-full p-3 rounded-lg text-black focus:outline-none"
+                        className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                         errorMessage={errors.confirma_nova_senha?.message}
                         id="confirma"
                         isInvalid={!!errors.confirma_nova_senha}

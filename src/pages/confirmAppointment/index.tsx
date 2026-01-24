@@ -243,7 +243,7 @@ export function ConfirmAppointmentPage() {
   // ===========================
   if (isCompleted) {
     return (
-      <section className="min-h-screen bg-gray-800">
+      <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
         <Header />
         <div className="px-4 py-8 md:px-8">
           <Helmet title="Agendamento Concluído" />
@@ -257,11 +257,11 @@ export function ConfirmAppointmentPage() {
               </div>
             </div>
 
-            <div className="bg-gray-900 rounded-lg p-6 mb-6">
+            <div className="rounded-lg p-6 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
               <div className="text-left">
-                <div className="bg-gray-800 rounded-lg p-4 mb-4">
+                <div className="rounded-lg p-4 mb-4 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-white">
+                    <h3 className="text-lg font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                       Detalhes do Agendamento
                     </h3>
                     <span className="bg-green-600 text-white text-center text-xs px-2 py-1 rounded-full">
@@ -269,33 +269,33 @@ export function ConfirmAppointmentPage() {
                     </span>
                   </div>
 
-                  <div className="space-y-2 mb-4 pb-4 border-b border-gray-700">
+                  <div className="space-y-2 mb-4 pb-4 border-b transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
                     {barber && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Barbeiro:</span>
-                        <span className="text-white font-medium">
+                        <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Barbeiro:</span>
+                        <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                           {barber.nome}
                         </span>
                       </div>
                     )}
 
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Data:</span>
-                      <span className="text-white font-medium">
+                      <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Data:</span>
+                      <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                         {formatDate(selectedDate)}
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Horário:</span>
-                      <span className="text-white font-medium">
+                      <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Horário:</span>
+                      <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                         {selectedTime}
                       </span>
                     </div>
                   </div>
 
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-400 mb-3">
+                    <h4 className="text-sm font-medium mb-3 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                       {selectedServices && selectedServices.length > 1
                         ? "Serviços Contratados:"
                         : "Serviço Contratado:"}
@@ -308,8 +308,8 @@ export function ConfirmAppointmentPage() {
                           className="flex items-center gap-2"
                         >
                           <span className="text-yellow-400">✓</span>
-                          <span className="text-white">{service.nome}</span>
-                          <span className="text-gray-400 text-sm">
+                          <span className="transition-colors duration-300" style={{ color: "var(--text-primary)" }}>{service.nome}</span>
+                          <span className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                             ({service.duracao} min)
                           </span>
                         </div>
@@ -317,17 +317,17 @@ export function ConfirmAppointmentPage() {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-gray-700">
+                  <div className="pt-3 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-400">Duração total:</span>
-                      <span className="text-white font-medium">
+                      <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Duração total:</span>
+                      <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                         {totalDuration} minutos
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-white my-4 text-sm mb-10">
+                <p className="my-4 text-sm mb-10 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                   Pedimos que chegue com antecedência no horário agendado.
                   Obrigado pela preferência! 😉
                 </p>

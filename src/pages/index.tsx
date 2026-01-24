@@ -146,7 +146,12 @@ export function Login() {
                   <Input
                     isRequired
                     autoComplete="username"
-                    className="w-full p-3 rounded-lg text-black focus:outline-none"
+                    className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                    style={{
+                      backgroundColor: "var(--input-bg)",
+                      borderColor: "var(--input-border)",
+                      color: "var(--input-text)",
+                    }}
                     description={
                       hasLettersOrAt
                         ? "Informe seu e-mail cadastrado"

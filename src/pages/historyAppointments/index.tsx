@@ -260,7 +260,7 @@ export function HistoryAppointmentsPage() {
   }, [filteredAppointments, filter]);
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">
@@ -276,24 +276,25 @@ export function HistoryAppointmentsPage() {
           {/* Header */}
           <div className="mb-6">
             <button
-              className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 w-8 h-8 flex items-center justify-center border border-gray-400 rounded-full"
+              className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+              style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
               type="button"
               onClick={() => navigate("/home")}
             >
               <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
             </button>
 
-            <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
+            <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
               <img
                 alt="Banner"
                 className="absolute inset-0 w-full h-full object-cover opacity-70"
                 src="/image-1.png"
               />
               <div className="absolute bottom-0 left-0 p-4">
-                <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+                <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                   Meus Agendamentos
                 </h1>
-                <p className="text-gray-200">
+                <p className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   {filter === "confirmados"
                     ? "Seus agendamentos confirmados"
                     : "Histórico de agendamentos realizados"}
@@ -303,14 +304,15 @@ export function HistoryAppointmentsPage() {
           </div>
 
           {/* Filtros */}
-          <div className="bg-gray-900 rounded-lg p-4 mb-6">
+          <div className="rounded-lg p-4 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   filter === "confirmados"
                     ? "bg-yellow-400 text-gray-900"
-                    : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "hover:bg-[var(--bg-hover)]"
                 }`}
+                style={filter === "confirmados" ? undefined : { backgroundColor: "var(--bg-secondary)", color: "var(--text-primary)" }}
                 type="button"
                 onClick={() => {
                   setFilter("confirmados");

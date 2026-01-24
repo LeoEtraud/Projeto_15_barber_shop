@@ -37,7 +37,7 @@ export function HomePage() {
   );
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       {/* Header fixo */}
       <Header />
 
@@ -47,17 +47,17 @@ export function HomePage() {
 
         <div className="mx-auto max-w-4xl">
           {/* Banner de boas-vindas */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
             <img
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-70"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Bem-vindo à Balata Barbearia
               </h1>
-              <span className="text-gray-200">
+              <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 Cortamos cabelo e contamos histórias.
               </span>
             </div>
@@ -75,23 +75,30 @@ export function HomePage() {
               {filteredItems.map((item) => (
                 <button
                   key={item.id}
-                  className="flex flex-col items-center gap-4 rounded-lg bg-gray-900 p-6 shadow hover:shadow-md hover:border-yellow-400 border border-gray-700 transition-all text-center"
+                  className="flex flex-col items-center gap-4 rounded-lg p-6 shadow hover:shadow-md hover:border-yellow-400 border transition-all text-center transition-colors duration-300"
+                  style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
                   type="button"
                   onClick={() => navigate(item.path)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--accent-amber)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-primary)";
+                  }}
                 >
                   <div className="text-4xl">{item.icon}</div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">
+                    <h3 className="text-lg font-semibold mb-2 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                       {item.title}
                     </h3>
-                    <p className="text-sm text-gray-400">{item.description}</p>
+                    <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{item.description}</p>
                   </div>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="bg-gray-900 rounded-lg p-12 text-center border border-gray-700">
-              <p className="text-gray-400 text-lg">
+            <div className="rounded-lg p-12 text-center border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <p className="text-lg transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 Nenhuma página disponível para seu perfil.
               </p>
             </div>

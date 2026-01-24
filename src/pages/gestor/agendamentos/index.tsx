@@ -633,7 +633,7 @@ export function GestorAgendamentosPage() {
   const dias = gerarProximos6Dias();
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">

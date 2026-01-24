@@ -90,7 +90,7 @@ export function GestorDashboardPage() {
   }, [isGestor]);
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">
@@ -99,12 +99,12 @@ export function GestorDashboardPage() {
         <div className="mx-auto max-w-6xl">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-white mb-2">
+            <h1 className="text-3xl font-bold mb-2 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               Dashboard do Gestor
             </h1>
-            <p className="text-white">
+            <p className="transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               Bem-vindo,{" "}
-              <span className="text-yellow-400 font-bold">
+              <span className="font-bold transition-colors duration-300" style={{ color: "var(--accent-amber)" }}>
                 {user?.user?.nome}
                 {"!"}
               </span>
@@ -113,10 +113,10 @@ export function GestorDashboardPage() {
 
           {/* Cards de Estatísticas Gerais */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-gray-400 text-sm mb-2">Total de Clientes</h3>
+            <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="text-sm mb-2 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Total de Clientes</h3>
               {isLoading ? (
-                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+                <div className="h-10 w-20 rounded animate-pulse transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)" }} />
               ) : hasError ? (
                 <p className="text-lg text-red-400">Erro</p>
               ) : (
@@ -126,10 +126,10 @@ export function GestorDashboardPage() {
               )}
             </div>
 
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-gray-400 text-sm mb-2">Agendamentos Hoje</h3>
+            <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="text-sm mb-2 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Agendamentos Hoje</h3>
               {isLoading ? (
-                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+                <div className="h-10 w-20 rounded animate-pulse transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)" }} />
               ) : hasError ? (
                 <p className="text-lg text-red-400">Erro</p>
               ) : (
@@ -139,10 +139,10 @@ export function GestorDashboardPage() {
               )}
             </div>
 
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-gray-400 text-sm mb-2">Profissionais</h3>
+            <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="text-sm mb-2 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Profissionais</h3>
               {isLoading ? (
-                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+                <div className="h-10 w-20 rounded animate-pulse transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)" }} />
               ) : hasError ? (
                 <p className="text-lg text-red-400">Erro</p>
               ) : (
@@ -152,10 +152,10 @@ export function GestorDashboardPage() {
               )}
             </div>
 
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
-              <h3 className="text-gray-400 text-sm mb-2">Receita do Mês</h3>
+            <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="text-sm mb-2 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Receita do Mês</h3>
               {isLoading ? (
-                <div className="h-10 w-20 bg-gray-700 rounded animate-pulse" />
+                <div className="h-10 w-20 rounded animate-pulse transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)" }} />
               ) : hasError ? (
                 <p className="text-lg text-red-400">Erro</p>
               ) : (
@@ -170,9 +170,9 @@ export function GestorDashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Gerenciar Barbeiros */}
             <PermissionGate requiredPermissions={["manage_barbers"]}>
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Profissionais
                   </h2>
                   <Button
@@ -183,7 +183,7 @@ export function GestorDashboardPage() {
                     Ver Todos
                   </Button>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Gerencie os profissionais da barbearia
                 </p>
               </div>
@@ -191,9 +191,9 @@ export function GestorDashboardPage() {
 
             {/* Gerenciar Serviços */}
             <PermissionGate requiredPermissions={["manage_services"]}>
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Serviços
                   </h2>
                   <Button
@@ -204,7 +204,7 @@ export function GestorDashboardPage() {
                     Ver Todos
                   </Button>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Gerencie os serviços oferecidos
                 </p>
               </div>
@@ -212,9 +212,9 @@ export function GestorDashboardPage() {
 
             {/* Gerenciar Horários */}
             <PermissionGate requiredPermissions={["manage_schedules"]}>
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Horários
                   </h2>
                   <Button
@@ -225,7 +225,7 @@ export function GestorDashboardPage() {
                     Configurar
                   </Button>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Configure os horários de funcionamento da barbearia
                 </p>
               </div>
@@ -233,9 +233,9 @@ export function GestorDashboardPage() {
 
             {/* Gerenciar Agendamentos */}
             <PermissionGate requiredPermissions={["manage_schedules"]}>
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+              <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     Gerenciar Agendamentos
                   </h2>
                   <Button
@@ -246,7 +246,7 @@ export function GestorDashboardPage() {
                     Visualizar
                   </Button>
                 </div>
-                <p className="text-gray-400 text-sm mb-4">
+                <p className="text-sm mb-4 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                   Visualize a grade de disponibilidade e horários dos próximos 6 dias
                 </p>
               </div>
@@ -255,8 +255,8 @@ export function GestorDashboardPage() {
 
           {/* Relatórios */}
           <PermissionGate requiredPermissions={["view_reports"]}>
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-700 mb-6">
-              <h2 className="text-xl font-semibold text-white mb-4">
+            <div className="rounded-lg p-6 border mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h2 className="text-xl font-semibold mb-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Relatórios
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -274,16 +274,16 @@ export function GestorDashboardPage() {
           </PermissionGate>
 
           {/* Agendamentos */}
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-700">
+          <div className="rounded-lg p-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-white">
+              <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Todos os Agendamentos
               </h2>
               <Button color="primary" size="sm">
                 Ver Todos
               </Button>
             </div>
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
               <p>Nenhum agendamento encontrado</p>
             </div>
           </div>

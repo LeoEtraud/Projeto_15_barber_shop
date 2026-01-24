@@ -557,7 +557,7 @@ export function ChoiceSchedulePage() {
   }, [barber?.id]);
 
   return (
-    <section className="min-h-screen bg-gray-800">
+    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       {/* COMPONENTE CABEÇALH0 */}
       <Header />
 
@@ -566,9 +566,8 @@ export function ChoiceSchedulePage() {
 
         <div className="mx-auto max-w-2xl">
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
@@ -576,14 +575,14 @@ export function ChoiceSchedulePage() {
           </button>
 
           {/* Banner */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
             <img
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Selecione a data e horário
               </h1>
             </div>
@@ -591,17 +590,18 @@ export function ChoiceSchedulePage() {
 
           {/* RESUMO DO AGENDAMENTO */}
           {selectedServices && selectedServices.length > 0 && (
-            <div className="bg-gray-900 rounded-lg p-4 mb-6">
-              <h3 className="text-white font-medium mb-2">
+            <div className="rounded-lg p-4 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+              <h3 className="font-medium mb-2 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Resumo do agendamento
               </h3>
-              <div className="text-sm text-gray-300">
+              <div className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 {barber && <div>Barbeiro: {barber.nome}</div>}
 
                 {selectedServices.map((service) => (
                   <div
                     key={service.id}
-                    className="border-b border-gray-700 pb-2 last:border-0 last:pb-0"
+                    className="border-b pb-2 last:border-0 last:pb-0 transition-colors duration-300"
+                    style={{ borderColor: "var(--border-primary)" }}
                   >
                     <div>Serviço: {service.nome}</div>
                     <div>Preço: {formatPrice(Number(service.preco))}</div>
@@ -619,7 +619,7 @@ export function ChoiceSchedulePage() {
           {/* SELEÇÃO DE DATA */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Escolha a data
               </h2>
               <div className="relative">
@@ -641,7 +641,7 @@ export function ChoiceSchedulePage() {
                   type="button"
                   onClick={handleOpenCalendar}
                 >
-                  <CalendarIcon className="w-5 h-5 text-white" />
+                  <CalendarIcon className="w-5 h-5 transition-colors duration-300" style={{ color: "var(--text-primary)" }} />
                 </button>
               </div>
             </div>
@@ -718,8 +718,12 @@ export function ChoiceSchedulePage() {
                     className={`p-3 rounded-lg text-center transition-colors ${
                       selectedDate === date.value
                         ? "bg-blue-600 text-white"
-                        : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                        : "hover:bg-[var(--bg-hover)]"
                     }`}
+                    style={selectedDate === date.value 
+                      ? undefined 
+                      : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                    }
                     type="button"
                     onClick={() => handleDateSelect(date.value)}
                   >
@@ -740,7 +744,7 @@ export function ChoiceSchedulePage() {
           {/* SELEÇÃO DE HORÁRIO DISPONÍVEIS */}
           {selectedDate && availableTimeSlots.length > 0 && (
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-white mb-3">
+              <h2 className="text-lg font-semibold mb-3 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Escolha o horário
               </h2>
 
@@ -783,10 +787,10 @@ export function ChoiceSchedulePage() {
                     {turnos.manha.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-sm font-semibold text-white">
+                          <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                             Manhã
                           </h3>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                             {formatarDisponiveis(
                               contarDisponiveis(turnos.manha)
                             )}
@@ -798,11 +802,17 @@ export function ChoiceSchedulePage() {
                               key={time}
                               className={`p-2 rounded-lg text-center text-sm transition-colors ${
                                 isOccupied
-                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  ? "cursor-not-allowed opacity-50"
                                   : selectedTime === time
                                     ? "bg-green-600 text-white"
-                                    : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                                    : "hover:bg-[var(--bg-hover)]"
                               }`}
+                              style={isOccupied 
+                                ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
+                                : selectedTime === time
+                                  ? undefined
+                                  : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                              }
                               disabled={isOccupied}
                               title={
                                 isOccupied ? "Horário ocupado" : "Disponível"
@@ -823,10 +833,10 @@ export function ChoiceSchedulePage() {
                     {turnos.tarde.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-sm font-semibold text-white">
+                          <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                             Tarde
                           </h3>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                             {formatarDisponiveis(
                               contarDisponiveis(turnos.tarde)
                             )}
@@ -838,11 +848,17 @@ export function ChoiceSchedulePage() {
                               key={time}
                               className={`p-2 rounded-lg text-center text-sm transition-colors ${
                                 isOccupied
-                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  ? "cursor-not-allowed opacity-50"
                                   : selectedTime === time
                                     ? "bg-green-600 text-white"
-                                    : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                                    : "hover:bg-[var(--bg-hover)]"
                               }`}
+                              style={isOccupied 
+                                ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
+                                : selectedTime === time
+                                  ? undefined
+                                  : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                              }
                               disabled={isOccupied}
                               title={
                                 isOccupied ? "Horário ocupado" : "Disponível"
@@ -863,10 +879,10 @@ export function ChoiceSchedulePage() {
                     {turnos.noite.length > 0 && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-sm font-semibold text-white">
+                          <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                             Noite
                           </h3>
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                             {formatarDisponiveis(
                               contarDisponiveis(turnos.noite)
                             )}
@@ -878,11 +894,17 @@ export function ChoiceSchedulePage() {
                               key={time}
                               className={`p-2 rounded-lg text-center text-sm transition-colors ${
                                 isOccupied
-                                  ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                                  ? "cursor-not-allowed opacity-50"
                                   : selectedTime === time
                                     ? "bg-green-600 text-white"
-                                    : "bg-gray-900 text-gray-300 hover:bg-gray-700"
+                                    : "hover:bg-[var(--bg-hover)]"
                               }`}
+                              style={isOccupied 
+                                ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
+                                : selectedTime === time
+                                  ? undefined
+                                  : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                              }
                               disabled={isOccupied}
                               title={
                                 isOccupied ? "Horário ocupado" : "Disponível"

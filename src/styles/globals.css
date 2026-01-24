@@ -2,6 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Variáveis CSS para temas - Light Theme (padrão) */
+:root {
+  --bg-primary: #fafafa;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e5e5e5;
+  --bg-card: #e8e8e8;
+  --bg-hover: #f0f0f0;
+  
+  --text-primary: #1a1a1a;
+  --text-secondary: #404040;
+  --text-tertiary: #6b6b6b;
+  --text-muted: #9ca3af;
+  
+  --accent-gold: #b8860b;
+  --accent-amber: #d97706;
+  --accent-bronze: #92400e;
+  
+  --border-primary: #e5e5e5;
+  --border-secondary: #d4d4d4;
+  --border-accent: #b8860b;
+  
+  --input-bg: #d4d4d4;
+  --input-border: #000000;
+  --input-text: #000000;
+  --input-placeholder: #808080;
+  --input-focus-border: #3b82f6;
+  
+  --scrollbar-track: #f5f5f5;
+  --scrollbar-thumb: #d4d4d4;
+}
+
+/* Dark Theme */
+.dark {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2a2a2a;
+  --bg-card: #1f1f1f;
+  --bg-hover: #2f2f2f;
+  
+  --text-primary: #f5f5f5;
+  --text-secondary: #d4d4d4;
+  --text-tertiary: #a3a3a3;
+  --text-muted: #737373;
+  
+  --accent-gold: #d4af37;
+  --accent-amber: #f59e0b;
+  --accent-bronze: #cd7f32;
+  
+  --border-primary: #3a3a3a;
+  --border-secondary: #2a2a2a;
+  --border-accent: #d4af37;
+  
+  --input-bg: #2a2a2a;
+  --input-border: #3a3a3a;
+  --input-text: #f5f5f5;
+  --input-placeholder: #737373;
+  --input-focus-border: #3b82f6;
+  
+  --scrollbar-track: #1a1a1a;
+  --scrollbar-thumb: #3a3a3a;
+}
+
 /* Mobile layout guards */
 html,
 body,
@@ -9,31 +71,32 @@ body,
   height: 100%;
 }
 
-html,
-body {
-  background: #000; /* evita flicker branco */
-  overscroll-behavior: none; /* bloqueia bounce/overscroll */
+html {
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
 }
 
 body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   margin: 0;
-  overflow-x: hidden; /* evita scroll horizontal */
-  touch-action: manipulation; /* reduz gestos que causam pan/zoom indesejado */
+  overflow-x: hidden;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @supports (-webkit-touch-callout: none) {
-  /* iOS Safari: evita “bump” e gaps em safe areas */
   body {
     position: relative;
-    background-color: #000;
   }
 }
 
-/* Scrollbar escura (global) */
+/* Scrollbar com tema */
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #000 #0a0a0a;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* Chrome, Edge, Safari */
@@ -43,21 +106,94 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #000;
+  background-color: var(--scrollbar-thumb);
   border-radius: 8px;
-  border: 2px solid #0a0a0a;
+  border: 2px solid var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #000;
+  background-color: var(--accent-amber);
 }
 
 /* Cursor de bloqueado para botões desabilitados */
 button:disabled,
 [disabled="true"] {
   cursor: not-allowed !important;
+}
+
+/* Estilos para campos de input */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="date"],
+input[type="number"],
+textarea,
+select {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--input-text) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--input-focus-border) !important;
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder) !important;
+}
+
+/* Estilos para componentes Input do HeroUI */
+[data-slot="input-wrapper"] {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease !important;
+}
+
+[data-slot="input-wrapper"]:focus-within {
+  border-color: var(--input-focus-border) !important;
+}
+
+[data-slot="input"] {
+  color: var(--input-text) !important;
+  background-color: transparent !important;
+}
+
+[data-slot="input"]::placeholder {
+  color: var(--input-placeholder) !important;
+}
+
+[data-slot="label"] {
+  color: var(--text-primary) !important;
+}
+
+/* Estilos para select */
+select {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--input-text) !important;
+}
+
+select:focus {
+  border-color: var(--input-focus-border) !important;
+  outline: none;
+}
+
+select option {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
 }

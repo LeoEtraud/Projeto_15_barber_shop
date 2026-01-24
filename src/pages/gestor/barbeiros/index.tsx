@@ -17,7 +17,8 @@ import {
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { UserPlus, User } from "phosphor-react";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 
@@ -332,6 +333,7 @@ export function GestorBarbeirosPage() {
       funcao: "",
     },
   });
+
 
   // FUNÇÃO PARA FETCHAR OS BARBEIROS
   useEffect(() => {
@@ -739,16 +741,28 @@ export function GestorBarbeirosPage() {
           return;
         }
 
-        const createData = {
+        const createData: {
+          nome: string;
+          email: string;
+          telefone: string;
+          data_nascimento: string;
+          funcao: string;
+          avatar?: string;
+          barbeariaId: string;
+        } = {
           nome: normalizeName(data.nome.trim()),
           email: data.email,
           telefone: data.telefone.replace(/\D/g, ""),
           data_nascimento: convertDateToAPI(data.data_nascimento),
           funcao: apiFuncaoValue,
-          avatar: avatarBase64 ?? undefined,
           barbeariaId: barbeariaId,
         };
-        
+
+        // Adiciona avatar se houver
+        if (avatarBase64) {
+          createData.avatar = avatarBase64;
+        }
+
         console.log("[Frontend] Enviando dados para criar profissional:", {
           ...createData,
           avatar: avatarBase64 ? `base64 (${avatarBase64.length} chars)` : "não enviado",
@@ -836,9 +850,9 @@ export function GestorBarbeirosPage() {
 
   if (!isGestor) {
     return (
-      <section className="min-h-screen bg-gray-800 flex flex-col text-white items-center justify-center">
-        <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
-        <p className="text-gray-400">
+      <section className="min-h-screen flex flex-col items-center justify-center transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
+        <h1 className="text-2xl font-bold mb-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>Acesso Negado</h1>
+        <p className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
           Apenas gestores podem acessar esta página.
         </p>
       </section>
@@ -846,7 +860,7 @@ export function GestorBarbeirosPage() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">
@@ -855,9 +869,8 @@ export function GestorBarbeirosPage() {
         <div className="mx-auto max-w-6xl">
           {/* Botão Voltar */}
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
@@ -890,7 +903,7 @@ export function GestorBarbeirosPage() {
                     className="bg-white text-teal-600 font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
                     color="primary"
                     size="sm"
-                    startContent={<PlusIcon className="w-4 h-4" />}
+                    startContent={<UserPlus size={18} />}
                     onPress={() => handleOpenModal()}
                   >
                     Adicionar Profissional
@@ -901,7 +914,7 @@ export function GestorBarbeirosPage() {
           </div>
 
           {/* Abas de Filtro */}
-          <div className="bg-gray-900 rounded-lg p-2 mb-6 border border-gray-700">
+          <div className="rounded-lg p-2 mb-6 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
             <div className="flex flex-wrap gap-2">
               {FUNCOES.map((funcao) => (
                 <button
@@ -909,7 +922,7 @@ export function GestorBarbeirosPage() {
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     selectedTab === funcao.value
                       ? "bg-teal-500 text-white shadow-md"
-                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                      : "hover:bg-[var(--bg-hover)] transition-colors duration-300"
                   }`}
                   type="button"
                   onClick={() => setSelectedTab(funcao.value)}
@@ -928,14 +941,14 @@ export function GestorBarbeirosPage() {
 
             if (filteredBarbers.length === 0) {
               return (
-                <div className="bg-gray-900 rounded-lg p-12 text-center border border-gray-700">
-                  <p className="text-gray-400 text-lg mb-4">
+                <div className="rounded-lg p-12 text-center border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+                  <p className="text-lg mb-4 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     {`Nenhum ${selectedTab.toLowerCase()} cadastrado`},
                   </p>
                   <PermissionGate requiredPermissions={["manage_barbers"]}>
                     <Button
                       color="primary"
-                      startContent={<PlusIcon className="w-5 h-5" />}
+                      startContent={<UserPlus size={20} />}
                       onPress={() => handleOpenModal()}
                     >
                       Adicionar Primeiro Profissional
@@ -949,11 +962,11 @@ export function GestorBarbeirosPage() {
               <>
                 {/* Título da Categoria */}
                 <div className="mb-4">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                     {FUNCOES.find((f) => f.value === selectedTab)?.label ||
                       selectedTab}
                   </h2>
-                  <p className="text-gray-400 text-sm mt-1">
+                  <p className="text-sm mt-1 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                     {filteredBarbers.length}{" "}
                     {filteredBarbers.length === 1
                       ? "profissional encontrado"
@@ -970,7 +983,8 @@ export function GestorBarbeirosPage() {
                     return (
                       <Card
                         key={barber.id}
-                        className="bg-gray-900 border border-gray-700 hover:border-teal-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
+                        className="border hover:border-teal-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
+                        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
                       >
                         {/* Badge de Status */}
                         <div
@@ -992,7 +1006,8 @@ export function GestorBarbeirosPage() {
                               return avatarUrl ? (
                                 <img
                                   alt={barber.nome}
-                                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
+                                  className="w-16 h-16 rounded-full object-cover border-2 flex-shrink-0 transition-colors duration-300"
+                                  style={{ borderColor: "var(--border-primary)" }}
                                   src={avatarUrl}
                                   onError={(e) => {
                                     // Se a imagem falhar, mostra o ícone de usuário
@@ -1013,7 +1028,8 @@ export function GestorBarbeirosPage() {
                               return (
                                 <img
                                   alt={barber.nome}
-                                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-700 flex-shrink-0"
+                                  className="w-16 h-16 rounded-full object-cover border-2 flex-shrink-0 transition-colors duration-300"
+                                  style={{ borderColor: "var(--border-primary)" }}
                                   src={getDefaultBarberImage(barber.nome)}
                                   onError={(e) => {
                                     // Se a imagem padrão falhar, esconde o elemento
@@ -1026,15 +1042,15 @@ export function GestorBarbeirosPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
                                 <div className="flex-1 min-w-0">
-                                  <h3 className="text-base font-semibold text-white truncate">
+                                  <h3 className="text-base font-semibold truncate transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                                     {getNomeSobrenome(barber.nome)}
                                   </h3>
                                   {barber.funcao && (
-                                    <p className="text-gray-500 text-xs mt-0.5">
+                                    <p className="text-xs mt-0.5 transition-colors duration-300" style={{ color: "var(--text-tertiary)" }}>
                                       {barber.funcao}
                                     </p>
                                   )}
-                                  <p className="text-gray-400 text-xs truncate mt-0.5">
+                                  <p className="text-xs truncate mt-0.5 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                                     {barber.email}
                                   </p>
                                 </div>
@@ -1048,11 +1064,12 @@ export function GestorBarbeirosPage() {
                             >
                               <Button
                                 fullWidth
-                                className="text-white"
+                                className="transition-colors duration-300"
+                                style={{ color: "var(--text-primary)" }}
                                 color="primary"
                                 size="sm"
                                 startContent={
-                                  <PencilIcon className="w-4 h-4 text-white" />
+                                  <PencilIcon className="w-4 h-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }} />
                                 }
                                 variant="flat"
                                 onPress={() => handleOpenModal(barber)}
@@ -1065,7 +1082,8 @@ export function GestorBarbeirosPage() {
                             >
                               <Button
                                 fullWidth
-                                className="text-white"
+                                className="transition-colors duration-300"
+                                style={{ color: "var(--text-primary)" }}
                                 color="danger"
                                 size="sm"
                                 startContent={<TrashIcon className="w-4 h-4" />}
@@ -1093,11 +1111,11 @@ export function GestorBarbeirosPage() {
       {/* MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL */}
       <Modal
         classNames={{
-          base: "bg-gray-900 border border-gray-700",
+          base: "border transition-colors duration-300",
           header:
             "bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 border-b border-teal-500/30",
-          body: "bg-gray-900 py-6",
-          footer: "bg-gray-900 border-t border-gray-700",
+          body: "py-6 transition-colors duration-300",
+          footer: "border-t transition-colors duration-300",
           closeButton:
             "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
           wrapper: "items-center justify-center",
@@ -1108,9 +1126,9 @@ export function GestorBarbeirosPage() {
         onClose={handleCloseModal}
         scrollBehavior="inside"
       >
-        <ModalContent>
+        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
               {selectedBarber
                 ? "Editar Profissional"
                 : "Adicionar Profissional"}
@@ -1124,23 +1142,41 @@ export function GestorBarbeirosPage() {
                   {/* Preview da Imagem - Padrão circular como nos cards */}
                   <div className="relative">
                     {(() => {
-                      // Se não há profissional selecionado (modo criação), mostra apenas ícone de usuário
+                      // Se não há profissional selecionado (modo criação), mostra imagem padrão
                       if (!selectedBarber && !imagePreview) {
                         return (
-                          <div className="w-32 h-32 rounded-full bg-gray-700 border-2 border-gray-700 flex items-center justify-center">
-                            <svg
-                              className="w-16 h-16 text-gray-400"
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </div>
+                          <>
+                            <img
+                              alt="Imagem padrão de perfil"
+                              className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                              src="/barbeiros/icons-perfil.png"
+                              onError={(e) => {
+                                // Se a imagem falhar, mostra o ícone de usuário como fallback
+                                const target = e.currentTarget;
+                                target.style.display = "none";
+                                const fallback = target.nextElementSibling as HTMLElement;
+                                if (fallback) {
+                                  fallback.classList.remove("hidden");
+                                }
+                              }}
+                            />
+                            {/* Fallback: ícone de usuário caso a imagem não carregue */}
+                            <div className="w-32 h-32 rounded-full border-2 flex items-center justify-center hidden transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)", borderColor: "var(--border-primary)" }}>
+                              <svg
+                                className="w-16 h-16 transition-colors duration-300"
+                                style={{ color: "var(--text-tertiary)" }}
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          </>
                         );
                       }
 
@@ -1219,20 +1255,8 @@ export function GestorBarbeirosPage() {
                     className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                     htmlFor="avatar-upload"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                      />
-                    </svg>
-                    Alterar imagem
+                    <User size={20} weight="bold" />
+                    {selectedBarber ? "Alterar imagem" : "Adicionar imagem"}
                   </label>
                   <input
                     accept="image/*"
@@ -1256,10 +1280,15 @@ export function GestorBarbeirosPage() {
                       {...field}
                       isRequired
                       classNames={{
-                        base: "w-full md:col-span-2",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        base: "w-full",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
+                      }}
+                      style={{
+                        ["--input-bg" as string]: "var(--input-bg)",
+                        ["--input-border" as string]: "var(--input-border)",
+                        ["--input-text" as string]: "var(--input-text)",
                       }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
@@ -1290,9 +1319,14 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
+                      }}
+                      style={{
+                        ["--input-bg" as string]: "var(--input-bg)",
+                        ["--input-border" as string]: "var(--input-border)",
+                        ["--input-text" as string]: "var(--input-text)",
                       }}
                       errorMessage={errors.email?.message}
                       isInvalid={!!errors.email}
@@ -1324,9 +1358,14 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
+                      }}
+                      style={{
+                        ["--input-bg" as string]: "var(--input-bg)",
+                        ["--input-border" as string]: "var(--input-border)",
+                        ["--input-text" as string]: "var(--input-text)",
                       }}
                       errorMessage={errors.telefone?.message}
                       isInvalid={!!errors.telefone}
@@ -1358,9 +1397,14 @@ export function GestorBarbeirosPage() {
                       isRequired
                       classNames={{
                         base: "w-full",
-                        input: "text-gray-900",
-                        label: "text-gray-700",
-                        inputWrapper: "bg-white border-gray-300",
+                        input: "transition-colors duration-300",
+                        label: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300",
+                      }}
+                      style={{
+                        ["--input-bg" as string]: "var(--input-bg)",
+                        ["--input-border" as string]: "var(--input-border)",
+                        ["--input-text" as string]: "var(--input-text)",
                       }}
                       errorMessage={errors.data_nascimento?.message}
                       isInvalid={!!errors.data_nascimento}
@@ -1393,7 +1437,12 @@ export function GestorBarbeirosPage() {
                       <select
                         {...field}
                         required
-                        className="w-full p-4 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors duration-300"
+                        style={{
+                          backgroundColor: "var(--input-bg)",
+                          borderColor: "var(--input-border)",
+                          color: "var(--input-text)",
+                        }}
                         id="funcao-select"
                         onFocus={(e) => e.target.focus()}
                       >
@@ -1412,6 +1461,7 @@ export function GestorBarbeirosPage() {
                     </div>
                   )}
                 />
+
               </div>
             </ModalBody>
             <ModalFooter className="justify-between items-center">
@@ -1439,7 +1489,7 @@ export function GestorBarbeirosPage() {
                 <Button
                   color="danger"
                   isDisabled={isSubmitting}
-                  variant="light"
+                  variant="solid"
                   onPress={handleCloseModal}
                 >
                   Cancelar
@@ -1482,19 +1532,20 @@ export function GestorBarbeirosPage() {
           </ModalBody>
           <ModalFooter>
             <Button
-              color="default"
+              color="danger"
               isDisabled={isSubmitting}
-              variant="light"
+              variant="solid"
               onPress={onDeleteClose}
             >
-              Cancelar
+              Não
             </Button>
             <Button
-              color="danger"
+              color="primary"
               isLoading={isSubmitting}
+              variant="solid"
               onPress={handleDelete}
             >
-              Excluir
+              Sim
             </Button>
           </ModalFooter>
         </ModalContent>

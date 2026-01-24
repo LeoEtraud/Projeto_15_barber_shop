@@ -1,13 +1,28 @@
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid"; // << ADICIONE
+import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
 import { useEffect } from "react";
-import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
-import { StarIcon as StarIconOutline } from "@heroicons/react/24/outline";
 
 import { Header } from "@/components/Header";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+
+// Função para obter selo de avaliação baseado na nota
+function getRatingBadge(rating: number): string {
+  if (rating >= 5) {
+    return "🏅 Perfil aprovado pelos clientes";
+  }
+
+  if (rating >= 4) {
+    return "👌 Muito bem avaliado";
+  }
+
+  if (rating >= 3) {
+    return "👍 Clientes satisfeitos";
+  }
+
+  return "";
+}
 
 export function ChoiceBarberPage() {
   const navigate = useNavigate();
@@ -18,7 +33,7 @@ export function ChoiceBarberPage() {
   }, []);
 
   return (
-    <section className="min-h-screen bg-gray-800">
+    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       {/* COMPONENTE CABEÇALHO */}
       <Header />
 
@@ -28,9 +43,8 @@ export function ChoiceBarberPage() {
 
         <div className="mx-auto max-w-2xl">
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
@@ -38,14 +52,14 @@ export function ChoiceBarberPage() {
           </button>
 
           {/* Banner com imagem de fundo */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
             <img
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Escolha um profissional
               </h1>
             </div>
@@ -56,7 +70,8 @@ export function ChoiceBarberPage() {
             {barbers.map((barber) => (
               <button
                 key={barber.id}
-                className="flex items-center gap-3 rounded-lg bg-gray-900 p-4 border border-transparent hover:border-gray-600 transition-all duration-300 shadow-lg hover:shadow-xl text-left relative"
+                className="flex items-center gap-3 rounded-lg p-4 border border-transparent transition-all duration-300 shadow-lg hover:shadow-xl text-left relative"
+                style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
                 type="button"
                 onClick={() =>
                   navigate("/choice-service", {
@@ -69,14 +84,23 @@ export function ChoiceBarberPage() {
                     },
                   })
                 }
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-secondary)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--border-primary)";
+                }}
               >
                 {(() => {
-                  const avatarUrl = barber.avatar && barber.avatar.trim() !== ""
-                    ? barber.avatar.startsWith("data:image")
-                      ? barber.avatar
-                      : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(barber.avatar)}`
-                    : null;
-                  
+                  const avatarUrl =
+                    barber.avatar && barber.avatar.trim() !== ""
+                      ? barber.avatar.startsWith("data:image")
+                        ? barber.avatar
+                        : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(
+                            barber.avatar,
+                          )}`
+                      : null;
+
                   return avatarUrl ? (
                     <img
                       alt={`Barbeiro ${barber.nome}`}
@@ -87,7 +111,8 @@ export function ChoiceBarberPage() {
                         const target = e.currentTarget;
 
                         target.style.display = "none";
-                        const fallback = target.nextElementSibling as HTMLElement;
+                        const fallback =
+                          target.nextElementSibling as HTMLElement;
 
                         if (fallback) {
                           fallback.classList.remove("hidden");
@@ -98,7 +123,7 @@ export function ChoiceBarberPage() {
                 })()}
                 {(() => {
                   if (barber.avatar && barber.avatar.trim() !== "") return null;
-                  
+
                   return (
                     <img
                       alt={`Barbeiro ${barber.nome}`}
@@ -111,29 +136,13 @@ export function ChoiceBarberPage() {
                   );
                 })()}
                 <div className="flex-1">
-                  <div className="text-white font-medium">{barber.nome}</div>
-                  <div className="text-xs text-gray-400">
-                    {barber.qtd_atendimentos && barber.qtd_atendimentos > 1
-                      ? barber.qtd_atendimentos + " atendimentos"
-                      : null}
-                  </div>
-                  <div className="mt-1 flex items-center gap-1">
-                    {Array.from({ length: 5 }, (_, i) =>
-                      i < barber.nota_avaliacao ? (
-                        <StarIconSolid
-                          key={i}
-                          aria-hidden="true"
-                          className="w-3 h-3 text-yellow-400"
-                        />
-                      ) : (
-                        <StarIconOutline
-                          key={i}
-                          aria-hidden="true"
-                          className="w-3 h-3 text-gray-500"
-                        />
-                      )
-                    )}
-                  </div>
+                  <div className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>{barber.nome}</div>
+                  {/* Selo de avaliação - só exibe se for 3 estrelas ou mais */}
+                  {barber.nota_avaliacao >= 3 && (
+                    <div className="mt-1 text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                      {getRatingBadge(barber.nota_avaliacao)}
+                    </div>
+                  )}
                 </div>
                 {/* Seta amarela, mais cheia e maior */}
                 <ArrowRightIcon className="absolute right-4 text-yellow-400 w-8 h-8" />

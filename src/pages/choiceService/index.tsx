@@ -165,7 +165,7 @@ export function ChoiceServicePage() {
   }
 
   return (
-    <section className="min-h-screen bg-gray-800">
+    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
 
       <div className="p-4 md:px-8">
@@ -173,9 +173,8 @@ export function ChoiceServicePage() {
 
         <div className="mx-auto max-w-2xl">
           <button
-            className="text-sm bg-gray-800 hover:bg-gray-900 mb-4 
-             w-8 h-8 flex items-center justify-center 
-             border border-gray-400 rounded-full"
+            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
+            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
             type="button"
             onClick={() => navigate(-1)}
           >
@@ -183,14 +182,14 @@ export function ChoiceServicePage() {
           </button>
 
           {/* Banner */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-800 h-40 mb-6">
+          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
             <img
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover opacity-100"
               src="/image-1.png"
             />
             <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold text-white drop-shadow-lg">
+              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 Selecione o(s) serviço(s)
               </h1>
             </div>
@@ -209,10 +208,10 @@ export function ChoiceServicePage() {
                   className={[
                     "group rounded-lg shadow-lg transition-all border overflow-hidden flex",
                     isSelected
-                      ? "border-green-400 hover:border-green-300 bg-gray-800 ring-2 ring-green-400/50"
+                      ? "border-green-400 hover:border-green-300 ring-2 ring-green-400/50"
                       : isDisabled
-                        ? "border-gray-700 opacity-60 cursor-not-allowed bg-gray-900/50"
-                        : "border-transparent hover:border-gray-600 hover:shadow-xl bg-gray-900",
+                        ? "opacity-60 cursor-not-allowed"
+                        : "border-transparent hover:shadow-xl",
                   ].join(" ")}
                   disabled={isDisabled}
                   title={
@@ -227,7 +226,7 @@ export function ChoiceServicePage() {
                   <div className="flex-1 p-2.5 flex flex-col justify-between min-h-0">
                     <div className="min-w-0">
                       <div className="mb-1 text-left">
-                        <div className="text-white font-semibold text-sm leading-tight line-clamp-2 text-left">
+                        <div className="font-semibold text-sm leading-tight line-clamp-2 text-left transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                           {service.nome}
                         </div>
                       </div>
@@ -236,7 +235,7 @@ export function ChoiceServicePage() {
                         <span className="text-green-300 font-bold text-sm">
                           {formatPrice(Number(service.preco))}
                         </span>
-                        <span className="text-green-200 text-[10px] font-medium bg-gray-800/50 px-1 py-0.5 rounded whitespace-nowrap">
+                        <span className="text-green-200 text-[10px] font-medium px-1 py-0.5 rounded whitespace-nowrap transition-colors duration-300" style={{ backgroundColor: "var(--bg-tertiary)" }}>
                           {service.duracao} min
                         </span>
                       </div>
@@ -249,7 +248,7 @@ export function ChoiceServicePage() {
                         </div>
                       )}
                     </div>
-                    <div className="text-[9px] text-gray-400 mt-auto">
+                    <div className="text-[9px] mt-auto transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                       Toque para {isSelected ? "remover" : "selecionar"}
                     </div>
                   </div>
@@ -435,7 +434,7 @@ export function ChoiceServicePage() {
               >
                 Prosseguir no agendamento
               </button>
-              <p className="text-xs text-gray-300 mt-2">
+              <p className="text-xs mt-2 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 {selectedServices.length} de 2 serviço(s) selecionado(s).
               </p>
             </div>

@@ -886,7 +886,7 @@ export function GestorHorariosPage() {
 
   if (!isGestor) {
     return (
-      <section className="min-h-screen bg-gray-800 flex flex-col text-white items-center justify-center">
+      <section className="min-h-screen flex flex-col items-center justify-center transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
         <h1 className="text-2xl font-bold mb-4">Acesso Negado</h1>
         <p className="text-gray-400">
           Apenas gestores podem acessar esta página.
@@ -903,7 +903,7 @@ export function GestorHorariosPage() {
   );
 
   return (
-    <section className="min-h-screen bg-gray-800 flex flex-col text-white">
+    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       <Header />
 
       <div className="px-4 py-8 md:px-8 flex-1">
