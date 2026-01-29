@@ -430,29 +430,29 @@ export function GestorServicosPage() {
           </button>
 
           {/* Banner */}
-          <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 rounded-lg mb-6 shadow-sm relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-lg mb-6 shadow-sm relative overflow-hidden">
             <div className="absolute inset-0">
               <img
                 alt="Serviços"
                 className="w-full h-full object-cover object-right-center opacity-15"
                 src="/image-1.png"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/90 via-orange-500/90 to-rose-500/90" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-blue-700/90 to-blue-800/90" />
             </div>
 
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                  <h1 className="text-xl md:text-2xl font-medium text-white mb-1">
                     Gerenciar Serviços
                   </h1>
-                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                  <p className="text-white/80 text-xs md:text-sm font-light">
                     Gerencie os serviços oferecidos pela sua barbearia
                   </p>
                 </div>
                 <PermissionGate requiredPermissions={["manage_services"]}>
                   <Button
-                    className="bg-white text-orange-600 font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
+                    className="bg-white text-black font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
                     color="primary"
                     size="sm"
                     startContent={<PlusIcon className="w-4 h-4" />}
@@ -579,14 +579,16 @@ export function GestorServicosPage() {
                           >
                             <Button
                               fullWidth
-                              className="transition-colors duration-300"
-                              style={{ color: "var(--text-primary)" }}
-                              color="primary"
+                              className="transition-colors duration-300 font-semibold"
+                              style={{ 
+                                backgroundColor: "#4ade80",
+                                color: "#000000",
+                              }}
                               size="sm"
                               startContent={
-                                <PencilIcon className="w-4 h-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }} />
+                                <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
                               }
-                              variant="flat"
+                              variant="solid"
                               onPress={() => handleOpenModal(service)}
                             >
                               Editar
@@ -597,12 +599,14 @@ export function GestorServicosPage() {
                           >
                             <Button
                               fullWidth
-                              className="transition-colors duration-300"
-                              style={{ color: "var(--text-primary)" }}
-                              color="danger"
+                              className="transition-colors duration-300 font-semibold"
+                              style={{ 
+                                backgroundColor: "#f87171",
+                                color: "#000000",
+                              }}
                               size="sm"
-                              startContent={<TrashIcon className="w-4 h-4" />}
-                              variant="flat"
+                              startContent={<TrashIcon className="w-4 h-4" style={{ color: "#000000" }} />}
+                              variant="solid"
                               onPress={() => {
                                 setSelectedService(service);
                                 onDeleteOpen();
@@ -625,6 +629,7 @@ export function GestorServicosPage() {
               </p>
               <PermissionGate requiredPermissions={["manage_services"]}>
                 <Button
+                  className="text-black"
                   color="primary"
                   startContent={<PlusIcon className="w-5 h-5" />}
                   onPress={() => handleOpenModal()}
@@ -640,10 +645,10 @@ export function GestorServicosPage() {
       {/* Modal de Cadastro/Edição */}
       <Modal
         classNames={{
-          base: "border transition-colors duration-300",
+          base: "border transition-colors duration-300 max-h-[95vh] my-2 rounded-t-lg",
           header:
-            "bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 border-b border-orange-500/30",
-          body: "py-6 transition-colors duration-300",
+            "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b border-blue-500/30 rounded-t-lg",
+          body: "py-6 transition-colors duration-300 overflow-y-auto max-h-[calc(95vh-200px)]",
           footer: "border-t transition-colors duration-300",
           closeButton:
             "transition-colors duration-300 hover:bg-white/20 focus:bg-white/20",
@@ -925,31 +930,31 @@ export function GestorServicosPage() {
       {/* Modal de Confirmação de Exclusão */}
       <Modal
         classNames={{
-          base: "bg-gray-900 border border-gray-700",
+          base: "border transition-colors duration-300",
           header:
-            "bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 border-b border-orange-500/30",
-          body: "bg-gray-900",
-          footer: "bg-gray-900 border-t border-gray-700",
+            "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b border-blue-500/30",
+          body: "transition-colors duration-300",
+          footer: "border-t transition-colors duration-300",
           closeButton:
             "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
       >
-        <ModalContent>
+        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader>
             <h2 className="text-xl font-bold text-white">Confirmar Exclusão</h2>
           </ModalHeader>
-          <ModalBody>
-            <p className="text-gray-300">
+          <ModalBody style={{ backgroundColor: "var(--bg-card)" }}>
+            <p className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
               Tem certeza que deseja excluir o serviço{" "}
-              <span className="font-semibold text-white">
+              <span className="font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 {selectedService?.nome}
               </span>
               ? Esta ação não pode ser desfeita.
             </p>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
             <Button
               color="danger"
               isDisabled={isSubmitting}

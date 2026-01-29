@@ -881,14 +881,14 @@ export function GestorBarbeirosPage() {
           </button>
 
           {/* Banner */}
-          <div className="bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500 rounded-lg mb-6 shadow-sm relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-lg mb-6 shadow-sm relative overflow-hidden">
             <div className="absolute inset-0">
               <img
                 alt="Barbeiro"
                 className="w-full h-full object-cover object-right-center opacity-15"
                 src="/image-1.png"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/90 via-emerald-500/90 to-cyan-500/90" />
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-blue-700/90 to-blue-800/90" />
             </div>
 
             <div className="relative z-10 p-4 md:p-5">
@@ -903,7 +903,7 @@ export function GestorBarbeirosPage() {
                 </div>
                 <PermissionGate requiredPermissions={["manage_barbers"]}>
                   <Button
-                    className="bg-white text-teal-600 font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
+                    className="bg-white text-black font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
                     color="primary"
                     size="sm"
                     startContent={<UserPlus size={18} />}
@@ -950,6 +950,7 @@ export function GestorBarbeirosPage() {
                   </p>
                   <PermissionGate requiredPermissions={["manage_barbers"]}>
                     <Button
+                      className="text-black"
                       color="primary"
                       startContent={<UserPlus size={20} />}
                       onPress={() => handleOpenModal()}
@@ -993,9 +994,13 @@ export function GestorBarbeirosPage() {
                         <div
                           className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-medium ${
                             isActive
-                              ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                              ? "text-white border"
                               : "bg-red-500/20 text-red-400 border border-red-500/30"
                           }`}
+                          style={isActive ? {
+                            backgroundColor: "#2563eb",
+                            borderColor: "#1d4ed8",
+                          } : undefined}
                         >
                           {isActive ? "Ativo" : "Inativo"}
                         </div>
@@ -1067,14 +1072,16 @@ export function GestorBarbeirosPage() {
                             >
                               <Button
                                 fullWidth
-                                className="transition-colors duration-300"
-                                style={{ color: "var(--text-primary)" }}
-                                color="primary"
+                                className="transition-colors duration-300 font-semibold"
+                                style={{ 
+                                  backgroundColor: "#4ade80",
+                                  color: "#000000",
+                                }}
                                 size="sm"
                                 startContent={
-                                  <PencilIcon className="w-4 h-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }} />
+                                  <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
                                 }
-                                variant="flat"
+                                variant="solid"
                                 onPress={() => handleOpenModal(barber)}
                               >
                                 Editar
@@ -1085,12 +1092,14 @@ export function GestorBarbeirosPage() {
                             >
                               <Button
                                 fullWidth
-                                className="transition-colors duration-300"
-                                style={{ color: "var(--text-primary)" }}
-                                color="danger"
+                                className="transition-colors duration-300 font-semibold"
+                                style={{ 
+                                  backgroundColor: "#f87171",
+                                  color: "#000000",
+                                }}
                                 size="sm"
-                                startContent={<TrashIcon className="w-4 h-4" />}
-                                variant="flat"
+                                startContent={<TrashIcon className="w-4 h-4" style={{ color: "#000000" }} />}
+                                variant="solid"
                                 onPress={() => {
                                   setSelectedBarber(barber);
                                   onDeleteOpen();
@@ -1114,9 +1123,9 @@ export function GestorBarbeirosPage() {
       {/* MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL */}
       <Modal
         classNames={{
-          base: "border transition-colors duration-300 max-h-[95vh] my-2",
+          base: "border transition-colors duration-300 max-h-[95vh] my-2 rounded-t-lg",
           header:
-            "bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 border-b border-teal-500/30",
+            "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b border-blue-500/30 rounded-t-lg",
           body: "py-6 transition-colors duration-300 overflow-y-auto max-h-[calc(95vh-200px)]",
           footer: "border-t transition-colors duration-300",
           closeButton:
@@ -1464,14 +1473,14 @@ export function GestorBarbeirosPage() {
               {selectedBarber ? (
                 <div className="flex items-center gap-3">
                   <Switch
-                    color={isActive ? "success" : "danger"}
+                    color={isActive ? "primary" : "danger"}
                     isSelected={isActive}
                     size="sm"
                     onValueChange={setIsActive}
                   >
                     <span
                       className={`text-sm font-medium ${
-                        isActive ? "text-green-400" : "text-red-400"
+                        isActive ? "text-blue-400" : "text-red-400"
                       }`}
                     >
                       {isActive ? "Ativo" : "Inativo"}
@@ -1502,31 +1511,31 @@ export function GestorBarbeirosPage() {
       {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
       <Modal
         classNames={{
-          base: "bg-gray-900 border border-gray-700",
+          base: "border transition-colors duration-300",
           header:
-            "bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 border-b border-teal-500/30",
-          body: "bg-gray-900",
-          footer: "bg-gray-900 border-t border-gray-700",
+            "bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 border-b border-blue-500/30",
+          body: "transition-colors duration-300",
+          footer: "border-t transition-colors duration-300",
           closeButton:
             "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
         }}
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
       >
-        <ModalContent>
+        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader>
             <h2 className="text-xl font-bold text-white">Confirmar Exclusão</h2>
           </ModalHeader>
-          <ModalBody>
-            <p className="text-gray-300">
+          <ModalBody style={{ backgroundColor: "var(--bg-card)" }}>
+            <p className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
               Tem certeza que deseja excluir o profissional{" "}
-              <span className="font-semibold text-white">
+              <span className="font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 {selectedBarber?.nome}
               </span>
               ? Esta ação não pode ser desfeita.
             </p>
           </ModalBody>
-          <ModalFooter>
+          <ModalFooter style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
             <Button
               color="danger"
               isDisabled={isSubmitting}

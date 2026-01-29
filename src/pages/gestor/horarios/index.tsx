@@ -25,6 +25,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useLoading } from "@/contexts/LoadingProvider";
+import { useTheme } from "@/contexts/ThemeProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
 import {
   GetHorariosFuncionamento,
@@ -316,6 +317,8 @@ export function GestorHorariosPage() {
   const { isGestor } = usePermissions();
   const { professionals, fetchProfessionals } = useSchedule();
   const { withLoading } = useLoading();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [horarios, setHorarios] = useState<IHorarioFuncionamento[]>([]);
   const [selectedDia, setSelectedDia] = useState<string | null>(null);
@@ -934,10 +937,10 @@ export function GestorHorariosPage() {
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                  <h1 className="text-xl md:text-2xl font-medium text-white mb-1">
                     Gerenciar Horários de Funcionamento
                   </h1>
-                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                  <p className="text-white/80 text-xs md:text-sm font-light">
                     Configure os horários de funcionamento da sua barbearia
                   </p>
                 </div>
@@ -1000,17 +1003,21 @@ export function GestorHorariosPage() {
                 return (
                   <Card
                     key={dia.value}
-                    className={`bg-gray-900 border ${
+                    className={`border ${
                       horario?.is_feriado
                         ? "border-red-500/50"
-                        : "border-gray-700"
+                        : ""
                     } transition-all duration-200 hover:border-blue-500`}
+                    style={{
+                      backgroundColor: isDark ? "#111827" : "var(--bg-tertiary)",
+                      borderColor: horario?.is_feriado ? undefined : isDark ? "#374151" : "var(--border-primary)",
+                    }}
                   >
                     <CardBody className="p-3">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                            <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                               {dia.label}
                             </h3>
                             {horario?.is_feriado && (
@@ -1026,12 +1033,15 @@ export function GestorHorariosPage() {
                           </div>
                         </div>
                         <Button
-                          color="primary"
                           size="sm"
-                          startContent={<PencilIcon className="w-3 h-3 text-white" />}
-                          variant="flat"
+                          startContent={<PencilIcon className="w-3 h-3" style={{ color: "#ffffff" }} />}
+                          variant="solid"
                           onPress={() => handleOpenModal(dia.value)}
-                          className="text-white"
+                          className="font-semibold"
+                          style={{
+                            backgroundColor: "#22c55e",
+                            color: "#ffffff",
+                          }}
                         >
                           {horario ? "Editar" : "Config"}
                         </Button>
@@ -1041,9 +1051,9 @@ export function GestorHorariosPage() {
                         <div className="space-y-3 text-xs">
                           {/* Horário de Funcionamento - Não exibir se for feriado */}
                           {!horario.is_feriado && (
-                            <div className="bg-gray-800/50 rounded-lg p-2.5 border border-gray-700/50">
+                            <div className="rounded-lg p-2.5 border transition-colors duration-300" style={{ backgroundColor: isDark ? "rgba(31, 41, 55, 0.5)" : "var(--bg-secondary)", borderColor: isDark ? "rgba(55, 65, 81, 0.5)" : "var(--border-primary)" }}>
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-gray-400 text-[10px] uppercase tracking-wide">
+                                <span className="text-[10px] uppercase tracking-wide transition-colors duration-300" style={{ color: isDark ? "#9ca3af" : "#404040" }}>
                                   Horário de Funcionamento
                             </span>
                           </div>
@@ -1062,7 +1072,7 @@ export function GestorHorariosPage() {
                           {/* Lista de Barbeiros - Não exibir se for feriado */}
                           {!horario.is_feriado && (
                             <div className="pt-2 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
-                              <span className="block mb-2 text-[10px] uppercase tracking-wide transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                              <span className="block mb-2 text-[10px] uppercase tracking-wide transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                                 Barbeiros{" "}
                           {horario.profissionais &&
                               horario.profissionais.length > 0
@@ -1080,7 +1090,8 @@ export function GestorHorariosPage() {
                                   return (
                                     <div
                                       key={profissional.id}
-                                      className="flex items-center gap-1.5 bg-gray-800 rounded-lg px-2 py-1.5 border border-gray-700/50 hover:border-blue-500/50 transition-colors"
+                                      className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 border hover:border-blue-500/50 transition-colors duration-300"
+                                      style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-tertiary)", borderColor: isDark ? "rgba(55, 65, 81, 0.5)" : "var(--border-primary)" }}
                                     >
                                       {/* Avatar do Barbeiro */}
                                       {avatarUrl ? (
@@ -1113,7 +1124,7 @@ export function GestorHorariosPage() {
                                           />
                                         );
                                       })()}
-                                      <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                                      <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                                         {profissional.nome}
                                 </span>
                               </div>
@@ -1121,7 +1132,7 @@ export function GestorHorariosPage() {
                                 })}
                               </div>
                             ) : (
-                              <p className="text-gray-500 text-[10px] italic">
+                              <p className="text-[10px] italic transition-colors duration-300" style={{ color: isDark ? "#6b7280" : "#6b6b6b" }}>
                                 Nenhum barbeiro atribuído
                               </p>
                             )}
@@ -1130,7 +1141,7 @@ export function GestorHorariosPage() {
                         </div>
                       ) : (
                         <div className="text-center py-3">
-                              <p className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                              <p className="text-xs transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                             Não configurado
                           </p>
                         </div>
@@ -1146,12 +1157,15 @@ export function GestorHorariosPage() {
               {abaAtiva === "excecoes" && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Calendário */}
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
+                  <div className="rounded-lg p-4 border transition-colors duration-300" style={{ backgroundColor: isDark ? "#111827" : "var(--bg-tertiary)", borderColor: isDark ? "#374151" : "var(--border-primary)" }}>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-white">Calendário</h3>
+                      <h3 className="text-lg font-semibold transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>Calendário</h3>
                       <div className="flex items-center gap-2">
                         <button
-                          className="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700"
+                          className="px-3 py-1 rounded transition-colors duration-300"
+                          style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-tertiary)", color: "var(--text-primary)" }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDark ? "#374151" : "var(--bg-hover)"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDark ? "#1f2937" : "var(--bg-tertiary)"}
                           onClick={() => {
                             if (mesCalendario === 0) {
                               setMesCalendario(11);
@@ -1163,11 +1177,14 @@ export function GestorHorariosPage() {
                         >
                           &lt;&lt;
                         </button>
-                        <span className="text-white font-medium min-w-[120px] text-center">
+                        <span className="font-medium min-w-[120px] text-center transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                           {new Date(anoCalendario, mesCalendario).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
                         </span>
                         <button
-                          className="px-3 py-1 bg-gray-800 text-white rounded hover:bg-gray-700"
+                          className="px-3 py-1 rounded transition-colors duration-300"
+                          style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-tertiary)", color: "var(--text-primary)" }}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = isDark ? "#374151" : "var(--bg-hover)"}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isDark ? "#1f2937" : "var(--bg-tertiary)"}
                           onClick={() => {
                             if (mesCalendario === 11) {
                               setMesCalendario(0);
@@ -1183,7 +1200,7 @@ export function GestorHorariosPage() {
                     </div>
                     <div className="grid grid-cols-7 gap-1 mb-2">
                       {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((dia) => (
-                        <div key={dia} className="text-center text-xs text-gray-400 font-medium py-1">
+                        <div key={dia} className="text-center text-xs font-medium py-1 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                           {dia}
                         </div>
                       ))}
@@ -1206,11 +1223,23 @@ export function GestorHorariosPage() {
                               isHoje
                                 ? "bg-blue-500 text-white"
                                 : excecao
-                                  ? "bg-purple-500/30 text-purple-300 border border-purple-500"
-                                  : isPassado
-                                    ? "bg-gray-800 text-gray-500"
-                                    : "bg-gray-800 text-white hover:bg-gray-700"
+                                  ? `border border-purple-500 ${isDark ? "bg-purple-500/30 text-purple-300" : "bg-purple-500/20 text-purple-700"}`
+                                  : ""
                             }`}
+                            style={!isHoje && !excecao ? {
+                              backgroundColor: isPassado ? (isDark ? "#1f2937" : "var(--bg-tertiary)") : (isDark ? "#1f2937" : "var(--bg-tertiary)"),
+                              color: isPassado ? "var(--text-tertiary)" : "var(--text-primary)",
+                            } : undefined}
+                            onMouseEnter={(e) => {
+                              if (!isHoje && !excecao && !isPassado) {
+                                e.currentTarget.style.backgroundColor = isDark ? "#374151" : "var(--bg-hover)";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!isHoje && !excecao && !isPassado) {
+                                e.currentTarget.style.backgroundColor = isDark ? "#1f2937" : "var(--bg-tertiary)";
+                              }
+                            }}
                             onClick={() => handleOpenModalExcecao(dia.data, excecao)}
                             disabled={isPassado}
                           >
@@ -1220,18 +1249,18 @@ export function GestorHorariosPage() {
                         );
                       })}
                       </div>
-                      <div className="mt-6 pt-4 border-t border-gray-700">
-                        <h4 className="text-sm font-semibold text-white mb-3">Legendas:</h4>
+                      <div className="mt-6 pt-4 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
+                        <h4 className="text-sm font-semibold mb-3 transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>Legendas:</h4>
                         <div className="space-y-2.5">
                           <div className="flex items-center gap-3">
                             <div className="w-5 h-5 rounded bg-blue-500 flex-shrink-0"></div>
-                            <p className="text-xs text-gray-300">
+                            <p className="text-xs transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                               Dia atual
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="w-5 h-5 rounded bg-purple-500/30 border border-purple-500 flex-shrink-0"></div>
-                            <p className="text-xs text-gray-300">
+                            <p className="text-xs transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                               * Datas com exceção
                             </p>
                           </div>
@@ -1240,13 +1269,13 @@ export function GestorHorariosPage() {
                   </div>
 
                   {/* Lista de Exceções */}
-                  <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
-                    <h3 className="text-lg font-semibold text-white mb-4">
+                  <div className="rounded-lg p-4 border transition-colors duration-300" style={{ backgroundColor: isDark ? "#111827" : "var(--bg-tertiary)", borderColor: isDark ? "#374151" : "var(--border-primary)" }}>
+                    <h3 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                       Lista de Exceções (ordenada por data)
                     </h3>
                     <div className="space-y-3 max-h-[600px] overflow-y-auto">
                       {excecoes.length === 0 ? (
-                        <p className="text-gray-400 text-sm text-center py-8">
+                        <p className="text-sm text-center py-8 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                           Nenhuma exceção cadastrada
                         </p>
                       ) : (
@@ -1273,44 +1302,53 @@ export function GestorHorariosPage() {
                             return (
                               <div
                                 key={excecao.id}
-                                className="bg-gray-800 rounded-lg p-3 border border-gray-700"
+                                className="rounded-lg p-3 border transition-colors duration-300"
+                                style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-secondary)", borderColor: isDark ? "#374151" : "var(--border-primary)" }}
                               >
                                 <div className="flex items-start justify-between mb-2">
                                   <div>
-                                    <div className="text-purple-400 font-semibold">
+                                    <div className="font-semibold transition-colors duration-300" style={{ color: isDark ? "#a78bfa" : "#9333ea" }}>
                                       {dataFormatada} ({diaSemana})
                                     </div>
-                                    <div className="text-white text-sm mt-1">
+                                    <div className="text-sm mt-1 transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                                       {excecao.is_feriado
                                         ? "FECHADO"
                                         : `${excecao.horario_abertura} - ${excecao.horario_fechamento}`}
                                     </div>
                                     {excecao.tem_almoco && !excecao.is_feriado && (
-                                      <div className="text-gray-400 text-xs mt-1">
+                                      <div className="text-xs mt-1 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                                         • {excecao.horario_almoco_inicio} - {excecao.horario_almoco_fim} (almoço)
                                       </div>
                                     )}
                                     {!excecao.tem_almoco && !excecao.is_feriado && (
-                                      <div className="text-gray-400 text-xs mt-1">
+                                      <div className="text-xs mt-1 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                                         • sem almoço
                                       </div>
                                     )}
                                   </div>
                                   <div className="flex gap-2">
                                     <Button
-                                      color="primary"
                                       size="sm"
-                                      variant="flat"
+                                      variant="solid"
+                                      className="font-semibold"
+                                      style={{
+                                        backgroundColor: "#22c55e",
+                                        color: "#ffffff",
+                                      }}
                                       onPress={() => handleOpenModalExcecao(dataExcecao, excecao)}
                                     >
                                       Editar
                                     </Button>
                                     <Button
-                                      color="danger"
                                       size="sm"
-                                      variant="flat"
+                                      variant="solid"
+                                      className="font-semibold"
+                                      style={{
+                                        backgroundColor: "#ef4444",
+                                        color: "#ffffff",
+                                      }}
                                       onPress={() => handleDeleteExcecao(excecao.id)}
-                                      startContent={<TrashIcon className="w-4 h-4" />}
+                                      startContent={<TrashIcon className="w-4 h-4" style={{ color: "#ffffff" }} />}
                                     >
                                       Excluir
                                     </Button>
