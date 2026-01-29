@@ -19,12 +19,12 @@ export function ThemeToggle() {
       aria-label={`Alternar para tema ${isDark ? "claro" : "escuro"}`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full shadow-lg transition-transform duration-300 ease-in-out flex items-center justify-center border ${
-          isDark ? "translate-x-6" : "translate-x-1"
+        className={`inline-block h-5 w-5 transform rounded-full shadow-lg transition-transform duration-300 ease-in-out flex items-center justify-center ${
+          isDark ? "translate-x-6 border" : "translate-x-1"
         }`}
         style={{
           backgroundColor: isDark ? "var(--accent-gold)" : "#ffffff",
-          borderColor: "#000000",
+          borderColor: isDark ? "#000000" : "transparent",
         }}
       >
         {isDark ? (

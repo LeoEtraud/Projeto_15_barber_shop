@@ -164,19 +164,34 @@ function getInitials(nomeCompleto: string): string {
 }
 
 // Função para obter URL do avatar
+// O servidor salva avatares como base64 no banco de dados (Render/Vercel)
 function getAvatarUrl(avatar: string | undefined): string | null {
   if (!avatar) return null;
 
-  // Se o avatar já é base64, retorna diretamente
+  // Se o avatar já é base64 (formato do banco de dados), retorna diretamente
   if (avatar.startsWith("data:image")) {
     return avatar;
   }
 
+  // Se já é uma URL completa (fallback para casos especiais), retorna diretamente
+  if (avatar.startsWith("http://") || avatar.startsWith("https://")) {
+    return avatar;
+  }
+
+  // Se o avatar não começa com "data:image" mas parece ser base64 (sem prefixo),
+  // adiciona o prefixo necessário
+  if (avatar.length > 100 && /^[A-Za-z0-9+/=]+$/.test(avatar)) {
+    // Parece ser base64 puro, adiciona prefixo genérico
+    return `data:image/jpeg;base64,${avatar}`;
+  }
+
+  // Se chegou aqui, tenta construir URL da API apenas como último recurso
   const apiUrl = import.meta.env.VITE_API;
+  if (apiUrl) {
+    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+  }
 
-  if (!apiUrl) return null;
-
-  return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+  return null;
 }
 
 // Função para calcular horários disponíveis
@@ -324,6 +339,8 @@ export function GestorHorariosPage() {
   const [horarios, setHorarios] = useState<IHorarioFuncionamento[]>([]);
   const [selectedDia, setSelectedDia] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Estado para controlar qual aba está ativa
   const [abaAtiva, setAbaAtiva] = useState<"padrao" | "excecoes">("padrao");
@@ -1109,10 +1126,21 @@ export function GestorHorariosPage() {
               {abaAtiva === "padrao" && (
                 <>
                   {/* Mobile: Carrossel horizontal com scroll suave */}
-                  <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x">
-                    <div className="flex gap-4 min-w-max pb-1">
-                      {DIAS_SEMANA.map((dia) => {
-                        const horario = getHorarioByDia(dia.value);
+                  <div className="md:hidden">
+                    <div 
+                      ref={carouselRef}
+                      className="overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x"
+                      onScroll={(e) => {
+                        const container = e.currentTarget;
+                        const scrollLeft = container.scrollLeft;
+                        const cardWidth = container.clientWidth * 0.85 + 16; // 85vw + gap
+                        const index = Math.round(scrollLeft / cardWidth);
+                        setActiveCardIndex(Math.min(index, DIAS_SEMANA.length - 1));
+                      }}
+                    >
+                      <div className="flex gap-4 min-w-max pb-1">
+                        {DIAS_SEMANA.map((dia, index) => {
+                          const horario = getHorarioByDia(dia.value);
                         
                         // Busca o horário PADRAO para comparação
                         const horariosDoDia = horariosEnriquecidos.filter(
@@ -1131,6 +1159,7 @@ export function GestorHorariosPage() {
                         return (
                           <Card
                             key={dia.value}
+                            data-card-index={index}
                             className={`border flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center ${
                               horario?.is_feriado
                                 ? "border-red-500/50"
@@ -1167,7 +1196,7 @@ export function GestorHorariosPage() {
                                   variant="light"
                                   onPress={() => handleOpenModal(dia.value)}
                                 >
-                                  <PencilIcon className="w-4 h-4" style={{ color: "#ffffff" }} />
+                                  <PencilIcon className="w-4 h-4 md:hidden" style={{ color: "#22c55e" }} />
                                 </Button>
                               </div>
 
@@ -1265,6 +1294,32 @@ export function GestorHorariosPage() {
                           </Card>
                         );
                       })}
+                      </div>
+                    </div>
+                    
+                    {/* Indicadores de posição do carrossel */}
+                    <div className="flex justify-center gap-2 mt-4 md:hidden">
+                      {DIAS_SEMANA.map((_, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          className={`transition-all duration-300 rounded-full ${
+                            activeCardIndex === index
+                              ? isDark ? "bg-gray-400 w-8" : "bg-green-500 w-8"
+                              : isDark ? "bg-gray-600 w-2" : "bg-gray-300 w-2"
+                          } h-2`}
+                          onClick={() => {
+                            if (carouselRef.current) {
+                              const cardWidth = carouselRef.current.clientWidth * 0.85 + 16;
+                              carouselRef.current.scrollTo({
+                                left: index * cardWidth,
+                                behavior: "smooth",
+                              });
+                            }
+                          }}
+                          aria-label={`Ir para card ${index + 1}`}
+                        />
+                      ))}
                     </div>
                   </div>
 

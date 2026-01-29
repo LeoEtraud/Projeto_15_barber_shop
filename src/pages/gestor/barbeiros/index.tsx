@@ -472,30 +472,39 @@ export function GestorBarbeirosPage() {
   };
 
   // FUNÇÃO PARA OBTER URL DO AVATAR
+  // O servidor salva avatares como base64 no banco de dados (Render/Vercel)
   const getAvatarUrl = (avatar: string | undefined | null): string | null => {
     if (!avatar || avatar.trim() === "") return null;
 
-    // Se o avatar já é base64, retorna diretamente
+    // Se o avatar já é base64 (formato do banco de dados), retorna diretamente
     if (avatar.startsWith("data:image")) {
       return avatar;
     }
 
-    // Se já é uma URL completa, retorna diretamente
+    // Se já é uma URL completa (fallback para casos especiais), retorna diretamente
     if (avatar.startsWith("http://") || avatar.startsWith("https://")) {
       return avatar;
     }
 
-    const apiUrl = import.meta.env.VITE_API;
-
-    if (!apiUrl) {
-      console.warn("[Frontend] VITE_API não configurado, não é possível construir URL do avatar");
-      return null;
+    // Se o avatar não começa com "data:image" mas parece ser base64 (sem prefixo),
+    // adiciona o prefixo necessário
+    // Isso pode acontecer se o backend retornar apenas os dados base64 sem o prefixo
+    if (avatar.length > 100 && /^[A-Za-z0-9+/=]+$/.test(avatar)) {
+      // Parece ser base64 puro, adiciona prefixo genérico
+      return `data:image/jpeg;base64,${avatar}`;
     }
 
-    // Remove barras iniciais se houver
-    const cleanAvatar = avatar.replace(/^\/+/, "");
-    
-    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(cleanAvatar)}`;
+    // Se chegou aqui, o avatar não está em um formato reconhecido
+    // Tenta construir URL da API apenas como último recurso (para compatibilidade)
+    const apiUrl = import.meta.env.VITE_API;
+    if (apiUrl) {
+      const cleanAvatar = avatar.replace(/^\/+/, "");
+      const fileName = cleanAvatar.split("/").pop() || cleanAvatar;
+      return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(fileName)}`;
+    }
+
+    // Se não conseguiu processar, retorna null para usar imagem padrão
+    return null;
   };
 
   // FUNÇÃO PARA ABRIR O MODAL DE CADASTRO/ATUALIZAÇÃO DE PROFISSIONAL
@@ -995,37 +1004,41 @@ export function GestorBarbeirosPage() {
                             {(() => {
                               const avatarUrl = getAvatarUrl(barber.avatar);
                               
-                              return avatarUrl ? (
-                                <img
-                                  alt={barber.nome}
-                                  className="w-16 h-16 rounded-full object-cover border-2 flex-shrink-0 transition-colors duration-300"
-                                  style={{ borderColor: "var(--border-primary)" }}
-                                  src={avatarUrl}
-                                  onError={(e) => {
-                                    // Se a imagem falhar, mostra o ícone de usuário
-                                    const target = e.currentTarget;
-                                    target.style.display = "none";
-                                    const fallback = target.nextElementSibling as HTMLElement;
-                                    if (fallback) {
-                                      fallback.classList.remove("hidden");
-                                    }
-                                  }}
-                                />
-                              ) : null;
-                            })()}
-                            {(() => {
-                              const hasAvatar = barber.avatar && barber.avatar.trim() !== "";
-                              if (hasAvatar) return null;
+                              if (!avatarUrl) {
+                                // Se não há URL, mostra imagem padrão diretamente
+                                return (
+                                  <img
+                                    alt={barber.nome}
+                                    className="w-16 h-16 rounded-full object-cover border-2 flex-shrink-0 transition-colors duration-300"
+                                    style={{ borderColor: "var(--border-primary)" }}
+                                    src={getDefaultBarberImage(barber.nome)}
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                );
+                              }
                               
                               return (
                                 <img
                                   alt={barber.nome}
                                   className="w-16 h-16 rounded-full object-cover border-2 flex-shrink-0 transition-colors duration-300"
                                   style={{ borderColor: "var(--border-primary)" }}
-                                  src={getDefaultBarberImage(barber.nome)}
+                                  src={avatarUrl}
                                   onError={(e) => {
-                                    // Se a imagem padrão falhar, esconde o elemento
-                                    e.currentTarget.style.display = "none";
+                                    // Se a imagem falhar, tenta usar a imagem padrão
+                                    const target = e.currentTarget;
+                                    const defaultImage = getDefaultBarberImage(barber.nome);
+                                    if (target.src !== defaultImage) {
+                                      target.src = defaultImage;
+                                    } else {
+                                      // Se a imagem padrão também falhar, esconde o elemento
+                                      target.style.display = "none";
+                                    }
+                                    // Log para debug em produção
+                                    if (import.meta.env.PROD) {
+                                      console.error("[Frontend] Erro ao carregar avatar:", avatarUrl, "Tentando fallback");
+                                    }
                                   }}
                                 />
                               );

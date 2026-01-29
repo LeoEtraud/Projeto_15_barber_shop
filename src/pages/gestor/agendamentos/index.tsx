@@ -57,24 +57,34 @@ function getInitials(nomeCompleto: string): string {
 }
 
 // Função para obter URL do avatar
+// O servidor salva avatares como base64 no banco de dados (Render/Vercel)
 function getAvatarUrl(avatar: string | undefined): string | null {
   if (!avatar) return null;
 
-  // Se o avatar já é base64, retorna diretamente
+  // Se o avatar já é base64 (formato do banco de dados), retorna diretamente
   if (avatar.startsWith("data:image")) {
     return avatar;
   }
 
-  // Se já é uma URL completa, retorna diretamente
+  // Se já é uma URL completa (fallback para casos especiais), retorna diretamente
   if (avatar.startsWith("http://") || avatar.startsWith("https://")) {
     return avatar;
   }
 
+  // Se o avatar não começa com "data:image" mas parece ser base64 (sem prefixo),
+  // adiciona o prefixo necessário
+  if (avatar.length > 100 && /^[A-Za-z0-9+/=]+$/.test(avatar)) {
+    // Parece ser base64 puro, adiciona prefixo genérico
+    return `data:image/jpeg;base64,${avatar}`;
+  }
+
+  // Se chegou aqui, tenta construir URL da API apenas como último recurso
   const apiUrl = import.meta.env.VITE_API;
+  if (apiUrl) {
+    return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+  }
 
-  if (!apiUrl) return null;
-
-  return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
+  return null;
 }
 
 export function GestorAgendamentosPage() {
