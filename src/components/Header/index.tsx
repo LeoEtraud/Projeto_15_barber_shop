@@ -26,7 +26,7 @@ function Header() {
   }
 
   return (
-    <header className="w-full flex items-center justify-between px-3 py-2 bg-[var(--bg-card)] border-b border-[var(--border-primary)] sticky top-0 z-50 transition-colors duration-300 shadow-sm">
+    <header className="w-full flex items-center justify-between px-3 py-1.5 bg-[var(--bg-card)] border-b border-[var(--border-primary)] sticky top-0 z-50 transition-colors duration-300 shadow-sm">
       <div className="flex items-center gap-2">
         <button
           aria-label="Ir para inicial"
@@ -36,7 +36,7 @@ function Header() {
         >
           <img
             alt="Logo da Barbearia"
-            className="h-12 w-12 md:h-12 md:w-12 select-none border-1 border-[var(--border-primary)] rounded-lg transition-colors duration-300"
+            className="h-10 w-10 md:h-10 md:w-10 select-none border-1 border-[var(--border-primary)] rounded-lg transition-colors duration-300"
             src="/logo-ia.png"
           />
           <span className="text-[var(--text-primary)] font-semibold text-base transition-colors duration-300">
@@ -92,7 +92,7 @@ function Header() {
                 </div>
                 <Avatar
                   isBordered
-                  className="w-9 h-9 md:w-9 md:h-9 text-xs flex-shrink-0 active:scale-100"
+                  className="w-8 h-8 md:w-8 md:h-8 text-xs flex-shrink-0 active:scale-100"
                   color="default"
                 >
                   {getUserInitials(user.user.nome ?? "")}

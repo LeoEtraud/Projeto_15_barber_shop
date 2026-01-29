@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { addToast } from "@heroui/react";
@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
+import { useTheme } from "@/contexts/ThemeProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
 import { getNomeSobrenome } from "@/utils/format-nome";
 
@@ -91,6 +92,8 @@ export function GestorAgendamentosPage() {
   const navigate = useNavigate();
   const { isGestor } = usePermissions();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const {
     professionals,
     fetchAppointmentsByProfessional,
@@ -110,6 +113,8 @@ export function GestorAgendamentosPage() {
   const [novoBarbeiro, setNovoBarbeiro] = useState<string>("");
   const [novoHorario, setNovoHorario] = useState<string>("");
   const [isRemarcando, setIsRemarcando] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Buscar profissionais ao carregar a página
   useEffect(() => {
@@ -868,8 +873,19 @@ export function GestorAgendamentosPage() {
             {barbeiroSelecionado && (
               <div>
                 {/* Mobile: Carrossel horizontal com scroll suave */}
-                <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x">
-                  <div className="flex gap-3 min-w-max pb-1">
+                <div className="md:hidden">
+                  <div
+                    ref={carouselRef}
+                    className="overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x"
+                    onScroll={(e) => {
+                      const container = e.currentTarget;
+                      const scrollLeft = container.scrollLeft;
+                      const cardWidth = container.clientWidth * 0.85 + 12; // 85vw + gap (gap-3 = 12px)
+                      const index = Math.round(scrollLeft / cardWidth);
+                      setActiveCardIndex(Math.min(index, dias.length - 1));
+                    }}
+                  >
+                    <div className="flex gap-3 min-w-max pb-1">
                     {dias.map((diaInfo, index) => {
                       const dataFormatada = formatarData(diaInfo.data);
                       const diaSemanaMap: Record<string, string> = {
@@ -968,6 +984,32 @@ export function GestorAgendamentosPage() {
                         </div>
                       );
                     })}
+                    </div>
+                  </div>
+
+                  {/* Indicadores de posição do carrossel */}
+                  <div className="flex justify-center gap-2 mt-4 md:hidden">
+                    {dias.map((_, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className={`transition-all duration-300 rounded-full ${
+                          activeCardIndex === index
+                            ? isDark ? "bg-gray-400 w-8" : "bg-green-500 w-8"
+                            : isDark ? "bg-gray-600 w-2" : "bg-gray-300 w-2"
+                        } h-2`}
+                        onClick={() => {
+                          if (carouselRef.current) {
+                            const cardWidth = carouselRef.current.clientWidth * 0.85 + 12;
+                            carouselRef.current.scrollTo({
+                              left: index * cardWidth,
+                              behavior: "smooth",
+                            });
+                          }
+                        }}
+                        aria-label={`Ir para card ${index + 1}`}
+                      />
+                    ))}
                   </div>
                 </div>
 

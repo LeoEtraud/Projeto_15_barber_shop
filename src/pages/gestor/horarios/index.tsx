@@ -1133,9 +1133,19 @@ export function GestorHorariosPage() {
                       onScroll={(e) => {
                         const container = e.currentTarget;
                         const scrollLeft = container.scrollLeft;
-                        const cardWidth = container.clientWidth * 0.85 + 16; // 85vw + gap
+                        // Calcula a largura do card: 85vw + gap (gap-4 = 16px)
+                        // Usa window.innerWidth para obter a viewport width real
+                        const cardWidth = window.innerWidth * 0.85 + 16;
                         const index = Math.round(scrollLeft / cardWidth);
-                        setActiveCardIndex(Math.min(index, DIAS_SEMANA.length - 1));
+                        // Garante que o índice não ultrapasse o último card
+                        const maxIndex = DIAS_SEMANA.length - 1;
+                        // Se estiver próximo do final do scroll, força o último índice
+                        const scrollMax = container.scrollWidth - container.clientWidth;
+                        if (scrollLeft >= scrollMax - 10) {
+                          setActiveCardIndex(maxIndex);
+                        } else {
+                          setActiveCardIndex(Math.min(index, maxIndex));
+                        }
                       }}
                     >
                       <div className="flex gap-4 min-w-max pb-1">
@@ -1310,7 +1320,7 @@ export function GestorHorariosPage() {
                           } h-2`}
                           onClick={() => {
                             if (carouselRef.current) {
-                              const cardWidth = carouselRef.current.clientWidth * 0.85 + 16;
+                              const cardWidth = window.innerWidth * 0.85 + 16;
                               carouselRef.current.scrollTo({
                                 left: index * cardWidth,
                                 behavior: "smooth",
