@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
-export function Header() {
+function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -49,9 +49,12 @@ export function Header() {
         <ThemeToggle />
         {user?.user ? (
           <Dropdown
-            placement="bottom-end"
+            placement="bottom-start"
             shouldBlockScroll={false}
             backdrop="transparent"
+            classNames={{
+              base: "md:!left-auto md:!right-0",
+            }}
             motionProps={{
               variants: {
                 enter: {
@@ -122,3 +125,6 @@ export function Header() {
     </header>
   );
 }
+
+export { Header };
+export default Header;

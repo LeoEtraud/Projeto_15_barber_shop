@@ -34,6 +34,7 @@ import {
   DeleteProfessional,
 } from "@/contexts/ScheduleProvider/util";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+import { getNomeSobrenome } from "@/utils/format-nome";
 import { formatPhone, formatDate, normalizeName } from "@/utils/format-Cpf-Phone";
 import { IBarbers, IProfessionals } from "@/contexts/ScheduleProvider/types";
 
@@ -262,23 +263,6 @@ const schema = yup.object().shape({
 });
 
 
-// FUNÇÃO PARA OBTER APENAS NOME E SOBRENOME
-function getNomeSobrenome(nomeCompleto: string): string {
-  const nomes =
-    nomeCompleto
-      ?.trim()
-      .split(" ")
-      .filter((n) => n.length > 0) || [];
-
-  if (nomes.length === 0) return "";
-
-  if (nomes.length === 1) {
-    return nomes[0];
-  }
-
-  // Retorna o primeiro nome e o último sobrenome
-  return `${nomes[0]} ${nomes[nomes.length - 1]}`;
-}
 
 /**
  * Página de Gerenciamento de Profissionais - Apenas para Gestores
@@ -1066,46 +1050,44 @@ export function GestorBarbeirosPage() {
                             </div>
                           </div>
 
-                          <div className="flex gap-2 mt-3">
+                          <div className="flex justify-end gap-2 mt-3">
                             <PermissionGate
                               requiredPermissions={["manage_barbers"]}
                             >
                               <Button
-                                fullWidth
-                                className="transition-colors duration-300 font-semibold"
+                                className="transition-colors duration-300 font-semibold min-w-[50px]"
                                 style={{ 
                                   backgroundColor: "#4ade80",
                                   color: "#000000",
                                 }}
                                 size="sm"
-                                startContent={
-                                  <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
-                                }
+                                isIconOnly
+                                aria-label="Editar"
                                 variant="solid"
                                 onPress={() => handleOpenModal(barber)}
                               >
-                                Editar
+                                <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
                               </Button>
                             </PermissionGate>
                             <PermissionGate
                               requiredPermissions={["manage_barbers"]}
                             >
                               <Button
-                                fullWidth
-                                className="transition-colors duration-300 font-semibold"
+                                className="transition-colors duration-300 font-semibold min-w-[50px]"
                                 style={{ 
                                   backgroundColor: "#f87171",
                                   color: "#000000",
                                 }}
                                 size="sm"
-                                startContent={<TrashIcon className="w-4 h-4" style={{ color: "#000000" }} />}
+                                isIconOnly
+                                aria-label="Excluir"
                                 variant="solid"
                                 onPress={() => {
                                   setSelectedBarber(barber);
                                   onDeleteOpen();
                                 }}
                               >
-                                Excluir
+                                <TrashIcon className="w-4 h-4" style={{ color: "#000000" }} />
                               </Button>
                             </PermissionGate>
                           </div>
@@ -1300,6 +1282,14 @@ export function GestorBarbeirosPage() {
                       label="Nome Completo"
                       maxLength={100}
                       placeholder="Digite o nome completo"
+                      onFocus={(e) => {
+                        // No mobile, faz scroll para o campo quando focado
+                        if (window.innerWidth <= 768) {
+                          setTimeout(() => {
+                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 300);
+                        }
+                      }}
                       onChange={(e) => {
                         const value = e.target.value;
 
@@ -1339,7 +1329,14 @@ export function GestorBarbeirosPage() {
                       maxLength={60}
                       placeholder="Digite o email"
                       type="email"
-                      onFocus={(e) => e.target.focus()}
+                      onFocus={(e) => {
+                        // No mobile, faz scroll para o campo quando focado
+                        if (window.innerWidth <= 768) {
+                          setTimeout(() => {
+                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 300);
+                        }
+                      }}
                       onChange={(e) => {
                         const value = e.target.value;
 
@@ -1379,7 +1376,14 @@ export function GestorBarbeirosPage() {
                       maxLength={15}
                       placeholder="(00) 00000-0000"
                       type="tel"
-                      onFocus={(e) => e.target.focus()}
+                      onFocus={(e) => {
+                        // No mobile, faz scroll para o campo quando focado
+                        if (window.innerWidth <= 768) {
+                          setTimeout(() => {
+                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 300);
+                        }
+                      }}
                       value={formatPhone(field.value || "")}
                       onChange={(e) => {
                         const formatted = formatPhone(e.target.value);
@@ -1416,7 +1420,14 @@ export function GestorBarbeirosPage() {
                       label="Data de Nascimento"
                       maxLength={10}
                       placeholder="DD/MM/AAAA"
-                      onFocus={(e) => e.target.focus()}
+                      onFocus={(e) => {
+                        // No mobile, faz scroll para o campo quando focado
+                        if (window.innerWidth <= 768) {
+                          setTimeout(() => {
+                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 300);
+                        }
+                      }}
                       value={field.value ? formatDate(field.value) : ""}
                       onChange={(e) => {
                         // Remove tudo que não é número
@@ -1449,7 +1460,14 @@ export function GestorBarbeirosPage() {
                           color: "var(--input-text)",
                         }}
                         id="funcao-select"
-                        onFocus={(e) => e.target.focus()}
+                        onFocus={(e) => {
+                          // No mobile, faz scroll para o campo quando focado
+                          if (window.innerWidth <= 768) {
+                            setTimeout(() => {
+                              e.target.scrollIntoView({ behavior: "smooth", block: "center" });
+                            }, 300);
+                          }
+                        }}
                       >
                         <option value="">Selecione uma função</option>
                         {FUNCOES.map((funcao) => (

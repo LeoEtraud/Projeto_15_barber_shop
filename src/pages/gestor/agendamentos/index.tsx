@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+import { getNomeSobrenome } from "@/utils/format-nome";
 
 // Função para formatar data para comparação
 function formatarDataParaComparacao(data: Date): string {
@@ -732,7 +733,7 @@ export function GestorAgendamentosPage() {
                                 : ""}
                             </div>
                             <span className="flex-1 text-left">
-                              {barbeiro?.nome || "Selecione um barbeiro"}
+                              {barbeiro?.nome ? getNomeSobrenome(barbeiro.nome) : "Selecione um barbeiro"}
                             </span>
                           </>
                         );
@@ -827,7 +828,7 @@ export function GestorAgendamentosPage() {
                               >
                                 {getInitials(barbeiro.nome)}
                               </div>
-                              <span className="flex-1">{barbeiro.nome}</span>
+                              <span className="flex-1">{getNomeSobrenome(barbeiro.nome)}</span>
                               {barbeiroSelecionado === barbeiro.id && (
                                 <svg
                                   className="w-4 h-4 text-blue-400"
@@ -855,8 +856,113 @@ export function GestorAgendamentosPage() {
 
             {/* Grid de Agendamentos por Data */}
             {barbeiroSelecionado && (
-              <div className="overflow-x-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3 min-w-[200px]">
+              <div>
+                {/* Mobile: Carrossel horizontal com scroll suave */}
+                <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x">
+                  <div className="flex gap-3 min-w-max pb-1">
+                    {dias.map((diaInfo, index) => {
+                      const dataFormatada = formatarData(diaInfo.data);
+                      const diaSemanaMap: Record<string, string> = {
+                        DOMINGO: "Dom",
+                        SEGUNDA: "Seg",
+                        TERCA: "Ter",
+                        QUARTA: "Qua",
+                        QUINTA: "Qui",
+                        SEXTA: "Sex",
+                        SABADO: "Sáb",
+                      };
+                      const diaSemana = diaSemanaMap[diaInfo.diaSemana] || diaInfo.diaSemana;
+                      const slots = gerarSlotsComAgendamentos(diaInfo.horario, diaInfo.data);
+                      const { agendados, disponiveis } = contarHorariosPorData(
+                        diaInfo.data,
+                        diaInfo.horario
+                      );
+
+                      return (
+                        <div
+                          key={index}
+                          className="bg-gray-800 rounded-lg p-2.5 border border-gray-700 flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center"
+                        >
+                          <div className="text-white font-semibold mb-1.5 text-center text-sm">
+                            {diaSemana} {dataFormatada}
+                          </div>
+
+                          {/* Estatísticas */}
+                          <div className="flex justify-between items-center mb-2 text-[10px]">
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-green-400 font-bold text-xs">●</span>
+                              <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{disponiveis}</span>
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-red-400 font-bold text-xs">●</span>
+                              <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{agendados}</span>
+                            </div>
+                          </div>
+
+                          {diaInfo.horario && !diaInfo.horario.is_feriado ? (
+                            <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                              {slots.map((slot, slotIndex) => {
+                                if (slot.isSlotAlmoco) {
+                                  return (
+                                    <div
+                                      key={slotIndex}
+                                      className="py-1 px-1.5 rounded text-center text-[10px] font-medium transition-colors duration-300"
+                                      style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}
+                                    >
+                                      Almoço: {slot.hora}
+                                    </div>
+                                  );
+                                }
+
+                                if (slot.agendamento) {
+                                  return (
+                                    <button
+                                      key={slotIndex}
+                                      className="w-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-left p-1.5 rounded transition-all cursor-pointer"
+                                      type="button"
+                                      onClick={() => handleClickAgendamento(slot.agendamento!)}
+                                    >
+                                      <div className="text-red-400 font-semibold text-[10px] mb-0.5">
+                                        {slot.hora}
+                                      </div>
+                                      <div className="text-[10px] font-medium mb-0.5 line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                                        {slot.agendamento.cliente?.nome || "Cliente não informado"}
+                                      </div>
+                                      {slot.agendamento.servicos && slot.agendamento.servicos.length > 0 && (
+                                        <div className="text-[9px] line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                                          {slot.agendamento.servicos.join(", ")}
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                }
+
+                                return (
+                                  <div
+                                    key={slotIndex}
+                                    className="bg-green-500/20 text-green-400 py-1 px-1.5 rounded text-center text-[10px]"
+                                  >
+                                    {slot.hora} • Disp.
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="text-center py-3">
+                              <div className="text-red-400 font-semibold text-xs">FECHADO</div>
+                              {diaInfo.horario?.is_feriado && (
+                                <div className="text-[10px] mt-0.5 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>(Feriado)</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Desktop: Grid tradicional */}
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
                   {dias.map((diaInfo, index) => {
                     const dataFormatada = formatarData(diaInfo.data);
                     const diaSemanaMap: Record<string, string> = {
@@ -1121,7 +1227,7 @@ export function GestorAgendamentosPage() {
                                 );
                               })()}
                               <span className="flex-1">
-                                {barbeiro?.nome || "Selecione um barbeiro"}
+                                {barbeiro?.nome ? getNomeSobrenome(barbeiro.nome) : "Selecione um barbeiro"}
                               </span>
                             </>
                           );
@@ -1216,7 +1322,7 @@ export function GestorAgendamentosPage() {
                                 >
                                   {getInitials(barbeiro.nome)}
                                 </div>
-                                <span className="flex-1">{barbeiro.nome}</span>
+                                <span className="flex-1">{getNomeSobrenome(barbeiro.nome)}</span>
                                 {novoBarbeiro === barbeiro.id && (
                                   <svg
                                     className="w-4 h-4 text-blue-400"

@@ -645,99 +645,160 @@ export function ChoiceSchedulePage() {
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {(() => {
-                const availableDates = generateDates();
-                const isSelectedDateInAvailable = availableDates.some(
-                  (date) => date.value === selectedDate,
-                );
+            {/* Container com carrossel no mobile e grid no desktop */}
+            <div className="sm:grid sm:grid-cols-3 sm:gap-3">
+              {/* Mobile: Carrossel horizontal com scroll suave */}
+              <div className="sm:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x">
+                <div className="flex gap-3 min-w-max pb-1">
+                  {(() => {
+                    const availableDates = generateDates();
+                    const isSelectedDateInAvailable = availableDates.some(
+                      (date) => date.value === selectedDate,
+                    );
 
-                // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
-                if (selectedDate && !isSelectedDateInAvailable) {
-                  const selectedDateObj = new Date(selectedDate + "T00:00:00");
-                  const day = String(selectedDateObj.getDate()).padStart(
-                    2,
-                    "0",
+                    // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
+                    if (selectedDate && !isSelectedDateInAvailable) {
+                      const selectedDateObj = new Date(selectedDate + "T00:00:00");
+                      const day = String(selectedDateObj.getDate()).padStart(
+                        2,
+                        "0",
+                      );
+                      const month = String(selectedDateObj.getMonth() + 1).padStart(
+                        2,
+                        "0",
+                      );
+                      const shortDate = `${day}/${month}`;
+
+                      const weekdayShort = selectedDateObj.toLocaleDateString(
+                        "pt-BR",
+                        {
+                          weekday: "short",
+                        },
+                      );
+
+                      const weekdayShortCapitalized =
+                        weekdayShort.charAt(0).toUpperCase() +
+                        weekdayShort.slice(1);
+
+                      const today = new Date();
+                      const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+                      const isToday = selectedDate === todayString;
+
+                      return (
+                        <button
+                          key={selectedDate}
+                          className="p-3 rounded-lg text-center transition-colors bg-blue-600 text-white flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center"
+                          type="button"
+                          onClick={() => handleDateSelect(selectedDate)}
+                        >
+                          <div className="text-sm font-medium whitespace-nowrap">
+                            {isToday
+                              ? `Hoje (${shortDate})`
+                              : `${weekdayShortCapitalized} (${shortDate})`}
+                          </div>
+                        </button>
+                      );
+                    }
+
+                    // Caso contrário, mostra as 6 datas disponíveis
+                    return availableDates.map((date) => (
+                      <button
+                        key={date.value}
+                        className={`p-3 rounded-lg text-center transition-colors flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center ${
+                          selectedDate === date.value
+                            ? "bg-blue-600 text-white"
+                            : "hover:bg-[var(--bg-hover)]"
+                        }`}
+                        style={selectedDate === date.value 
+                          ? undefined 
+                          : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                        }
+                        type="button"
+                        onClick={() => handleDateSelect(date.value)}
+                      >
+                        <div className="text-sm font-medium whitespace-nowrap">
+                          {date.labelMobile}
+                        </div>
+                      </button>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Desktop: Grid tradicional */}
+              <div className="hidden sm:contents">
+                {(() => {
+                  const availableDates = generateDates();
+                  const isSelectedDateInAvailable = availableDates.some(
+                    (date) => date.value === selectedDate,
                   );
-                  const month = String(selectedDateObj.getMonth() + 1).padStart(
-                    2,
-                    "0",
-                  );
-                  const shortDate = `${day}/${month}`;
 
-                  const weekdayLong = selectedDateObj.toLocaleDateString(
-                    "pt-BR",
-                    {
-                      weekday: "long",
-                    },
-                  );
-                  const weekdayShort = selectedDateObj.toLocaleDateString(
-                    "pt-BR",
-                    {
-                      weekday: "short",
-                    },
-                  );
+                  // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
+                  if (selectedDate && !isSelectedDateInAvailable) {
+                    const selectedDateObj = new Date(selectedDate + "T00:00:00");
+                    const day = String(selectedDateObj.getDate()).padStart(
+                      2,
+                      "0",
+                    );
+                    const month = String(selectedDateObj.getMonth() + 1).padStart(
+                      2,
+                      "0",
+                    );
+                    const shortDate = `${day}/${month}`;
 
-                  const weekdayLongCapitalized =
-                    weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
-                  const weekdayShortCapitalized =
-                    weekdayShort.charAt(0).toUpperCase() +
-                    weekdayShort.slice(1);
+                    const weekdayLong = selectedDateObj.toLocaleDateString(
+                      "pt-BR",
+                      {
+                        weekday: "long",
+                      },
+                    );
 
-                  const today = new Date();
-                  const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-                  const isToday = selectedDate === todayString;
+                    const weekdayLongCapitalized =
+                      weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
 
-                  return (
+                    const today = new Date();
+                    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+                    const isToday = selectedDate === todayString;
+
+                    return (
+                      <button
+                        key={selectedDate}
+                        className="p-3 rounded-lg text-center transition-colors bg-blue-600 text-white"
+                        type="button"
+                        onClick={() => handleDateSelect(selectedDate)}
+                      >
+                        <div className="text-sm font-medium">
+                          {isToday
+                            ? `Hoje (${shortDate})`
+                            : `${weekdayLongCapitalized} (${shortDate})`}
+                        </div>
+                      </button>
+                    );
+                  }
+
+                  // Caso contrário, mostra as 6 datas disponíveis
+                  return availableDates.map((date) => (
                     <button
-                      key={selectedDate}
-                      className="p-3 rounded-lg text-center transition-colors bg-blue-600 text-white"
+                      key={date.value}
+                      className={`p-3 rounded-lg text-center transition-colors ${
+                        selectedDate === date.value
+                          ? "bg-blue-600 text-white"
+                          : "hover:bg-[var(--bg-hover)]"
+                      }`}
+                      style={selectedDate === date.value 
+                        ? undefined 
+                        : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                      }
                       type="button"
-                      onClick={() => handleDateSelect(selectedDate)}
+                      onClick={() => handleDateSelect(date.value)}
                     >
-                      {/* Mobile: versão abreviada */}
-                      <div className="text-sm font-medium sm:hidden">
-                        {isToday
-                          ? `Hoje (${shortDate})`
-                          : `${weekdayShortCapitalized} (${shortDate})`}
-                      </div>
-                      {/* Desktop: versão completa */}
-                      <div className="hidden text-sm font-medium sm:block">
-                        {isToday
-                          ? `Hoje (${shortDate})`
-                          : `${weekdayLongCapitalized} (${shortDate})`}
+                      <div className="text-sm font-medium">
+                        {date.labelDesktop}
                       </div>
                     </button>
-                  );
-                }
-
-                // Caso contrário, mostra as 6 datas disponíveis
-                return availableDates.map((date) => (
-                  <button
-                    key={date.value}
-                    className={`p-3 rounded-lg text-center transition-colors ${
-                      selectedDate === date.value
-                        ? "bg-blue-600 text-white"
-                        : "hover:bg-[var(--bg-hover)]"
-                    }`}
-                    style={selectedDate === date.value 
-                      ? undefined 
-                      : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
-                    }
-                    type="button"
-                    onClick={() => handleDateSelect(date.value)}
-                  >
-                    {/* Mobile: versão abreviada */}
-                    <div className="text-sm font-medium sm:hidden">
-                      {date.labelMobile}
-                    </div>
-                    {/* Desktop: versão completa */}
-                    <div className="hidden text-sm font-medium sm:block">
-                      {date.labelDesktop}
-                    </div>
-                  </button>
-                ));
-              })()}
+                  ));
+                })()}
+              </div>
             </div>
           </div>
 

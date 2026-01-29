@@ -240,3 +240,21 @@ select option {
     font-size: 16px !important;
   }
 }
+
+/* Estilos para carrossel horizontal no mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE e Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari e Opera */
+}
+
+/* Melhora o scroll suave em dispositivos móveis */
+@media (max-width: 640px) {
+  .scrollbar-hide {
+    -webkit-overflow-scrolling: touch; /* Scroll suave no iOS */
+    scroll-behavior: smooth;
+  }
+}

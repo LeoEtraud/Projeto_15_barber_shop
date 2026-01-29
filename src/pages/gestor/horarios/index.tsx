@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import {
   Button,
   Card,
@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { useTheme } from "@/contexts/ThemeProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+import { getNomeSobrenome } from "@/utils/format-nome";
 import {
   GetHorariosFuncionamento,
   UpdateHorarioFuncionamento,
@@ -342,6 +343,9 @@ export function GestorHorariosPage() {
   // Estado para controlar se está criando ou editando exceção
   const [isCriandoExcecao, setIsCriandoExcecao] = useState(false);
   const [dataSelecionadaExcecao, setDataSelecionadaExcecao] = useState<Date | null>(null);
+  
+  // Ref para controlar se já atualizou os horários com barbeiros ativos
+  const jaAtualizouBarbeiros = useRef(false);
 
   const opcoesHorario = gerarOpcoesHorario();
 
@@ -496,6 +500,108 @@ export function GestorHorariosPage() {
     // (a API pode já ter retornado os dados completos)
     return enriquecerHorariosComProfissionais(horarios);
   }, [horarios, professionals]);
+
+  // Atualizar automaticamente horários de segunda a sábado com barbeiros ativos
+  useEffect(() => {
+    const atualizarHorariosComBarbeirosAtivos = async () => {
+      // Evita loop infinito - só executa uma vez quando os dados estiverem prontos
+      if (jaAtualizouBarbeiros.current) {
+        return;
+      }
+
+      // Só executa se tiver horários e profissionais carregados
+      if (horarios.length === 0 || professionals.length === 0) {
+        return;
+      }
+
+      const barbeariaId = user?.user?.barbeariaId;
+      if (!barbeariaId) {
+        return;
+      }
+
+      // Marca como já atualizado para evitar execuções repetidas
+      jaAtualizouBarbeiros.current = true;
+
+      // Filtrar apenas barbeiros ativos (função Barbeiro ou Barbeiros)
+      const barbeirosAtivos = professionals.filter(
+        (p) =>
+          (p.status === "ATIVO" || p.status === "ativo") &&
+          (p.funcao === "Barbeiro" || p.funcao === "Barbeiros")
+      );
+
+      if (barbeirosAtivos.length === 0) {
+        return;
+      }
+
+      const barbeirosAtivosIds = barbeirosAtivos.map((b) => b.id);
+      const diasSegundaASabado = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"];
+
+      let precisaAtualizar = false;
+
+      // Verifica cada horário padrão de segunda a sábado
+      for (const horario of horarios) {
+        if (
+          horario.tipo_regra === "PADRAO" &&
+          diasSegundaASabado.includes(horario.dia_da_semana) &&
+          !horario.is_feriado &&
+          horario.id
+        ) {
+          // Obtém os IDs dos profissionais atuais (pode vir de profissionais_ids ou profissionais)
+          const profissionaisAtuaisIds = 
+            horario.profissionais_ids || 
+            horario.profissionais?.map((p) => p.id) || 
+            [];
+          
+          // Verifica se todos os barbeiros ativos já estão incluídos
+          const todosBarbeirosIncluidos = barbeirosAtivosIds.every((id) =>
+            profissionaisAtuaisIds.includes(id)
+          );
+
+          // Se não estão todos incluídos, atualiza
+          if (!todosBarbeirosIncluidos) {
+            precisaAtualizar = true;
+            const profissionaisIdsFinal = Array.from(
+              new Set([...profissionaisAtuaisIds, ...barbeirosAtivosIds])
+            );
+
+            try {
+              await UpdateHorarioFuncionamento({
+                id: horario.id,
+                id_barbearia: barbeariaId,
+                dia_da_semana: horario.dia_da_semana,
+                horario_abertura: horario.horario_abertura,
+                horario_fechamento: horario.horario_fechamento,
+                tem_almoco: horario.tem_almoco,
+                horario_almoco_inicio: horario.horario_almoco_inicio,
+                horario_almoco_fim: horario.horario_almoco_fim,
+                is_feriado: horario.is_feriado,
+                profissionais_ids: profissionaisIdsFinal,
+                tipo_regra: "PADRAO" as const,
+                data_excecao: null,
+              });
+            } catch (error) {
+              console.error(
+                `Erro ao atualizar horário ${horario.dia_da_semana}:`,
+                error,
+              );
+              // Se der erro, permite tentar novamente
+              jaAtualizouBarbeiros.current = false;
+            }
+          }
+        }
+      }
+
+      // Recarrega os horários apenas se houve atualizações
+      if (precisaAtualizar) {
+        await fetchHorarios();
+        // Reseta a flag após recarregar para permitir nova verificação se necessário
+        jaAtualizouBarbeiros.current = false;
+      }
+    };
+
+    atualizarHorariosComBarbeirosAtivos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [horarios.length, professionals.length, user?.user?.barbeariaId]);
 
   // Função para obter horário de um dia específico baseado na semana selecionada
   // Lógica: Sempre usa PADRAO como base, só usa EXCECAO se houver data_excecao correspondente
@@ -781,6 +887,25 @@ export function GestorHorariosPage() {
         return;
       }
 
+      // Dias de segunda a sábado
+      const diasSegundaASabado = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"];
+      const isSegundaASabado = diasSegundaASabado.includes(selectedDia);
+
+      // Filtrar apenas barbeiros ativos (função Barbeiro ou Barbeiros)
+      const barbeirosAtivos = professionals.filter(
+        (p) =>
+          (p.status === "ATIVO" || p.status === "ativo") &&
+          (p.funcao === "Barbeiro" || p.funcao === "Barbeiros")
+      );
+
+      // Se for segunda a sábado e não for feriado, inclui automaticamente todos os barbeiros ativos
+      let profissionaisIdsFinal = data.profissionais_ids;
+      if (isSegundaASabado && !data.is_feriado) {
+        const barbeirosAtivosIds = barbeirosAtivos.map((b) => b.id);
+        // Combina os barbeiros selecionados manualmente com todos os ativos (sem duplicatas)
+        profissionaisIdsFinal = Array.from(new Set([...data.profissionais_ids, ...barbeirosAtivosIds]));
+      }
+
       // Se está criando exceção (aba Exceções por data)
       if (isCriandoExcecao && dataSelecionadaExcecao) {
         const dataExcecaoISO = dataSelecionadaExcecao.toISOString();
@@ -798,7 +923,7 @@ export function GestorHorariosPage() {
             ? data.horario_almoco_fim
             : undefined,
           is_feriado: data.is_feriado,
-          profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
+          profissionais_ids: data.is_feriado ? [] : profissionaisIdsFinal,
           tipo_regra: "EXCECAO" as const,
           data_excecao: dataExcecaoISO,
         };
@@ -854,7 +979,7 @@ export function GestorHorariosPage() {
             ? data.horario_almoco_fim
             : undefined,
           is_feriado: data.is_feriado,
-          profissionais_ids: data.is_feriado ? [] : data.profissionais_ids,
+          profissionais_ids: data.is_feriado ? [] : profissionaisIdsFinal,
           tipo_regra: dataSelecionadaExcecao ? ("EXCECAO" as const) : ("PADRAO" as const),
           data_excecao: dataExcecaoISO,
         };
@@ -982,7 +1107,169 @@ export function GestorHorariosPage() {
           <>
             {/* Aba: Padrão Semanal */}
               {abaAtiva === "padrao" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <>
+                  {/* Mobile: Carrossel horizontal com scroll suave */}
+                  <div className="md:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x">
+                    <div className="flex gap-4 min-w-max pb-1">
+                      {DIAS_SEMANA.map((dia) => {
+                        const horario = getHorarioByDia(dia.value);
+                        
+                        // Busca o horário PADRAO para comparação
+                        const horariosDoDia = horariosEnriquecidos.filter(
+                          (h) => h.dia_da_semana === dia.value
+                        );
+                        const horarioPadrao = horariosDoDia.find(
+                          (h) => h.tipo_regra === "PADRAO"
+                        );
+                        
+                        // Verifica se há mudanças no horário (só mostra badge se houver diferenças)
+                        const temMudancas =
+                          horario?.tipo_regra === "EXCECAO" &&
+                          horarioPadrao &&
+                          temMudancasNoHorario(horario, horarioPadrao);
+
+                        return (
+                          <Card
+                            key={dia.value}
+                            className={`border flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center ${
+                              horario?.is_feriado
+                                ? "border-red-500/50"
+                                : ""
+                            } transition-all duration-200 hover:border-blue-500`}
+                            style={{
+                              backgroundColor: isDark ? "#111827" : "var(--bg-tertiary)",
+                              borderColor: horario?.is_feriado ? undefined : isDark ? "#374151" : "var(--border-primary)",
+                            }}
+                          >
+                            <CardBody className="p-3">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-semibold transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
+                                      {dia.label}
+                                    </h3>
+                                    {horario?.is_feriado && (
+                                      <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded">
+                                        Fechado
+                                      </span>
+                                    )}
+                                    {temMudancas && (
+                                      <span className="px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded">
+                                        Exceção
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <Button
+                                  className="min-w-[32px] h-8"
+                                  isIconOnly
+                                  size="sm"
+                                  variant="light"
+                                  onPress={() => handleOpenModal(dia.value)}
+                                >
+                                  <PencilIcon className="w-4 h-4" style={{ color: "#ffffff" }} />
+                                </Button>
+                              </div>
+
+                              {horario ? (
+                                <div>
+                                  {!horario.is_feriado ? (
+                                    <div>
+                                      <div className="text-xs mb-2 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
+                                        <span className="font-semibold">Horário: </span>
+                                        {horario.horario_abertura} - {horario.horario_fechamento}
+                                      </div>
+                                      {horario.tem_almoco && (
+                                        <div className="text-xs mb-2 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
+                                          <span className="font-semibold">Almoço: </span>
+                                          {horario.horario_almoco_inicio} - {horario.horario_almoco_fim}
+                                        </div>
+                                      )}
+                                      <div className="pt-2 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
+                                        <span className="block mb-2 text-[10px] uppercase tracking-wide transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
+                                          Barbeiros
+                                        </span>
+                                        {horario.profissionais && horario.profissionais.length > 0 ? (
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {horario.profissionais.map((profissional) => {
+                                              const avatarUrl = getAvatarUrl(
+                                                profissional.avatar
+                                              );
+
+                                              return (
+                                                <div
+                                                  key={profissional.id}
+                                                  className="flex items-center gap-1.5 bg-gray-800 rounded-lg px-2 py-1.5 border border-gray-700/50 hover:border-blue-500/50 transition-colors"
+                                                  style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-tertiary)", borderColor: isDark ? "rgba(55, 65, 81, 0.5)" : "var(--border-primary)" }}
+                                                >
+                                                  {avatarUrl ? (
+                                                    <img
+                                                      alt={profissional.nome}
+                                                      className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
+                                                      src={avatarUrl}
+                                                      onError={(e) => {
+                                                        const target = e.currentTarget;
+                                                        const fallback = target.nextElementSibling as HTMLElement;
+                                                        if (fallback) {
+                                                          target.style.display = "none";
+                                                          fallback.classList.remove("hidden");
+                                                        }
+                                                      }}
+                                                    />
+                                                  ) : null}
+                                                  {(() => {
+                                                    if (avatarUrl) return null;
+                                                    
+                                                    return (
+                                                      <img
+                                                        alt={profissional.nome}
+                                                        className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
+                                                        src={getDefaultBarberImage(profissional.nome)}
+                                                        onError={(e) => {
+                                                          e.currentTarget.style.display = "none";
+                                                        }}
+                                                      />
+                                                    );
+                                                  })()}
+                                                  <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
+                                                    {getNomeSobrenome(profissional.nome)}
+                                                  </span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        ) : (
+                                          <p className="text-[10px] italic transition-colors duration-300" style={{ color: isDark ? "#6b7280" : "#6b6b6b" }}>
+                                            Nenhum barbeiro atribuído
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="text-center py-3">
+                                      <div className="text-red-400 font-semibold text-xs">FECHADO</div>
+                                      {horario.is_feriado && (
+                                        <p className="text-xs transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
+                                          (Feriado)
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-xs transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
+                                  Horário não configurado
+                                </p>
+                              )}
+                            </CardBody>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Desktop: Grid tradicional */}
+                  <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {DIAS_SEMANA.map((dia) => {
                 const horario = getHorarioByDia(dia.value);
                 
@@ -1125,7 +1412,7 @@ export function GestorHorariosPage() {
                                         );
                                       })()}
                                       <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
-                                        {profissional.nome}
+                                        {getNomeSobrenome(profissional.nome)}
                                 </span>
                               </div>
                                   );
@@ -1150,7 +1437,8 @@ export function GestorHorariosPage() {
                   </Card>
                 );
               })}
-                </div>
+                  </div>
+                </>
               )}
 
               {/* Aba: Exceções por data */}

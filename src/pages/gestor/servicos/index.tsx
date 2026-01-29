@@ -573,46 +573,44 @@ export function GestorServicosPage() {
                           </div>
                         </div>
 
-                        <div className="flex gap-2 mt-3">
+                        <div className="flex justify-end gap-2 mt-3">
                           <PermissionGate
                             requiredPermissions={["manage_services"]}
                           >
                             <Button
-                              fullWidth
-                              className="transition-colors duration-300 font-semibold"
+                              className="transition-colors duration-300 font-semibold min-w-[50px]"
                               style={{ 
                                 backgroundColor: "#4ade80",
                                 color: "#000000",
                               }}
                               size="sm"
-                              startContent={
-                                <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
-                              }
+                              isIconOnly
+                              aria-label="Editar"
                               variant="solid"
                               onPress={() => handleOpenModal(service)}
                             >
-                              Editar
+                              <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
                             </Button>
                           </PermissionGate>
                           <PermissionGate
                             requiredPermissions={["manage_services"]}
                           >
                             <Button
-                              fullWidth
-                              className="transition-colors duration-300 font-semibold"
+                              className="transition-colors duration-300 font-semibold min-w-[50px]"
                               style={{ 
                                 backgroundColor: "#f87171",
                                 color: "#000000",
                               }}
                               size="sm"
-                              startContent={<TrashIcon className="w-4 h-4" style={{ color: "#000000" }} />}
+                              isIconOnly
+                              aria-label="Excluir"
                               variant="solid"
                               onPress={() => {
                                 setSelectedService(service);
                                 onDeleteOpen();
                               }}
                             >
-                              Excluir
+                              <TrashIcon className="w-4 h-4" style={{ color: "#000000" }} />
                             </Button>
                           </PermissionGate>
                         </div>

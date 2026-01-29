@@ -5,6 +5,13 @@ import { Router } from "./routes";
 import { AuthProvider } from "./contexts/AuthProvider";
 import { UserProvider } from "./contexts/UserProvider";
 import { ScheduleProvider } from "./contexts/ScheduleProvider";
+import { useScrollToTop } from "./hooks/useScrollToTop";
+
+function AppContent() {
+  useScrollToTop();
+  
+  return <Router />;
+}
 
 function App() {
   return (
@@ -14,7 +21,7 @@ function App() {
       <UserProvider>
         <ScheduleProvider>
           <AuthProvider>
-            <Router />
+            <AppContent />
           </AuthProvider>
         </ScheduleProvider>
       </UserProvider>
