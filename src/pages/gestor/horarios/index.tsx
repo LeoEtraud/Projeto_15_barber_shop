@@ -710,6 +710,18 @@ export function GestorHorariosPage() {
     return horariosEnriquecidos.filter((h) => h.tipo_regra === "EXCECAO");
   }, [horariosEnriquecidos]);
 
+  // Função para obter exceções filtradas pelo mês/ano do calendário
+  const excecoesFiltradas = useMemo(() => {
+    return excecoes.filter((excecao) => {
+      if (!excecao.data_excecao) return false;
+      const dataExcecao = new Date(excecao.data_excecao);
+      return (
+        dataExcecao.getMonth() === mesCalendario &&
+        dataExcecao.getFullYear() === anoCalendario
+      );
+    });
+  }, [excecoes, mesCalendario, anoCalendario]);
+
   // Função para gerar dias do calendário
   const gerarDiasCalendario = (mes: number, ano: number) => {
     const primeiroDia = new Date(ano, mes, 1);
@@ -1624,15 +1636,15 @@ export function GestorHorariosPage() {
                   {/* Lista de Exceções */}
                   <div className="rounded-lg p-4 border transition-colors duration-300" style={{ backgroundColor: isDark ? "#111827" : "var(--bg-tertiary)", borderColor: isDark ? "#374151" : "var(--border-primary)" }}>
                     <h3 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
-                      Lista de Exceções (ordenada por data)
+                      Exceções de {new Date(anoCalendario, mesCalendario).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
                     </h3>
                     <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                      {excecoes.length === 0 ? (
+                      {excecoesFiltradas.length === 0 ? (
                         <p className="text-sm text-center py-8 transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
-                          Nenhuma exceção cadastrada
+                          Nenhuma exceção cadastrada para este mês
                         </p>
                       ) : (
-                        excecoes
+                        excecoesFiltradas
                           .sort((a, b) => {
                             if (!a.data_excecao || !b.data_excecao) return 0;
                             return new Date(a.data_excecao).getTime() - new Date(b.data_excecao).getTime();
