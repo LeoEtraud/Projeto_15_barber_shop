@@ -1,7 +1,11 @@
 import { Helmet } from "react-helmet-async";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeftIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowLeftIcon,
+  XMarkIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/solid";
 import { addToast } from "@heroui/react";
 
 import { Header } from "@/components/Header";
@@ -113,6 +117,7 @@ export function GestorAgendamentosPage() {
   const [novoBarbeiro, setNovoBarbeiro] = useState<string>("");
   const [novoHorario, setNovoHorario] = useState<string>("");
   const [isRemarcando, setIsRemarcando] = useState(false);
+  const [isAtualizando, setIsAtualizando] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
 
@@ -594,6 +599,37 @@ export function GestorAgendamentosPage() {
     return slots;
   }, [novaData, novoBarbeiro, horarios, professionals]);
 
+  // Função para atualizar agendamentos
+  const handleAtualizar = async () => {
+    setIsAtualizando(true);
+    try {
+      // Atualiza a lista de profissionais
+      await fetchProfessionals();
+      
+      // Se houver barbeiro selecionado, atualiza os agendamentos
+      if (barbeiroSelecionado) {
+        await fetchAppointmentsByProfessional(barbeiroSelecionado);
+      }
+      
+      addToast({
+        title: "Sucesso",
+        description: "Agendamentos atualizados com sucesso!",
+        color: "success",
+        timeout: 2000,
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar agendamentos:", error);
+      addToast({
+        title: "Erro",
+        description: "Falha ao atualizar agendamentos. Tente novamente.",
+        color: "danger",
+        timeout: 3000,
+      });
+    } finally {
+      setIsAtualizando(false);
+    }
+  };
+
   // Função para remarcar agendamento
   const handleRemarcar = async () => {
     if (!agendamentoSelecionado || !novaData || !novoBarbeiro || !novoHorario) {
@@ -693,9 +729,28 @@ export function GestorAgendamentosPage() {
 
           {/* Conteúdo */}
           <div className="rounded-lg p-4 border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
-            <h3 className="text-lg font-semibold mb-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-              Agendamentos por Barbeiro
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                Agendamentos por Barbeiro
+              </h3>
+              <button
+                className="flex items-center justify-center w-10 h-10 rounded-lg border transition-all duration-300 hover:bg-[var(--bg-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isAtualizando}
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "var(--border-primary)",
+                }}
+                title="Atualizar agendamentos"
+                type="button"
+                onClick={handleAtualizar}
+              >
+                <ArrowPathIcon
+                  className={`w-5 h-5 text-yellow-400 transition-transform duration-300 ${
+                    isAtualizando ? "animate-spin" : ""
+                  }`}
+                />
+              </button>
+            </div>
 
             {/* Select de Barbeiros Customizado */}
             <div className="rounded-lg p-3 mb-4 border max-w-xs transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
