@@ -11,7 +11,10 @@ import { addToast } from "@heroui/react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { usePermissions } from "@/hooks/usePermissions";
-import { GetHorariosFuncionamento } from "@/contexts/ScheduleProvider/util";
+import {
+  GetHorariosFuncionamento,
+  RescheduleAppointment,
+} from "@/contexts/ScheduleProvider/util";
 import {
   IHorarioFuncionamento,
   IProfessionals,
@@ -642,19 +645,27 @@ export function GestorAgendamentosPage() {
       return;
     }
 
+    if (!agendamentoSelecionado.id) {
+      addToast({
+        title: "Erro",
+        description: "ID do agendamento não encontrado.",
+        color: "danger",
+        timeout: 3000,
+      });
+      return;
+    }
+
     setIsRemarcando(true);
 
     try {
-      // TODO: Implementar chamada à API para remarcar agendamento
-      // await RemarcarAgendamento({
-      //   appointmentId: agendamentoSelecionado.id,
-      //   novaData,
-      //   novoBarbeiro,
-      //   novoHorario,
-      // });
-
-      // Simulação de sucesso
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await withLoading(
+        RescheduleAppointment({
+          appointmentId: agendamentoSelecionado.id,
+          novaData,
+          novoBarbeiro,
+          novoHorario,
+        })
+      );
 
       addToast({
         title: "Sucesso",
@@ -669,11 +680,15 @@ export function GestorAgendamentosPage() {
       }
 
       fecharModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao remarcar agendamento:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Falha ao remarcar agendamento. Tente novamente.";
       addToast({
         title: "Erro",
-        description: "Falha ao remarcar agendamento. Tente novamente.",
+        description: errorMessage,
         color: "danger",
         timeout: 3000,
       });

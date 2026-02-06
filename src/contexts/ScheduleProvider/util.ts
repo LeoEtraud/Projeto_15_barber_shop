@@ -96,6 +96,37 @@ export async function ConfirmAppointment(appointmentId: string) {
   }
 }
 
+// CHAMADA DA API PARA REMARCAR AGENDAMENTO
+export async function RescheduleAppointment(data: {
+  appointmentId: string;
+  novaData: string; // Formato YYYY-MM-DD
+  novoBarbeiro: string; // ID do profissional
+  novoHorario: string; // Formato HH:MM
+}) {
+  try {
+    if (!data.appointmentId) {
+      throw new Error("ID do agendamento é obrigatório");
+    }
+
+    if (!data.novaData || !data.novoBarbeiro || !data.novoHorario) {
+      throw new Error("Todos os campos são obrigatórios para remarcar");
+    }
+
+    const request = await apiBarber.patch(
+      `/reschedule-appointment/${data.appointmentId}`,
+      {
+        novaData: data.novaData,
+        novoBarbeiro: data.novoBarbeiro,
+        novoHorario: data.novoHorario,
+      }
+    );
+
+    return request.data;
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
 // CHAMADA DA API PARA CRIAR PROFISSIONAL
 export async function CreateProfessional(data: {
   nome: string;
