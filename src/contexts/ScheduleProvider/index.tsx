@@ -21,6 +21,23 @@ import {
 
 import { useLoading } from "@/contexts/LoadingProvider";
 
+// Função auxiliar para garantir que a data UTC seja interpretada corretamente
+function parseUTCDate(dateString: string): Date {
+  // Se a string já tem timezone explícito (Z ou offset como +HH:MM ou -HH:MM), o Date já interpreta corretamente
+  // Caso contrário, assumimos que é UTC e adicionamos o 'Z'
+  const hasTimezone = dateString.includes('Z') || 
+                      /[+-]\d{2}:\d{2}$/.test(dateString) || 
+                      /[+-]\d{4}$/.test(dateString);
+  
+  if (!hasTimezone) {
+    // Se não tem timezone, assume UTC
+    dateString = `${dateString}Z`;
+  }
+  
+  // Cria o Date que automaticamente converte de UTC para o horário local do navegador
+  return new Date(dateString);
+}
+
 // Função para transformar o formato da API para o formato esperado
 function transformAppointmentFromAPI(appointment: any): IAppointments {
   try {
@@ -30,9 +47,11 @@ function transformAppointmentFromAPI(appointment: any): IAppointments {
     let valor = 0;
 
     if (appointment.hora_inicio) {
-      const startDate = new Date(appointment.hora_inicio);
+      // Garante que a data UTC seja interpretada corretamente e convertida para horário local
+      const startDate = parseUTCDate(appointment.hora_inicio);
 
       if (!Number.isNaN(startDate.getTime())) {
+        // Usa os métodos locais que já fazem a conversão automática de UTC para local
         const day = String(startDate.getDate()).padStart(2, "0");
         const month = String(startDate.getMonth() + 1).padStart(2, "0");
         const year = startDate.getFullYear();
@@ -43,7 +62,8 @@ function transformAppointmentFromAPI(appointment: any): IAppointments {
         const startMinutes = String(startDate.getMinutes()).padStart(2, "0");
 
         if (appointment.hora_fim) {
-          const endDate = new Date(appointment.hora_fim);
+          // Garante que a data UTC seja interpretada corretamente e convertida para horário local
+          const endDate = parseUTCDate(appointment.hora_fim);
 
           if (!Number.isNaN(endDate.getTime())) {
             const endHours = String(endDate.getHours()).padStart(2, "0");
