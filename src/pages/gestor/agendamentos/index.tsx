@@ -473,9 +473,11 @@ export function GestorAgendamentosPage() {
       return [];
     }
 
-    // Converte a string da data (formato YYYY-MM-DD) para Date
-    const dataSelecionada = new Date(novaData + "T00:00:00");
-    const diaSemanaNum = dataSelecionada.getDay();
+    // Converte a string da data (formato YYYY-MM-DD) para Date de forma segura
+    // Cria a data no timezone local para obter o dia da semana correto
+    const [ano, mes, dia] = novaData.split("-").map(Number);
+    const dataSelecionadaLocal = new Date(ano, mes - 1, dia, 0, 0, 0, 0);
+    const diaSemanaNum = dataSelecionadaLocal.getDay();
     const diaSemanaMap: Record<number, string> = {
       0: "DOMINGO",
       1: "SEGUNDA",
@@ -489,6 +491,33 @@ export function GestorAgendamentosPage() {
 
     // Busca horário de funcionamento para o dia
     const professionalsArray = Array.isArray(professionals) ? professionals : [];
+    
+    // Função auxiliar para verificar se o barbeiro está associado ao horário
+    const barbeiroEstaNoHorario = (h: IHorarioFuncionamento): boolean => {
+      // Se não tem profissionais_ids definidos ou está vazio, considera para todos os profissionais
+      if (!h.profissionais_ids || h.profissionais_ids.length === 0) {
+        return true;
+      }
+      // Verifica se o barbeiro selecionado está na lista
+      return h.profissionais_ids.includes(novoBarbeiro);
+    };
+
+    // Função auxiliar para comparar datas ignorando timezone
+    const compararDatas = (data1: Date | string, data2: Date): boolean => {
+      const d1 = typeof data1 === "string" ? new Date(data1) : data1;
+      const d2 = new Date(data2);
+      
+      // Normaliza ambas as datas para meia-noite no timezone local
+      const d1Local = new Date(d1.getFullYear(), d1.getMonth(), d1.getDate());
+      const d2Local = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+      
+      return (
+        d1Local.getDate() === d2Local.getDate() &&
+        d1Local.getMonth() === d2Local.getMonth() &&
+        d1Local.getFullYear() === d2Local.getFullYear()
+      );
+    };
+
     const excecao = horarios
       .map((h) => {
         const profissionaisEnriquecidos = h.profissionais_ids
@@ -504,19 +533,16 @@ export function GestorAgendamentosPage() {
       })
       .find((h) => {
         if (!h.data_excecao || h.tipo_regra !== "EXCECAO") return false;
-        const excecaoData = new Date(h.data_excecao);
-        excecaoData.setHours(0, 0, 0, 0);
-        const compararData = new Date(dataSelecionada);
-        compararData.setHours(0, 0, 0, 0);
+        
+        // Compara as datas de forma segura
+        const dataCorresponde = compararDatas(h.data_excecao, dataSelecionadaLocal);
 
-        return (
-          excecaoData.getDate() === compararData.getDate() &&
-          excecaoData.getMonth() === compararData.getMonth() &&
-          excecaoData.getFullYear() === compararData.getFullYear()
-        );
+        // Verifica se a data corresponde E se o barbeiro está associado ao horário
+        return dataCorresponde && barbeiroEstaNoHorario(h);
       });
 
-    const horarioPadrao = horarios
+    // Busca horário padrão com o barbeiro associado
+    const horarioPadraoComBarbeiro = horarios
       .map((h) => {
         const profissionaisEnriquecidos = h.profissionais_ids
           ?.map((id: string) =>
@@ -529,10 +555,117 @@ export function GestorAgendamentosPage() {
           profissionais: profissionaisEnriquecidos,
         };
       })
-      .find((h) => h.dia_da_semana === diaSemana && h.tipo_regra === "PADRAO");
+      .find((h) => {
+        // Verifica se é o dia da semana correto (comparação case-insensitive) e é padrão
+        if (!h.dia_da_semana || !h.tipo_regra) {
+          return false;
+        }
+        const diaCorresponde = h.dia_da_semana.toUpperCase().trim() === diaSemana.toUpperCase().trim();
+        const ePadrao = h.tipo_regra === "PADRAO";
+        const barbeiroAssociado = barbeiroEstaNoHorario(h);
+        
+        return diaCorresponde && ePadrao && barbeiroAssociado;
+      });
 
-    const horario = excecao || horarioPadrao;
+    // Se não encontrou com o barbeiro, busca qualquer horário padrão para aquele dia
+    // (pode ser que o horário não tenha profissionais_ids definidos, então é para todos)
+    const horarioPadraoQualquer = horarios
+      .map((h) => {
+        const profissionaisEnriquecidos = h.profissionais_ids
+          ?.map((id: string) =>
+            professionalsArray.find((p: IProfessionals) => p.id === id)
+          )
+          .filter((p): p is NonNullable<typeof p> => p !== undefined) || [];
 
+        return {
+          ...h,
+          profissionais: profissionaisEnriquecidos,
+        };
+      })
+      .find((h) => {
+        // Verifica se é o dia da semana correto (comparação case-insensitive) e é padrão
+        // Se não tem profissionais_ids ou está vazio, é para todos os profissionais
+        if (!h.dia_da_semana || !h.tipo_regra) {
+          return false;
+        }
+        const diaCorresponde = h.dia_da_semana.toUpperCase().trim() === diaSemana.toUpperCase().trim();
+        const ePadrao = h.tipo_regra === "PADRAO";
+        const semProfissionaisEspecificos = !h.profissionais_ids || h.profissionais_ids.length === 0;
+        
+        return diaCorresponde && ePadrao && semProfissionaisEspecificos;
+      });
+
+    // Se ainda não encontrou, busca qualquer horário padrão para aquele dia
+    // (mesmo que tenha profissionais_ids, se é um dia útil com atendimento, permite remarcar)
+    // Isso garante que só bloqueia se realmente não houver horário OU se for feriado
+    // IMPORTANTE: Esta busca não filtra por profissionais, apenas verifica se há horário padrão para o dia
+    const horarioPadraoFallback = horarios
+      .find((h) => {
+        // Verifica se é o dia da semana correto e é padrão (não é feriado)
+        // Compara de forma mais robusta, tratando casos onde dia_da_semana pode ser null/undefined
+        if (!h.dia_da_semana || !h.tipo_regra) {
+          return false;
+        }
+        const diaCorresponde = h.dia_da_semana.toUpperCase().trim() === diaSemana.toUpperCase().trim();
+        const ePadrao = h.tipo_regra === "PADRAO";
+        const naoEFeriado = !h.is_feriado;
+        
+        return diaCorresponde && ePadrao && naoEFeriado;
+      });
+
+    // Prioriza: exceção > horário padrão com barbeiro > horário padrão sem profissionais específicos > qualquer horário padrão não feriado
+    const horario = excecao || horarioPadraoComBarbeiro || horarioPadraoQualquer || horarioPadraoFallback;
+    
+    // Log adicional quando encontrar horário para debug
+    if (horario && !horario.is_feriado) {
+      console.log("✅ Horário encontrado para remarcação:", {
+        tipo: excecao ? "EXCECAO" : horarioPadraoComBarbeiro ? "PADRAO_COM_BARBEIRO" : horarioPadraoQualquer ? "PADRAO_SEM_PROFISSIONAIS" : "PADRAO_FALLBACK",
+        dia_da_semana: horario.dia_da_semana,
+        horario_abertura: horario.horario_abertura,
+        horario_fechamento: horario.horario_fechamento,
+        profissionais_ids: horario.profissionais_ids,
+        tem_almoco: horario.tem_almoco,
+        horario_almoco_inicio: horario.horario_almoco_inicio,
+        horario_almoco_fim: horario.horario_almoco_fim,
+      });
+    }
+
+    // Debug temporário - remover depois
+    if (!horario) {
+      console.log("🔍 Debug gerarHorariosDisponiveis:", {
+        novaData,
+        novoBarbeiro,
+        diaSemana,
+        diaSemanaNum,
+        totalHorarios: horarios.length,
+        horariosDisponiveis: horarios.map((h) => ({
+          id: h.id,
+          dia_da_semana: h.dia_da_semana,
+          tipo_regra: h.tipo_regra,
+          profissionais_ids: h.profissionais_ids,
+          is_feriado: h.is_feriado,
+          data_excecao: h.data_excecao,
+          horario_abertura: h.horario_abertura,
+          horario_fechamento: h.horario_fechamento,
+        })),
+        horariosParaDiaSemana: horarios.filter((h) => 
+          h.dia_da_semana?.toUpperCase() === diaSemana.toUpperCase()
+        ).map((h) => ({
+          id: h.id,
+          dia_da_semana: h.dia_da_semana,
+          tipo_regra: h.tipo_regra,
+          profissionais_ids: h.profissionais_ids,
+          is_feriado: h.is_feriado,
+        })),
+        excecaoEncontrada: !!excecao,
+        horarioPadraoComBarbeiroEncontrado: !!horarioPadraoComBarbeiro,
+        horarioPadraoQualquerEncontrado: !!horarioPadraoQualquer,
+        horarioPadraoFallbackEncontrado: !!horarioPadraoFallback,
+      });
+    }
+
+    // Só retorna vazio se realmente não houver horário OU se for feriado
+    // Não retorna vazio apenas por não ter profissionais associados, pois isso já foi verificado acima
     if (!horario || horario.is_feriado) {
       return [];
     }
@@ -548,8 +681,17 @@ export function GestorAgendamentosPage() {
 
     // Verifica se a data selecionada é hoje
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Normaliza para meia-noite
     const hojeStr = hoje.toISOString().split("T")[0]; // Formato YYYY-MM-DD
     const isHoje = novaData === hojeStr;
+    
+    // Log para debug
+    console.log("📆 Verificação de data:", {
+      novaData,
+      hojeStr,
+      isHoje,
+      dataSelecionadaLocal: dataSelecionadaLocal.toISOString().split("T")[0],
+    });
 
     // Hora atual para filtrar horários passados se for hoje
     const agora = new Date();
@@ -598,6 +740,20 @@ export function GestorAgendamentosPage() {
         horaAtual++;
       }
     }
+
+    // Log dos slots gerados para debug
+    console.log("📅 Slots gerados:", {
+      totalSlots: slots.length,
+      slots: slots,
+      horario_abertura: horario.horario_abertura,
+      horario_fechamento: horario.horario_fechamento,
+      tem_almoco: horario.tem_almoco,
+      horario_almoco_inicio: horario.horario_almoco_inicio,
+      horario_almoco_fim: horario.horario_almoco_fim,
+      isHoje,
+      horaAtualAgora,
+      minutoAtualAgora,
+    });
 
     return slots;
   }, [novaData, novoBarbeiro, horarios, professionals]);
