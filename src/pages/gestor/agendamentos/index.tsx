@@ -857,9 +857,11 @@ export function GestorAgendamentosPage() {
 
   return (
     <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
-      <Header />
+      <div className="sticky top-0 z-40 md:static">
+        <Header />
+      </div>
 
-      <div className="px-4 py-8 md:px-8 flex-1">
+      <div className="px-4 py-8 md:px-8 flex-1 overflow-y-auto pb-20 md:pb-8">
         <Helmet title="Gerenciar Agendamentos - Gestor" />
 
         <div className="mx-auto max-w-6xl">
@@ -1369,7 +1371,9 @@ export function GestorAgendamentosPage() {
         </div>
       </div>
 
-      <Footer />
+      <div className="fixed bottom-0 left-0 right-0 z-40 md:static">
+        <Footer />
+      </div>
 
       {/* Modal de Remarcação */}
       {modalRemarcarAberto && agendamentoSelecionado && (
