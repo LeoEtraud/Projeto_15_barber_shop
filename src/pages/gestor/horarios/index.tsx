@@ -518,115 +518,44 @@ export function GestorHorariosPage() {
     return enriquecerHorariosComProfissionais(horarios);
   }, [horarios, professionals]);
 
-  // Atualizar automaticamente horários de segunda a sábado com barbeiros ativos
-  useEffect(() => {
-    const atualizarHorariosComBarbeirosAtivos = async () => {
-      // Evita loop infinito - só executa uma vez quando os dados estiverem prontos
-      if (jaAtualizouBarbeiros.current) {
-        return;
-      }
-
-      // Só executa se tiver horários e profissionais carregados
-      if (horarios.length === 0 || professionals.length === 0) {
-        return;
-      }
-
-      const barbeariaId = user?.user?.barbeariaId;
-      if (!barbeariaId) {
-        return;
-      }
-
-      // Marca como já atualizado para evitar execuções repetidas
-      jaAtualizouBarbeiros.current = true;
-
-      // Filtrar apenas barbeiros ativos (função Barbeiro ou Barbeiros)
-      const barbeirosAtivos = professionals.filter(
-        (p) =>
-          (p.status === "ATIVO" || p.status === "ativo") &&
-          (p.funcao === "Barbeiro" || p.funcao === "Barbeiros")
-      );
-
-      if (barbeirosAtivos.length === 0) {
-        return;
-      }
-
-      const barbeirosAtivosIds = barbeirosAtivos.map((b) => b.id);
-      const diasSegundaASabado = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"];
-
-      let precisaAtualizar = false;
-
-      // Verifica cada horário padrão de segunda a sábado
-      for (const horario of horarios) {
-        if (
-          horario.tipo_regra === "PADRAO" &&
-          diasSegundaASabado.includes(horario.dia_da_semana) &&
-          !horario.is_feriado &&
-          horario.id
-        ) {
-          // Obtém os IDs dos profissionais atuais (pode vir de profissionais_ids ou profissionais)
-          const profissionaisAtuaisIds = 
-            horario.profissionais_ids || 
-            horario.profissionais?.map((p) => p.id) || 
-            [];
-          
-          // Verifica se todos os barbeiros ativos já estão incluídos
-          const todosBarbeirosIncluidos = barbeirosAtivosIds.every((id) =>
-            profissionaisAtuaisIds.includes(id)
-          );
-
-          // Se não estão todos incluídos, atualiza
-          if (!todosBarbeirosIncluidos) {
-            precisaAtualizar = true;
-            const profissionaisIdsFinal = Array.from(
-              new Set([...profissionaisAtuaisIds, ...barbeirosAtivosIds])
-            );
-
-            try {
-              await UpdateHorarioFuncionamento({
-                id: horario.id,
-                id_barbearia: barbeariaId,
-                dia_da_semana: horario.dia_da_semana,
-                horario_abertura: horario.horario_abertura,
-                horario_fechamento: horario.horario_fechamento,
-                tem_almoco: horario.tem_almoco,
-                horario_almoco_inicio: horario.horario_almoco_inicio,
-                horario_almoco_fim: horario.horario_almoco_fim,
-                is_feriado: horario.is_feriado,
-                profissionais_ids: profissionaisIdsFinal,
-                tipo_regra: "PADRAO" as const,
-                data_excecao: null,
-              });
-            } catch (error) {
-              console.error(
-                `Erro ao atualizar horário ${horario.dia_da_semana}:`,
-                error,
-              );
-              // Se der erro, permite tentar novamente
-              jaAtualizouBarbeiros.current = false;
-            }
-          }
-        }
-      }
-
-      // Recarrega os horários apenas se houve atualizações
-      if (precisaAtualizar) {
-        await fetchHorarios();
-        // Reseta a flag após recarregar para permitir nova verificação se necessário
-        jaAtualizouBarbeiros.current = false;
-      }
-    };
-
-    atualizarHorariosComBarbeirosAtivos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [horarios.length, professionals.length, user?.user?.barbeariaId]);
+  // NOTA: Comentado o useEffect que atualizava automaticamente os barbeiros
+  // Isso foi desabilitado para permitir que o gestor tenha controle total
+  // sobre quais barbeiros trabalham em cada dia, sem interferência automática
+  // 
+  // Se no futuro for necessário adicionar barbeiros automaticamente apenas na primeira vez,
+  // pode-se reativar este código com uma flag mais robusta que não interfira com atualizações manuais
+  //
+  // useEffect(() => {
+  //   const atualizarHorariosComBarbeirosAtivos = async () => {
+  //     // ... código comentado para não interferir com atualizações manuais
+  //   };
+  //   atualizarHorariosComBarbeirosAtivos();
+  // }, [horarios.length, professionals.length, user?.user?.barbeariaId]);
 
   // Função para obter horário de um dia específico baseado na semana selecionada
-  // Lógica: Sempre usa PADRAO como base, só usa EXCECAO se houver data_excecao correspondente
+  // Lógica: Na aba de Padrão Semanal, sempre retorna apenas PADRAO (ignora exceções)
+  // Na aba de Exceções, pode retornar EXCECAO se houver para a data específica
   const getHorarioByDia = (
     dia: string,
-    semana: "atual" | "proxima" = semanaSelecionada
+    semana: "atual" | "proxima" = semanaSelecionada,
+    ignorarExcecoes: boolean = true // Por padrão, ignora exceções (para aba Padrão Semanal)
   ): IHorarioFuncionamento | undefined => {
-    // Calcula a data do dia na semana selecionada
+    // Busca todos os horários para esse dia da semana
+    const horariosDoDia = horariosEnriquecidos.filter(
+      (h) => h.dia_da_semana === dia
+    );
+
+    if (horariosDoDia.length === 0) {
+      return undefined;
+    }
+
+    // Se deve ignorar exceções (aba Padrão Semanal), sempre retorna apenas o PADRAO
+    if (ignorarExcecoes) {
+      const padrao = horariosDoDia.find((h) => h.tipo_regra === "PADRAO");
+      return padrao;
+    }
+
+    // Se não deve ignorar exceções (aba Exceções), verifica se há exceção para a data específica
     const dataDoDia = calcularDataDoDia(dia, semana);
     const dataCalculada = new Date(
       dataDoDia.ano,
@@ -638,15 +567,6 @@ export function GestorHorariosPage() {
       0
     );
     dataCalculada.setHours(0, 0, 0, 0);
-
-    // Busca todos os horários para esse dia da semana
-    const horariosDoDia = horariosEnriquecidos.filter(
-      (h) => h.dia_da_semana === dia
-    );
-
-    if (horariosDoDia.length === 0) {
-      return undefined;
-    }
 
     // Primeiro, procura por EXCECAO que corresponda exatamente à data calculada
     const excecaoEncontrada = horariosDoDia.find((h) => {
@@ -669,7 +589,6 @@ export function GestorHorariosPage() {
     }
 
     // Caso contrário, sempre retorna o PADRAO (regra padrão)
-    // A próxima semana segue a mesma regra padrão da atual
     const padrao = horariosDoDia.find((h) => h.tipo_regra === "PADRAO");
     if (padrao) {
       return padrao;
@@ -772,7 +691,8 @@ export function GestorHorariosPage() {
     setSelectedDia(dia);
     setIsCriandoExcecao(false);
     setDataSelecionadaExcecao(null);
-    const horarioExistente = getHorarioByDia(dia);
+    // Na aba Padrão Semanal, sempre busca apenas o PADRAO (ignora exceções)
+    const horarioExistente = getHorarioByDia(dia, semanaSelecionada, true);
 
     if (!horarioExistente) {
       addToast({
@@ -916,24 +836,9 @@ export function GestorHorariosPage() {
         return;
       }
 
-      // Dias de segunda a sábado
-      const diasSegundaASabado = ["SEGUNDA", "TERCA", "QUARTA", "QUINTA", "SEXTA", "SABADO"];
-      const isSegundaASabado = diasSegundaASabado.includes(selectedDia);
-
-      // Filtrar apenas barbeiros ativos (função Barbeiro ou Barbeiros)
-      const barbeirosAtivos = professionals.filter(
-        (p) =>
-          (p.status === "ATIVO" || p.status === "ativo") &&
-          (p.funcao === "Barbeiro" || p.funcao === "Barbeiros")
-      );
-
-      // Se for segunda a sábado e não for feriado, inclui automaticamente todos os barbeiros ativos
-      let profissionaisIdsFinal = data.profissionais_ids;
-      if (isSegundaASabado && !data.is_feriado) {
-        const barbeirosAtivosIds = barbeirosAtivos.map((b) => b.id);
-        // Combina os barbeiros selecionados manualmente com todos os ativos (sem duplicatas)
-        profissionaisIdsFinal = Array.from(new Set([...data.profissionais_ids, ...barbeirosAtivosIds]));
-      }
+      // Usa apenas os barbeiros selecionados manualmente pelo usuário
+      // Não força a inclusão automática de barbeiros ativos para permitir remoção
+      const profissionaisIdsFinal = data.is_feriado ? [] : data.profissionais_ids;
 
       // Se está criando exceção (aba Exceções por data)
       if (isCriandoExcecao && dataSelecionadaExcecao) {
@@ -952,7 +857,7 @@ export function GestorHorariosPage() {
             ? data.horario_almoco_fim
             : undefined,
           is_feriado: data.is_feriado,
-          profissionais_ids: data.is_feriado ? [] : profissionaisIdsFinal,
+          profissionais_ids: profissionaisIdsFinal,
           tipo_regra: "EXCECAO" as const,
           data_excecao: dataExcecaoISO,
         };
@@ -973,8 +878,8 @@ export function GestorHorariosPage() {
           // Editando exceção existente
           horarioExistente = getExcecaoPorData(dataSelecionadaExcecao);
         } else {
-          // Editando padrão semanal
-          horarioExistente = getHorarioByDia(selectedDia);
+          // Editando padrão semanal - sempre busca apenas o PADRAO (ignora exceções)
+          horarioExistente = getHorarioByDia(selectedDia, semanaSelecionada, true);
         }
 
         if (!horarioExistente?.id) {
@@ -1008,15 +913,18 @@ export function GestorHorariosPage() {
             ? data.horario_almoco_fim
             : undefined,
           is_feriado: data.is_feriado,
-          profissionais_ids: data.is_feriado ? [] : profissionaisIdsFinal,
+          profissionais_ids: profissionaisIdsFinal,
           tipo_regra: dataSelecionadaExcecao ? ("EXCECAO" as const) : ("PADRAO" as const),
           data_excecao: dataExcecaoISO,
         };
 
-        await UpdateHorarioFuncionamento({
+        const response = await UpdateHorarioFuncionamento({
           id: horarioExistente.id,
           ...payload,
         });
+
+        // Log para debug (pode ser removido em produção)
+        console.log("Horário atualizado com sucesso:", response);
 
         addToast({
           title: "Sucesso",
@@ -1026,7 +934,13 @@ export function GestorHorariosPage() {
         });
       }
 
+      // Aguarda um pequeno delay para garantir que o backend processou a atualização
+      // antes de recarregar os horários
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Recarrega os horários para refletir as mudanças
       await fetchHorarios();
+      
       handleCloseModal();
     } catch (error) {
       console.error("Erro ao salvar horário:", error);
@@ -1162,7 +1076,8 @@ export function GestorHorariosPage() {
                     >
                       <div className="flex gap-4 min-w-max pb-1">
                         {DIAS_SEMANA.map((dia, index) => {
-                          const horario = getHorarioByDia(dia.value);
+                          // Na aba Padrão Semanal, sempre mostra apenas o PADRAO (ignora exceções)
+                          const horario = getHorarioByDia(dia.value, semanaSelecionada, true);
                         
                         // Busca o horário PADRAO para comparação
                         const horariosDoDia = horariosEnriquecidos.filter(
@@ -1172,11 +1087,8 @@ export function GestorHorariosPage() {
                           (h) => h.tipo_regra === "PADRAO"
                         );
                         
-                        // Verifica se há mudanças no horário (só mostra badge se houver diferenças)
-                        const temMudancas =
-                          horario?.tipo_regra === "EXCECAO" &&
-                          horarioPadrao &&
-                          temMudancasNoHorario(horario, horarioPadrao);
+                        // Na aba Padrão Semanal, nunca mostra badge de exceção
+                        const temMudancas = false;
 
                         return (
                           <Card
@@ -1202,11 +1114,6 @@ export function GestorHorariosPage() {
                                     {horario?.is_feriado && (
                                       <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded">
                                         Fechado
-                                      </span>
-                                    )}
-                                    {temMudancas && (
-                                      <span className="px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded">
-                                        Exceção
                                       </span>
                                     )}
                                   </div>
@@ -1348,7 +1255,8 @@ export function GestorHorariosPage() {
                   {/* Desktop: Grid tradicional */}
                   <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {DIAS_SEMANA.map((dia) => {
-                const horario = getHorarioByDia(dia.value);
+                // Na aba Padrão Semanal, sempre mostra apenas o PADRAO (ignora exceções)
+                const horario = getHorarioByDia(dia.value, semanaSelecionada, true);
                 
                 // Busca o horário PADRAO para comparação
                 const horariosDoDia = horariosEnriquecidos.filter(
@@ -1358,11 +1266,8 @@ export function GestorHorariosPage() {
                   (h) => h.tipo_regra === "PADRAO"
                 );
                 
-                // Verifica se há mudanças no horário (só mostra badge se houver diferenças)
-                const temMudancas =
-                  horario?.tipo_regra === "EXCECAO" &&
-                  horarioPadrao &&
-                  temMudancasNoHorario(horario, horarioPadrao);
+                // Na aba Padrão Semanal, nunca mostra badge de exceção
+                const temMudancas = false;
 
                 return (
                   <Card
@@ -1387,11 +1292,6 @@ export function GestorHorariosPage() {
                             {horario?.is_feriado && (
                               <span className="px-1.5 py-0.5 bg-red-500 text-white text-xs rounded">
                                 Fechado
-                              </span>
-                            )}
-                            {temMudancas && (
-                              <span className="px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded">
-                                Exceção
                               </span>
                             )}
                           </div>

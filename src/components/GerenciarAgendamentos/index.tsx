@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { GetHorariosFuncionamento } from "@/contexts/ScheduleProvider/util";
 import { IHorarioFuncionamento, IProfessionals } from "@/contexts/ScheduleProvider/types";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
@@ -24,29 +24,53 @@ export function GerenciarAgendamentos() {
   const [horarios, setHorarios] = useState<IHorarioFuncionamento[]>([]);
   const [barbeiroSelecionado, setBarbeiroSelecionado] = useState<string | null>(null);
 
-  // Buscar horários
-  useEffect(() => {
-    async function fetchHorarios() {
-      const barbeariaId = user?.user?.barbeariaId;
-      if (!barbeariaId) {
-        return;
-      }
-
-      try {
-        const response = await withLoading(GetHorariosFuncionamento(barbeariaId));
-        
-        // A API retorna os dados em hoursFunctionment
-        const horariosDaAPI =
-          response?.hoursFunctionment || response?.horarios || response || [];
-        setHorarios(Array.isArray(horariosDaAPI) ? horariosDaAPI : []);
-      } catch (error) {
-        console.error("Erro ao buscar horários:", error);
-        setHorarios([]);
-      }
+  // Função para buscar horários (reutilizável)
+  const fetchHorarios = useCallback(async () => {
+    const barbeariaId = user?.user?.barbeariaId;
+    if (!barbeariaId) {
+      return;
     }
 
-    fetchHorarios();
+    try {
+      const response = await withLoading(GetHorariosFuncionamento(barbeariaId));
+      
+      // A API retorna os dados em hoursFunctionment
+      const horariosDaAPI =
+        response?.hoursFunctionment || response?.horarios || response || [];
+      setHorarios(Array.isArray(horariosDaAPI) ? horariosDaAPI : []);
+    } catch (error) {
+      console.error("Erro ao buscar horários:", error);
+      setHorarios([]);
+    }
   }, [user?.user?.barbeariaId, withLoading]);
+
+  // Buscar horários ao carregar
+  useEffect(() => {
+    fetchHorarios();
+  }, [fetchHorarios]);
+
+  // Recarrega horários quando a página ganha foco (usuário volta para a aba)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchHorarios();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchHorarios]);
+
+  // Polling periódico para atualizar horários automaticamente (a cada 30 segundos)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchHorarios();
+    }, 30000); // 30 segundos
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchHorarios]);
 
   // Enriquecer horários com dados dos profissionais
   const horariosEnriquecidos = useMemo(() => {

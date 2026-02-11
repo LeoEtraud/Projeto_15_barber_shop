@@ -52,42 +52,62 @@ export function ChoiceSchedulePage() {
     [selectedServices]
   );
 
-  // Carrega horários de funcionamento da barbearia do barbeiro selecionado
-  useEffect(() => {
-    let isMounted = true;
-
+  // Função para buscar horários de funcionamento (reutilizável)
+  const fetchHorariosFuncionamento = useCallback(async () => {
     if (!barbeariaId) {
       setHorariosFuncionamento([]);
       return;
     }
 
-    GetHorariosFuncionamento(barbeariaId)
-      .then((response) => {
-        const horariosDaAPI =
-          response?.hoursFunctionment || response?.horarios || response || [];
-        if (isMounted) {
-          setHorariosFuncionamento(
-            Array.isArray(horariosDaAPI) ? horariosDaAPI : []
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar horários de funcionamento:", error);
-        if (isMounted) {
-          setHorariosFuncionamento([]);
-          addToast({
-            title: "Erro",
-            description: "Falha ao carregar horários de funcionamento.",
-            color: "danger",
-            timeout: 4000,
-          });
-        }
-      });
+    try {
+      const response = await GetHorariosFuncionamento(barbeariaId);
+      const horariosDaAPI =
+        response?.hoursFunctionment || response?.horarios || response || [];
+      setHorariosFuncionamento(
+        Array.isArray(horariosDaAPI) ? horariosDaAPI : []
+      );
+    } catch (error) {
+      console.error("Erro ao buscar horários de funcionamento:", error);
+      setHorariosFuncionamento([]);
+      // Só mostra toast se for o primeiro carregamento
+      if (horariosFuncionamento.length === 0) {
+        addToast({
+          title: "Erro",
+          description: "Falha ao carregar horários de funcionamento.",
+          color: "danger",
+          timeout: 4000,
+        });
+      }
+    }
+  }, [barbeariaId, horariosFuncionamento.length]);
+
+  // Carrega horários de funcionamento da barbearia do barbeiro selecionado
+  useEffect(() => {
+    fetchHorariosFuncionamento();
+  }, [fetchHorariosFuncionamento]);
+
+  // Recarrega horários quando a página ganha foco (usuário volta para a aba)
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchHorariosFuncionamento();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchHorariosFuncionamento]);
+
+  // Polling periódico para atualizar horários automaticamente (a cada 30 segundos)
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchHorariosFuncionamento();
+    }, 30000); // 30 segundos
 
     return () => {
-      isMounted = false;
+      clearInterval(intervalId);
     };
-  }, [barbeariaId]);
+  }, [fetchHorariosFuncionamento]);
 
   // FUNÇÃO PARA GERAR PRÓXIMOS 6 DIAS DISPONÍVEIS (EXCETO DOMINGO)
   const generateDates = () => {
@@ -96,6 +116,7 @@ export function ChoiceSchedulePage() {
       labelDesktop: string;
       labelMobile: string;
       isToday: boolean;
+      barbeiroTrabalha: boolean;
     }> = [];
     const today = new Date();
     const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -115,11 +136,18 @@ export function ChoiceSchedulePage() {
 
       date.setDate(today.getDate() + dayOffset);
 
-      const horario = getHorarioEfetivo(date);
-      if (!horario || horario.is_feriado) {
+      // Primeiro verifica se há horário de funcionamento (sem considerar o barbeiro)
+      const horarioFuncionamento = getHorarioFuncionamento(date);
+      
+      // Se não há horário ou é feriado, não exibe o card
+      if (!horarioFuncionamento || horarioFuncionamento.is_feriado) {
         dayOffset++;
         continue;
       }
+      
+      // Verifica se o barbeiro trabalha neste dia
+      const horarioEfetivo = getHorarioEfetivo(date);
+      const barbeiroTrabalha = horarioEfetivo !== undefined && !horarioEfetivo.is_feriado;
 
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -128,14 +156,16 @@ export function ChoiceSchedulePage() {
 
       const isToday = dateString === todayString;
 
-      // Se for hoje e todos os horários já passaram, pula este dia
-      if (isToday && isAllTimeSlotsPassed(dateString)) {
+      // Se for hoje e todos os horários já passaram E o barbeiro trabalha, pula este dia
+      // Se o barbeiro não trabalha, ainda exibe o card desabilitado
+      if (isToday && isAllTimeSlotsPassed(dateString) && barbeiroTrabalha) {
         dayOffset++;
         continue;
       }
 
-      // Se não há nenhum slot disponível para a data, pula
-      if (!hasSlotsForDate(date)) {
+      // Se o barbeiro trabalha, verifica se há slots disponíveis
+      // Se não trabalha, ainda exibe o card (desabilitado), então não pula
+      if (barbeiroTrabalha && !hasSlotsForDate(date)) {
         dayOffset++;
         continue;
       }
@@ -168,6 +198,7 @@ export function ChoiceSchedulePage() {
           ? `Hoje (${shortDate})`
           : `${weekdayShortCapitalized} (${shortDate})`,
         isToday,
+        barbeiroTrabalha: barbeiroTrabalha,
       });
 
       dayOffset++;
@@ -218,7 +249,8 @@ export function ChoiceSchedulePage() {
     return diaSemanaMap[date.getDay()];
   };
 
-  const getHorarioEfetivo = (date: Date) => {
+  // Função para obter horário de funcionamento sem verificar o barbeiro
+  const getHorarioFuncionamento = (date: Date) => {
     const diaSemana = getDiaSemana(date);
     const dataComparar = new Date(date);
     dataComparar.setHours(0, 0, 0, 0);
@@ -240,10 +272,28 @@ export function ChoiceSchedulePage() {
       );
     });
 
-    if (excecao) return excecao;
+    if (excecao) {
+      return excecao;
+    }
 
     const padrao = horariosDoDia.find((h) => h.tipo_regra === "PADRAO");
     return padrao || horariosDoDia[0];
+  };
+
+  const getHorarioEfetivo = (date: Date) => {
+    const horario = getHorarioFuncionamento(date);
+    if (!horario) return undefined;
+
+    // Verifica se o barbeiro trabalha neste dia
+    if (barber?.id) {
+      const profissionaisIds = horario.profissionais_ids || [];
+      // Se há profissionais_ids definidos, o barbeiro DEVE estar na lista
+      if (profissionaisIds.length > 0 && !profissionaisIds.includes(barber.id)) {
+        return undefined; // Barbeiro não trabalha neste dia
+      }
+    }
+
+    return horario;
   };
 
   const hasSlotsForDate = (date: Date) => {
@@ -321,7 +371,7 @@ export function ChoiceSchedulePage() {
 
       return true;
     },
-    [totalDuration, horariosFuncionamento]
+    [totalDuration, horariosFuncionamento, barber]
   );
 
   // FUNÇÃO PARA GERAR HORÁRIOS DISPONÍVEIS
@@ -402,7 +452,7 @@ export function ChoiceSchedulePage() {
     }
 
     return slots;
-  }, [selectedDate, schedules, totalDuration, horariosFuncionamento]);
+  }, [selectedDate, schedules, totalDuration, horariosFuncionamento, barber]);
 
   // Atualiza os horários disponíveis ao selecionar uma data
   const handleDateSelect = (date: string) => {
@@ -487,9 +537,9 @@ export function ChoiceSchedulePage() {
     const horario = getHorarioEfetivo(selectedDateObj);
     if (!horario || horario.is_feriado) {
       addToast({
-        title: "Data inválida",
-        description: "A barbearia não atende nesta data.",
-        color: "warning",
+        title: "Informação",
+        description: "Esse barbeiro não atende neste dia!",
+        color: "primary",
         timeout: 3000,
       });
 
@@ -659,6 +709,9 @@ export function ChoiceSchedulePage() {
                     // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
                     if (selectedDate && !isSelectedDateInAvailable) {
                       const selectedDateObj = new Date(selectedDate + "T00:00:00");
+                      const horario = getHorarioEfetivo(selectedDateObj);
+                      const barbeiroTrabalha = horario !== undefined && !horario.is_feriado;
+                      
                       const day = String(selectedDateObj.getDate()).padStart(
                         2,
                         "0",
@@ -687,9 +740,30 @@ export function ChoiceSchedulePage() {
                       return (
                         <button
                           key={selectedDate}
-                          className="p-3 rounded-lg text-center transition-colors bg-blue-600 text-white flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center"
+                          className={`p-3 rounded-lg text-center transition-colors flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center ${
+                            !barbeiroTrabalha
+                              ? "opacity-50 cursor-not-allowed"
+                              : "bg-blue-600 text-white"
+                          }`}
+                          style={!barbeiroTrabalha
+                            ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
+                            : undefined
+                          }
                           type="button"
-                          onClick={() => handleDateSelect(selectedDate)}
+                          disabled={!barbeiroTrabalha}
+                          title={!barbeiroTrabalha ? "Não atende nesse dia" : undefined}
+                          onClick={() => {
+                            if (barbeiroTrabalha) {
+                              handleDateSelect(selectedDate);
+                            } else {
+                              addToast({
+                                title: "Informação",
+                                description: "Esse barbeiro não atende neste dia",
+                                color: "warning",
+                                timeout: 3000,
+                              });
+                            }
+                          }}
                         >
                           <div className="text-sm font-medium whitespace-nowrap">
                             {isToday
@@ -701,26 +775,47 @@ export function ChoiceSchedulePage() {
                     }
 
                     // Caso contrário, mostra as 6 datas disponíveis
-                    return availableDates.map((date) => (
-                      <button
-                        key={date.value}
-                        className={`p-3 rounded-lg text-center transition-colors flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center ${
-                          selectedDate === date.value
-                            ? "bg-blue-600 text-white"
-                            : "hover:bg-[var(--bg-hover)]"
-                        }`}
-                        style={selectedDate === date.value 
-                          ? undefined 
-                          : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
-                        }
-                        type="button"
-                        onClick={() => handleDateSelect(date.value)}
-                      >
-                        <div className="text-sm font-medium whitespace-nowrap">
-                          {date.labelMobile}
-                        </div>
-                      </button>
-                    ));
+                    return availableDates.map((date) => {
+                      const isDisabled = !date.barbeiroTrabalha;
+                      
+                      return (
+                        <button
+                          key={date.value}
+                          className={`p-3 rounded-lg text-center transition-colors flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center ${
+                            isDisabled
+                              ? "opacity-50 cursor-not-allowed"
+                              : selectedDate === date.value
+                                ? "bg-blue-600 text-white"
+                                : "hover:bg-[var(--bg-hover)]"
+                          }`}
+                          style={isDisabled
+                            ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
+                            : selectedDate === date.value 
+                              ? undefined 
+                              : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                          }
+                          type="button"
+                          disabled={isDisabled}
+                          title={isDisabled ? "Não atende nesse dia" : undefined}
+                          onClick={() => {
+                            if (!isDisabled) {
+                              handleDateSelect(date.value);
+                            } else {
+                              addToast({
+                                title: "Informação",
+                                description: "Esse barbeiro não atende neste dia!",
+                                color: "primary",
+                                timeout: 3000,
+                              });
+                            }
+                          }}
+                        >
+                          <div className="text-sm font-medium whitespace-nowrap">
+                            {date.labelMobile}
+                          </div>
+                        </button>
+                      );
+                    });
                   })()}
                 </div>
               </div>
@@ -736,6 +831,9 @@ export function ChoiceSchedulePage() {
                   // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
                   if (selectedDate && !isSelectedDateInAvailable) {
                     const selectedDateObj = new Date(selectedDate + "T00:00:00");
+                    const horario = getHorarioEfetivo(selectedDateObj);
+                    const barbeiroTrabalha = horario !== undefined && !horario.is_feriado;
+                    
                     const day = String(selectedDateObj.getDate()).padStart(
                       2,
                       "0",
@@ -763,9 +861,30 @@ export function ChoiceSchedulePage() {
                     return (
                       <button
                         key={selectedDate}
-                        className="p-3 rounded-lg text-center transition-colors bg-blue-600 text-white"
+                        className={`p-3 rounded-lg text-center transition-colors ${
+                          !barbeiroTrabalha
+                            ? "opacity-50 cursor-not-allowed"
+                            : "bg-blue-600 text-white"
+                        }`}
+                        style={!barbeiroTrabalha
+                          ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
+                          : undefined
+                        }
                         type="button"
-                        onClick={() => handleDateSelect(selectedDate)}
+                        disabled={!barbeiroTrabalha}
+                        title={!barbeiroTrabalha ? "Não atende nesse dia" : undefined}
+                        onClick={() => {
+                          if (barbeiroTrabalha) {
+                            handleDateSelect(selectedDate);
+                          } else {
+                            addToast({
+                              title: "Informação",
+                              description: "Esse barbeiro não atende neste dia",
+                              color: "warning",
+                              timeout: 3000,
+                            });
+                          }
+                        }}
                       >
                         <div className="text-sm font-medium">
                           {isToday
@@ -777,26 +896,47 @@ export function ChoiceSchedulePage() {
                   }
 
                   // Caso contrário, mostra as 6 datas disponíveis
-                  return availableDates.map((date) => (
-                    <button
-                      key={date.value}
-                      className={`p-3 rounded-lg text-center transition-colors ${
-                        selectedDate === date.value
-                          ? "bg-blue-600 text-white"
-                          : "hover:bg-[var(--bg-hover)]"
-                      }`}
-                      style={selectedDate === date.value 
-                        ? undefined 
-                        : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
-                      }
-                      type="button"
-                      onClick={() => handleDateSelect(date.value)}
-                    >
-                      <div className="text-sm font-medium">
-                        {date.labelDesktop}
-                      </div>
-                    </button>
-                  ));
+                  return availableDates.map((date) => {
+                    const isDisabled = !date.barbeiroTrabalha;
+                    
+                    return (
+                      <button
+                        key={date.value}
+                        className={`p-3 rounded-lg text-center transition-colors ${
+                          isDisabled
+                            ? "opacity-50 cursor-not-allowed"
+                            : selectedDate === date.value
+                              ? "bg-blue-600 text-white"
+                              : "hover:bg-[var(--bg-hover)]"
+                        }`}
+                        style={isDisabled
+                          ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
+                          : selectedDate === date.value 
+                            ? undefined 
+                            : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                        }
+                        type="button"
+                        disabled={isDisabled}
+                        title={isDisabled ? "Não atende nesse dia" : undefined}
+                        onClick={() => {
+                          if (!isDisabled) {
+                            handleDateSelect(date.value);
+                          } else {
+                            addToast({
+                              title: "Informação",
+                              description: "Esse barbeiro não atende neste dia!",
+                              color: "primary",
+                              timeout: 3000,
+                            });
+                          }
+                        }}
+                      >
+                        <div className="text-sm font-medium">
+                          {date.labelDesktop}
+                        </div>
+                      </button>
+                    );
+                  });
                 })()}
               </div>
             </div>
