@@ -258,3 +258,165 @@ select option {
     scroll-behavior: smooth;
   }
 }
+
+/* Estilos para toasts - texto adaptado ao tema */
+/* Tema Light: texto preto */
+[data-slot="toast"],
+[data-slot="toast"] *,
+[data-slot="toast-title"],
+[data-slot="toast-description"],
+.toast,
+.toast *,
+.toast-title,
+.toast-description,
+[role="alert"],
+[role="alert"] *,
+[role="status"],
+[role="status"] * {
+  color: #1a1a1a !important;
+}
+
+/* Estilos específicos para elementos de texto dentro dos toasts (Light) */
+[data-slot="toast"] h3,
+[data-slot="toast"] p,
+[data-slot="toast"] span,
+[data-slot="toast"] div,
+[role="alert"] h3,
+[role="alert"] p,
+[role="alert"] span,
+[role="alert"] div,
+[role="status"] h3,
+[role="status"] p,
+[role="status"] span,
+[role="status"] div {
+  color: #1a1a1a !important;
+}
+
+/* Estilos para qualquer elemento de toast do HeroUI (Light) */
+[class*="toast"],
+[class*="Toast"] {
+  color: #1a1a1a !important;
+}
+
+[class*="toast"] *,
+[class*="Toast"] * {
+  color: #1a1a1a !important;
+}
+
+/* Tema Dark: texto branco */
+.dark [data-slot="toast"],
+.dark [data-slot="toast"] *,
+.dark [data-slot="toast-title"],
+.dark [data-slot="toast-description"],
+.dark .toast,
+.dark .toast *,
+.dark .toast-title,
+.dark .toast-description,
+.dark [role="alert"],
+.dark [role="alert"] *,
+.dark [role="status"],
+.dark [role="status"] * {
+  color: white !important;
+}
+
+.dark [data-slot="toast"] h3,
+.dark [data-slot="toast"] p,
+.dark [data-slot="toast"] span,
+.dark [data-slot="toast"] div,
+.dark [role="alert"] h3,
+.dark [role="alert"] p,
+.dark [role="alert"] span,
+.dark [role="alert"] div,
+.dark [role="status"] h3,
+.dark [role="status"] p,
+.dark [role="status"] span,
+.dark [role="status"] div {
+  color: white !important;
+}
+
+.dark [class*="toast"],
+.dark [class*="Toast"] {
+  color: white !important;
+}
+
+.dark [class*="toast"] *,
+.dark [class*="Toast"] * {
+  color: white !important;
+}
+
+/* Toast de sucesso sempre com cor verde - prioridade sobre tema */
+/* Fundo verde para toasts de sucesso */
+[data-slot="toast"][data-color="success"],
+[data-slot="toast"][data-success="true"],
+[class*="success"][data-slot="toast"],
+[class*="Success"][data-slot="toast"],
+[data-color="success"],
+[class*="success"],
+[class*="Success"],
+[role="alert"][data-color="success"],
+[role="status"][data-color="success"],
+[class*="bg-success"],
+[class*="bg-green"] {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+}
+
+/* Texto branco para toasts de sucesso em ambos os temas (Light e Dark) */
+[data-slot="toast"][data-color="success"],
+[data-slot="toast"][data-color="success"] *,
+[data-slot="toast"][data-success="true"],
+[data-slot="toast"][data-success="true"] *,
+[class*="success"][data-slot="toast"],
+[class*="success"][data-slot="toast"] *,
+[class*="Success"][data-slot="toast"],
+[class*="Success"][data-slot="toast"] *,
+[data-color="success"],
+[data-color="success"] *,
+[class*="success"],
+[class*="success"] *,
+[class*="Success"],
+[class*="Success"] *,
+[role="alert"][data-color="success"],
+[role="alert"][data-color="success"] *,
+[role="status"][data-color="success"],
+[role="status"][data-color="success"] *,
+[class*="bg-success"],
+[class*="bg-success"] *,
+[class*="bg-green"],
+[class*="bg-green"] * {
+  color: white !important;
+}
+
+/* Sobrescrever especificamente para toasts de sucesso no tema light */
+[data-slot="toast"][data-color="success"] h3,
+[data-slot="toast"][data-color="success"] p,
+[data-slot="toast"][data-color="success"] span,
+[data-slot="toast"][data-color="success"] div,
+[data-color="success"] h3,
+[data-color="success"] p,
+[data-color="success"] span,
+[data-color="success"] div {
+  color: white !important;
+}
+
+/* Toast de logout (danger) no tema light: fundo vermelho e texto preto */
+/* Aplica apenas quando o html não tem a classe dark (tema light) */
+html:not(.dark) [data-slot="toast"][data-color="danger"],
+html:not(.dark) [data-color="danger"],
+html:not(.dark) [role="alert"][data-color="danger"],
+html:not(.dark) [role="status"][data-color="danger"] {
+  background-color: #ef4444 !important;
+  border-color: #dc2626 !important;
+}
+
+/* Texto preto para toast de logout no tema light */
+html:not(.dark) [data-slot="toast"][data-color="danger"],
+html:not(.dark) [data-slot="toast"][data-color="danger"] *,
+html:not(.dark) [data-color="danger"],
+html:not(.dark) [data-color="danger"] *,
+html:not(.dark) [role="alert"][data-color="danger"],
+html:not(.dark) [role="alert"][data-color="danger"] *,
+html:not(.dark) [role="status"][data-color="danger"],
+html:not(.dark) [role="status"][data-color="danger"] * {
+  color: #1a1a1a !important;
+}

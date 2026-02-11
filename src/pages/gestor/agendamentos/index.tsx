@@ -49,6 +49,39 @@ function extrairHoraInicio(horario: string): string {
   return partes[0] || "";
 }
 
+// Função para extrair hora de fim de um horário no formato "HH:MM - HH:MM"
+function extrairHoraFim(horario: string): string {
+  if (!horario) return "";
+  const partes = horario.split(" - ");
+
+  return partes[1] || partes[0] || "";
+}
+
+// Função para verificar se um horário está dentro do intervalo de um agendamento
+// (excluindo o horário de início, que deve ser tratado separadamente)
+function estaDentroDoIntervalo(
+  horaAtual: string,
+  horaInicio: string,
+  horaFim: string
+): boolean {
+  if (!horaInicio || !horaFim) return false;
+  
+  // Se o horário atual é exatamente o início, não está dentro do intervalo
+  // (o início é tratado separadamente)
+  if (horaAtual === horaInicio) return false;
+  
+  const [horaAtualNum, minutoAtualNum] = horaAtual.split(":").map(Number);
+  const [horaInicioNum, minutoInicioNum] = horaInicio.split(":").map(Number);
+  const [horaFimNum, minutoFimNum] = horaFim.split(":").map(Number);
+  
+  const minutosAtual = horaAtualNum * 60 + minutoAtualNum;
+  const minutosInicio = horaInicioNum * 60 + minutoInicioNum;
+  const minutosFim = horaFimNum * 60 + minutoFimNum;
+  
+  // Está dentro se for > início (não inclui o início) e < fim (não inclui o fim)
+  return minutosAtual > minutosInicio && minutosAtual < minutosFim;
+}
+
 // Função para obter as iniciais do barbeiro
 function getInitials(nomeCompleto: string): string {
   const parts = nomeCompleto?.trim().split(" ") || [];
@@ -365,6 +398,10 @@ export function GestorAgendamentosPage() {
 
     const dataFormatada = formatarData(_data);
     const agendamentosDoDia = agendamentosPorData.get(dataFormatada) || [];
+    
+    // Rastreia os agendamentos que já foram exibidos no slot de início
+    // Usa ID se disponível, senão usa uma chave composta (data + horário + cliente)
+    const agendamentosExibidos = new Set<string>();
 
     while (
       horaAtual < horaFechamento ||
@@ -372,51 +409,106 @@ export function GestorAgendamentosPage() {
     ) {
       const horaStr = `${String(horaAtual).padStart(2, "0")}:${String(minutoAtual).padStart(2, "0")}`;
 
-      // Verifica se está no intervalo de almoço
-      const isAlmoco =
+      // Verifica se deve adicionar o slot de almoço (prioridade sobre agendamentos)
+      if (
         horario.tem_almoco &&
         horario.horario_almoco_inicio &&
         horario.horario_almoco_fim &&
-        horaStr >= horario.horario_almoco_inicio &&
-        horaStr < horario.horario_almoco_fim;
+        !slotAlmocoAdicionado
+      ) {
+        // Converte horários para minutos para comparação precisa
+        const [horaAlmocoInicioNum, minutoAlmocoInicioNum] = horario.horario_almoco_inicio.split(":").map(Number);
+        const minutosAlmocoInicio = horaAlmocoInicioNum * 60 + minutoAlmocoInicioNum;
+        const minutosAtual = horaAtual * 60 + minutoAtual;
+        const [horaAlmocoFimNum, minutoAlmocoFimNum] = horario.horario_almoco_fim.split(":").map(Number);
+        const minutosAlmocoFim = horaAlmocoFimNum * 60 + minutoAlmocoFimNum;
+        
+        // Verifica se chegou exatamente no horário de início do almoço OU se já passou mas ainda está dentro do intervalo
+        // E se ainda não passou do horário de fim
+        if (minutosAtual >= minutosAlmocoInicio && minutosAtual < minutosAlmocoFim) {
+          // Adiciona o slot de almoço
+          slots.push({
+            hora: `${horario.horario_almoco_inicio} - ${horario.horario_almoco_fim}`,
+            disponivel: false,
+            isAlmoco: true,
+            isSlotAlmoco: true,
+          });
+          slotAlmocoAdicionado = true;
 
-      // Se está no início do intervalo de almoço e ainda não adicionou o slot de almoço
+          // Pula para o fim do almoço
+          horaAtual = horaAlmocoFimNum;
+          minutoAtual = minutoAlmocoFimNum;
+          continue;
+        }
+      }
+
+      // Verifica se está no intervalo de almoço (para não processar slots dentro do almoço)
+      // Usa comparação numérica para maior precisão
+      let isAlmoco = false;
       if (
-        isAlmoco &&
-        !slotAlmocoAdicionado &&
-        horaStr === horario.horario_almoco_inicio &&
+        horario.tem_almoco &&
+        horario.horario_almoco_inicio &&
         horario.horario_almoco_fim
       ) {
-        slots.push({
-          hora: `${horario.horario_almoco_inicio} - ${horario.horario_almoco_fim}`,
-          disponivel: false,
-          isAlmoco: true,
-          isSlotAlmoco: true,
-        });
-        slotAlmocoAdicionado = true;
-
-        // Pula para o fim do almoço
-        const [horaAlmocoFim, minutoAlmocoFim] = horario.horario_almoco_fim.split(":").map(Number);
-        horaAtual = horaAlmocoFim;
-        minutoAtual = minutoAlmocoFim;
-        continue;
+        const [horaAlmocoInicioNum, minutoAlmocoInicioNum] = horario.horario_almoco_inicio.split(":").map(Number);
+        const minutosAlmocoInicio = horaAlmocoInicioNum * 60 + minutoAlmocoInicioNum;
+        const [horaAlmocoFimNum, minutoAlmocoFimNum] = horario.horario_almoco_fim.split(":").map(Number);
+        const minutosAlmocoFim = horaAlmocoFimNum * 60 + minutoAlmocoFimNum;
+        const minutosAtual = horaAtual * 60 + minutoAtual;
+        
+        isAlmoco = minutosAtual >= minutosAlmocoInicio && minutosAtual < minutosAlmocoFim;
       }
 
       // Se não está no intervalo de almoço, adiciona slot normal
       if (!isAlmoco) {
-        // Verifica se há agendamento neste horário
+        // Verifica se há agendamento que começa EXATAMENTE neste horário (slot de início)
         const agendamentoNoHorario = agendamentosDoDia.find((ag) => {
           const horaInicio = extrairHoraInicio(ag.horario || "");
-
-          return horaInicio === horaStr;
+          if (horaInicio !== horaStr) return false;
+          
+          // Cria uma chave única para rastrear o agendamento
+          const chaveAgendamento = ag.id || `${dataFormatada}-${ag.horario}-${ag.cliente?.nome || ""}`;
+          
+          // Verifica se começa neste horário E ainda não foi exibido
+          return !agendamentosExibidos.has(chaveAgendamento);
         });
 
-        slots.push({
-          hora: horaStr,
-          disponivel: !agendamentoNoHorario,
-          isAlmoco: false,
-          agendamento: agendamentoNoHorario,
-        });
+        if (agendamentoNoHorario) {
+          // Cria chave única para marcar como exibido
+          const chaveAgendamento = agendamentoNoHorario.id || `${dataFormatada}-${agendamentoNoHorario.horario}-${agendamentoNoHorario.cliente?.nome || ""}`;
+          
+          // Agendamento começa neste horário - mostra o agendamento APENAS neste slot
+          agendamentosExibidos.add(chaveAgendamento); // Marca como exibido
+          slots.push({
+            hora: horaStr,
+            disponivel: false,
+            isAlmoco: false,
+            agendamento: agendamentoNoHorario,
+          });
+        } else {
+          // Verifica se está dentro do intervalo de algum agendamento
+          const agendamentoNoIntervalo = agendamentosDoDia.find((ag) => {
+            const horaInicio = extrairHoraInicio(ag.horario || "");
+            const horaFim = extrairHoraFim(ag.horario || "");
+
+            // Verifica se está dentro do intervalo (a função já exclui o horário de início)
+            return estaDentroDoIntervalo(horaStr, horaInicio, horaFim);
+          });
+
+          if (agendamentoNoIntervalo) {
+            // Está dentro do intervalo de um agendamento - NÃO cria o slot
+            // O agendamento já foi exibido no slot de início
+            // O loop continuará naturalmente para o próximo slot sem adicionar este
+          } else {
+            // Slot disponível
+            slots.push({
+              hora: horaStr,
+              disponivel: true,
+              isAlmoco: false,
+              agendamento: undefined,
+            });
+          }
+        }
       }
 
       // Avança 30 minutos
@@ -1135,7 +1227,7 @@ export function GestorAgendamentosPage() {
                       return (
                         <div
                           key={index}
-                          className="bg-gray-800 rounded-lg p-2.5 border border-gray-700 flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center"
+                          className="bg-gray-800 dark:bg-gray-800 rounded-lg p-2.5 border border-gray-700 dark:border-gray-700 flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center"
                         >
                           <div className="text-white font-semibold mb-1.5 text-center text-sm">
                             {diaSemana} {dataFormatada}
@@ -1169,6 +1261,9 @@ export function GestorAgendamentosPage() {
                                 }
 
                                 if (slot.agendamento) {
+                                  // Usa o horário completo do agendamento (ex: "11:00 - 11:30") em vez de apenas a hora do slot
+                                  const horarioExibicao = slot.agendamento.horario || slot.hora;
+                                  
                                   return (
                                     <button
                                       key={slotIndex}
@@ -1177,7 +1272,7 @@ export function GestorAgendamentosPage() {
                                       onClick={() => handleClickAgendamento(slot.agendamento!)}
                                     >
                                       <div className="text-red-400 font-semibold text-[10px] mb-0.5">
-                                        {slot.hora}
+                                        {horarioExibicao}
                                       </div>
                                       <div className="text-[10px] font-medium mb-0.5 line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                                         {slot.agendamento.cliente?.nome || "Cliente não informado"}
@@ -1191,6 +1286,19 @@ export function GestorAgendamentosPage() {
                                   );
                                 }
 
+                                // Slot ocupado mas sem agendamento (dentro do intervalo de um agendamento)
+                                if (!slot.disponivel) {
+                                  return (
+                                    <div
+                                      key={slotIndex}
+                                      className="bg-red-500/10 border border-red-500/30 py-1 px-1.5 rounded text-center text-[10px] text-red-400"
+                                    >
+                                      {slot.hora} • Ocupado
+                                    </div>
+                                  );
+                                }
+
+                                // Slot disponível
                                 return (
                                   <div
                                     key={slotIndex}
@@ -1264,7 +1372,7 @@ export function GestorAgendamentosPage() {
                     return (
                       <div
                         key={index}
-                        className="bg-gray-800 rounded-lg p-2.5 border border-gray-700"
+                        className="bg-gray-800 dark:bg-gray-600/50 rounded-lg p-2.5 border border-gray-700 dark:border-gray-700"
                       >
                         <div className="text-white font-semibold mb-1.5 text-center text-sm">
                           {diaSemana} {dataFormatada}
@@ -1298,6 +1406,9 @@ export function GestorAgendamentosPage() {
                               }
 
                               if (slot.agendamento) {
+                                // Usa o horário completo do agendamento (ex: "11:00 - 11:30") em vez de apenas a hora do slot
+                                const horarioExibicao = slot.agendamento.horario || slot.hora;
+                                
                                 return (
                                   <button
                                     key={slotIndex}
@@ -1306,7 +1417,7 @@ export function GestorAgendamentosPage() {
                                     onClick={() => handleClickAgendamento(slot.agendamento!)}
                                   >
                                     <div className="text-red-400 font-semibold text-[10px] mb-0.5">
-                                      {slot.hora}
+                                      {horarioExibicao}
                                     </div>
                                     <div className="text-[10px] font-medium mb-0.5 line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                                       {slot.agendamento.cliente?.nome || "Cliente não informado"}
@@ -1320,6 +1431,19 @@ export function GestorAgendamentosPage() {
                                 );
                               }
 
+                              // Slot ocupado mas sem agendamento (dentro do intervalo de um agendamento)
+                              if (!slot.disponivel) {
+                                return (
+                                  <div
+                                    key={slotIndex}
+                                    className="bg-red-500/10 border border-red-500/30 py-1 px-1.5 rounded text-center text-[10px] text-red-400"
+                                  >
+                                    {slot.hora} • Ocupado
+                                  </div>
+                                );
+                              }
+
+                              // Slot disponível
                               return (
                                 <div
                                   key={slotIndex}
