@@ -211,9 +211,9 @@ export function ChoiceSchedulePage() {
   const getTurno = (time: string): "manha" | "tarde" | "noite" => {
     const [hour] = time.split(":").map(Number);
 
-    if (hour < 12) return "manha";
-    if (hour < 18) return "tarde";
-    if (hour >= 18) return "noite";
+    if (hour < 13) return "manha"; // Manhã: antes das 13:00
+    if (hour < 18) return "tarde"; // Tarde: das 13:00 até 17:59
+    if (hour >= 18) return "noite"; // Noite: a partir das 18:00
 
     return "manha"; // fallback
   };
