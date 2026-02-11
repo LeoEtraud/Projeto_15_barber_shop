@@ -695,11 +695,10 @@ export function ChoiceSchedulePage() {
                 </button>
               </div>
             </div>
-            {/* Container com carrossel no mobile e grid no desktop */}
-            <div className="sm:grid sm:grid-cols-3 sm:gap-3">
-              {/* Mobile: Carrossel horizontal com scroll suave */}
-              <div className="sm:hidden overflow-x-auto scrollbar-hide -mx-4 px-4 snap-x snap-mandatory scroll-smooth touch-pan-x">
-                <div className="flex gap-3 min-w-max pb-1">
+            {/* Container com grid no mobile e desktop */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {/* Mobile e Desktop: Grid de datas */}
+              <div className="contents">
                   {(() => {
                     const availableDates = generateDates();
                     const isSelectedDateInAvailable = availableDates.some(
@@ -733,6 +732,16 @@ export function ChoiceSchedulePage() {
                         weekdayShort.charAt(0).toUpperCase() +
                         weekdayShort.slice(1);
 
+                      const weekdayLong = selectedDateObj.toLocaleDateString(
+                        "pt-BR",
+                        {
+                          weekday: "long",
+                        },
+                      );
+
+                      const weekdayLongCapitalized =
+                        weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
+
                       const today = new Date();
                       const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
                       const isToday = selectedDate === todayString;
@@ -740,7 +749,7 @@ export function ChoiceSchedulePage() {
                       return (
                         <button
                           key={selectedDate}
-                          className={`p-3 rounded-lg text-center transition-colors flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center ${
+                          className={`p-3 rounded-lg text-center transition-colors ${
                             !barbeiroTrabalha
                               ? "opacity-50 cursor-not-allowed"
                               : "bg-blue-600 text-white"
@@ -765,10 +774,15 @@ export function ChoiceSchedulePage() {
                             }
                           }}
                         >
-                          <div className="text-sm font-medium whitespace-nowrap">
+                          <div className="text-sm font-medium sm:hidden">
                             {isToday
                               ? `Hoje (${shortDate})`
                               : `${weekdayShortCapitalized} (${shortDate})`}
+                          </div>
+                          <div className="text-sm font-medium hidden sm:block">
+                            {isToday
+                              ? `Hoje (${shortDate})`
+                              : `${weekdayLongCapitalized} (${shortDate})`}
                           </div>
                         </button>
                       );
@@ -781,7 +795,7 @@ export function ChoiceSchedulePage() {
                       return (
                         <button
                           key={date.value}
-                          className={`p-3 rounded-lg text-center transition-colors flex-shrink-0 w-[calc(50vw-1.5rem)] snap-center ${
+                          className={`p-3 rounded-lg text-center transition-colors ${
                             isDisabled
                               ? "opacity-50 cursor-not-allowed"
                               : selectedDate === date.value
@@ -810,134 +824,16 @@ export function ChoiceSchedulePage() {
                             }
                           }}
                         >
-                          <div className="text-sm font-medium whitespace-nowrap">
+                          <div className="text-sm font-medium sm:hidden">
                             {date.labelMobile}
+                          </div>
+                          <div className="text-sm font-medium hidden sm:block">
+                            {date.labelDesktop}
                           </div>
                         </button>
                       );
                     });
                   })()}
-                </div>
-              </div>
-
-              {/* Desktop: Grid tradicional */}
-              <div className="hidden sm:contents">
-                {(() => {
-                  const availableDates = generateDates();
-                  const isSelectedDateInAvailable = availableDates.some(
-                    (date) => date.value === selectedDate,
-                  );
-
-                  // Se a data selecionada não está nas datas disponíveis, mostra apenas ela
-                  if (selectedDate && !isSelectedDateInAvailable) {
-                    const selectedDateObj = new Date(selectedDate + "T00:00:00");
-                    const horario = getHorarioEfetivo(selectedDateObj);
-                    const barbeiroTrabalha = horario !== undefined && !horario.is_feriado;
-                    
-                    const day = String(selectedDateObj.getDate()).padStart(
-                      2,
-                      "0",
-                    );
-                    const month = String(selectedDateObj.getMonth() + 1).padStart(
-                      2,
-                      "0",
-                    );
-                    const shortDate = `${day}/${month}`;
-
-                    const weekdayLong = selectedDateObj.toLocaleDateString(
-                      "pt-BR",
-                      {
-                        weekday: "long",
-                      },
-                    );
-
-                    const weekdayLongCapitalized =
-                      weekdayLong.charAt(0).toUpperCase() + weekdayLong.slice(1);
-
-                    const today = new Date();
-                    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-                    const isToday = selectedDate === todayString;
-
-                    return (
-                      <button
-                        key={selectedDate}
-                        className={`p-3 rounded-lg text-center transition-colors ${
-                          !barbeiroTrabalha
-                            ? "opacity-50 cursor-not-allowed"
-                            : "bg-blue-600 text-white"
-                        }`}
-                        style={!barbeiroTrabalha
-                          ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
-                          : undefined
-                        }
-                        type="button"
-                        disabled={!barbeiroTrabalha}
-                        title={!barbeiroTrabalha ? "Não atende nesse dia" : undefined}
-                        onClick={() => {
-                          if (barbeiroTrabalha) {
-                            handleDateSelect(selectedDate);
-                          } else {
-                            addToast({
-                              title: "Informação",
-                              description: "Esse barbeiro não atende neste dia",
-                              color: "warning",
-                              timeout: 3000,
-                            });
-                          }
-                        }}
-                      >
-                        <div className="text-sm font-medium">
-                          {isToday
-                            ? `Hoje (${shortDate})`
-                            : `${weekdayLongCapitalized} (${shortDate})`}
-                        </div>
-                      </button>
-                    );
-                  }
-
-                  // Caso contrário, mostra as 6 datas disponíveis
-                  return availableDates.map((date) => {
-                    const isDisabled = !date.barbeiroTrabalha;
-                    
-                    return (
-                      <button
-                        key={date.value}
-                        className={`p-3 rounded-lg text-center transition-colors ${
-                          isDisabled
-                            ? "opacity-50 cursor-not-allowed"
-                            : selectedDate === date.value
-                              ? "bg-blue-600 text-white"
-                              : "hover:bg-[var(--bg-hover)]"
-                        }`}
-                        style={isDisabled
-                          ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
-                          : selectedDate === date.value 
-                            ? undefined 
-                            : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
-                        }
-                        type="button"
-                        disabled={isDisabled}
-                        title={isDisabled ? "Não atende nesse dia" : undefined}
-                        onClick={() => {
-                          if (!isDisabled) {
-                            handleDateSelect(date.value);
-                          } else {
-                            addToast({
-                              title: "Informação",
-                              description: "Esse barbeiro não atende neste dia!",
-                              color: "primary",
-                              timeout: 3000,
-                            });
-                          }
-                        }}
-                      >
-                        <div className="text-sm font-medium">
-                          {date.labelDesktop}
-                        </div>
-                      </button>
-                    );
-                  });
-                })()}
               </div>
             </div>
           </div>

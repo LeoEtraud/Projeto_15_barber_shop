@@ -206,12 +206,12 @@ export function ChoiceServicePage() {
                   key={service.id}
                   aria-pressed={isSelected}
                   className={[
-                    "group rounded-lg shadow-lg transition-all border-2 overflow-hidden flex hover:scale-[1.02]",
+                    "group rounded-lg shadow-lg transition-all border-2 overflow-hidden flex md:hover:scale-[1.02]",
                     isSelected
                       ? "border-green-500 ring-2 ring-green-500/30 shadow-green-500/20"
                       : isDisabled
                         ? "opacity-50 cursor-not-allowed"
-                        : "hover:shadow-xl",
+                        : "md:hover:shadow-xl",
                   ].join(" ")}
                   style={isSelected 
                     ? { backgroundColor: "var(--bg-card)", borderColor: "#22c55e" }
@@ -220,13 +220,15 @@ export function ChoiceServicePage() {
                       : { backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }
                   }
                   onMouseEnter={(e) => {
-                    if (!isSelected && !isDisabled) {
+                    // Só aplica hover em telas maiores (desktop)
+                    if (!isSelected && !isDisabled && window.innerWidth >= 768) {
                       e.currentTarget.style.backgroundColor = "var(--bg-card-hover)";
                       e.currentTarget.style.borderColor = "var(--accent-amber)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isSelected && !isDisabled) {
+                    // Só aplica hover em telas maiores (desktop)
+                    if (!isSelected && !isDisabled && window.innerWidth >= 768) {
                       e.currentTarget.style.backgroundColor = "var(--bg-card)";
                       e.currentTarget.style.borderColor = "var(--border-primary)";
                     }
@@ -414,7 +416,7 @@ export function ChoiceServicePage() {
                     <div
                       className={`absolute inset-0 transition-opacity duration-300 ${
                         isSelected
-                          ? "bg-green-500/20"
+                          ? "bg-black/10"
                           : "bg-black/10 hover:bg-black/20"
                       }`}
                     />
