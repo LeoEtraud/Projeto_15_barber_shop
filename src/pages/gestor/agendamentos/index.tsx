@@ -876,7 +876,7 @@ export function GestorAgendamentosPage() {
           </button>
 
           {/* Banner */}
-          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-lg mb-6 shadow-sm relative overflow-hidden">
+          <div className="hidden md:block bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-lg mb-6 shadow-sm relative overflow-hidden">
             <div className="absolute inset-0">
               <img
                 alt="Agendamentos"

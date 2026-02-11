@@ -894,17 +894,6 @@ export function GestorBarbeirosPage() {
                     Gerencie os profissionais da sua barbearia
                   </p>
                 </div>
-                <PermissionGate requiredPermissions={["manage_barbers"]}>
-                  <Button
-                    className="bg-white text-black font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 whitespace-nowrap"
-                    color="primary"
-                    size="sm"
-                    startContent={<UserPlus size={18} />}
-                    onPress={() => handleOpenModal()}
-                  >
-                    Adicionar Profissional
-                  </Button>
-                </PermissionGate>
               </div>
             </div>
           </div>
@@ -959,16 +948,33 @@ export function GestorBarbeirosPage() {
               <>
                 {/* Título da Categoria */}
                 <div className="mb-4">
-                  <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-                    {FUNCOES.find((f) => f.value === selectedTab)?.label ||
-                      selectedTab}
-                  </h2>
-                  <p className="text-sm mt-1 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-                    {filteredBarbers.length}{" "}
-                    {filteredBarbers.length === 1
-                      ? "profissional encontrado"
-                      : "profissionais encontrados"}
-                  </p>
+                  <div className="flex flex-row items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold transition-colors duration-300 m-0" style={{ color: "var(--text-primary)" }}>
+                        {FUNCOES.find((f) => f.value === selectedTab)?.label ||
+                          selectedTab}
+                      </h2>
+                      <p className="text-sm mt-1 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                        {filteredBarbers.length}{" "}
+                        {filteredBarbers.length === 1
+                          ? "profissional encontrado"
+                          : "profissionais encontrados"}
+                      </p>
+                    </div>
+                    <PermissionGate requiredPermissions={["manage_barbers"]}>
+                      <div className="flex items-center">
+                        <Button
+                          className="bg-white text-black font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 md:whitespace-nowrap !min-w-0 md:!min-w-fit !h-10 md:!h-auto !w-10 md:!w-auto px-0 md:px-3.5 md:py-2 md:text-sm"
+                          color="primary"
+                          size="sm"
+                          startContent={<UserPlus size={20} className="md:w-[18px] md:h-[18px]" />}
+                          onPress={() => handleOpenModal()}
+                        >
+                          <span className="hidden md:inline ml-2">Adicionar Profissional</span>
+                        </Button>
+                      </div>
+                    </PermissionGate>
+                  </div>
                 </div>
 
                 {/* Grid de Cards */}
