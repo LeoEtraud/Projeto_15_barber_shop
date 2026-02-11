@@ -361,8 +361,6 @@ export function GestorHorariosPage() {
   const [isCriandoExcecao, setIsCriandoExcecao] = useState(false);
   const [dataSelecionadaExcecao, setDataSelecionadaExcecao] = useState<Date | null>(null);
   
-  // Ref para controlar se já atualizou os horários com barbeiros ativos
-  const jaAtualizouBarbeiros = useRef(false);
 
   const opcoesHorario = gerarOpcoesHorario();
 
@@ -598,31 +596,6 @@ export function GestorHorariosPage() {
     return horariosDoDia[0];
   };
 
-  // Função para verificar se há mudanças no horário (comparando EXCECAO com PADRAO)
-  const temMudancasNoHorario = (
-    horarioExcecao: IHorarioFuncionamento | undefined,
-    horarioPadrao: IHorarioFuncionamento | undefined
-  ): boolean => {
-    if (!horarioExcecao || !horarioPadrao) {
-      return false;
-    }
-
-    // Compara IDs dos profissionais
-    const idsExcecao = horarioExcecao.profissionais?.map((p) => p.id).sort() || [];
-    const idsPadrao = horarioPadrao.profissionais?.map((p) => p.id).sort() || [];
-
-    // Compara os campos principais do horário
-    return (
-      horarioExcecao.horario_abertura !== horarioPadrao.horario_abertura ||
-      horarioExcecao.horario_fechamento !== horarioPadrao.horario_fechamento ||
-      horarioExcecao.tem_almoco !== horarioPadrao.tem_almoco ||
-      horarioExcecao.horario_almoco_inicio !==
-        horarioPadrao.horario_almoco_inicio ||
-      horarioExcecao.horario_almoco_fim !== horarioPadrao.horario_almoco_fim ||
-      horarioExcecao.is_feriado !== horarioPadrao.is_feriado ||
-      JSON.stringify(idsExcecao) !== JSON.stringify(idsPadrao)
-    );
-  };
 
   // Função para obter apenas exceções (tipo_regra === "EXCECAO")
   const excecoes = useMemo(() => {
@@ -1079,16 +1052,7 @@ export function GestorHorariosPage() {
                           // Na aba Padrão Semanal, sempre mostra apenas o PADRAO (ignora exceções)
                           const horario = getHorarioByDia(dia.value, semanaSelecionada, true);
                         
-                        // Busca o horário PADRAO para comparação
-                        const horariosDoDia = horariosEnriquecidos.filter(
-                          (h) => h.dia_da_semana === dia.value
-                        );
-                        const horarioPadrao = horariosDoDia.find(
-                          (h) => h.tipo_regra === "PADRAO"
-                        );
-                        
                         // Na aba Padrão Semanal, nunca mostra badge de exceção
-                        const temMudancas = false;
 
                         return (
                           <Card
@@ -1258,16 +1222,7 @@ export function GestorHorariosPage() {
                 // Na aba Padrão Semanal, sempre mostra apenas o PADRAO (ignora exceções)
                 const horario = getHorarioByDia(dia.value, semanaSelecionada, true);
                 
-                // Busca o horário PADRAO para comparação
-                const horariosDoDia = horariosEnriquecidos.filter(
-                  (h) => h.dia_da_semana === dia.value
-                );
-                const horarioPadrao = horariosDoDia.find(
-                  (h) => h.tipo_regra === "PADRAO"
-                );
-                
                 // Na aba Padrão Semanal, nunca mostra badge de exceção
-                const temMudancas = false;
 
                 return (
                   <Card
