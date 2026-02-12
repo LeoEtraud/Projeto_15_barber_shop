@@ -981,10 +981,10 @@ export function GestorAgendamentosPage() {
             <div className="relative z-10 p-4 md:p-5">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                 <div className="flex-1">
-                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                  <h1 className="text-xl md:text-2xl font-medium mb-1 transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#ffffff" }}>
                     Gerenciar Agendamentos
                   </h1>
-                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                  <p className="text-xs md:text-sm font-light transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#ffffff" }}>
                     Visualize e gerencie os agendamentos dos barbeiros
                   </p>
                 </div>

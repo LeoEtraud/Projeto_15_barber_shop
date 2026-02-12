@@ -1439,11 +1439,11 @@ export function GestorHorariosPage() {
                         return (
                           <button
                             key={index}
-                            className={`aspect-square rounded text-sm font-medium transition-all ${
+                            className={`aspect-square rounded text-sm font-medium transition-all relative ${
                               isHoje
                                 ? "bg-blue-500 text-white"
                                 : excecao
-                                  ? `border border-purple-500 ${isDark ? "bg-purple-500/30 text-purple-300" : "bg-purple-500/20 text-purple-700"}`
+                                  ? `border border-yellow-500 ${isDark ? "bg-yellow-500/30 text-yellow-300" : "bg-yellow-500/20 text-yellow-700"}`
                                   : ""
                             }`}
                             style={!isHoje && !excecao ? {
@@ -1463,8 +1463,8 @@ export function GestorHorariosPage() {
                             onClick={() => handleOpenModalExcecao(dia.data, excecao)}
                             disabled={isPassado}
                           >
-                            {dia.dia}
-                            {excecao && <span className="block text-[8px]">*</span>}
+                            <span className="flex items-center justify-center h-full">{dia.dia}</span>
+                            {excecao && <span className="absolute top-0.5 right-1 text-[10px] font-bold text-yellow-600 dark:text-yellow-400">*</span>}
                           </button>
                         );
                       })}
@@ -1479,7 +1479,7 @@ export function GestorHorariosPage() {
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded bg-purple-500/30 border border-purple-500 flex-shrink-0"></div>
+                            <div className="w-5 h-5 rounded bg-yellow-500/30 border border-yellow-500 flex-shrink-0"></div>
                             <p className="text-xs transition-colors duration-300" style={{ color: isDark ? "var(--text-secondary)" : "#404040" }}>
                               * Datas com exceção
                             </p>
@@ -1556,6 +1556,7 @@ export function GestorHorariosPage() {
                                         color: "#ffffff",
                                       }}
                                       onPress={() => handleOpenModalExcecao(dataExcecao, excecao)}
+                                      startContent={<PencilIcon className="w-4 h-4" style={{ color: "#ffffff" }} />}
                                     >
                                       Editar
                                     </Button>
