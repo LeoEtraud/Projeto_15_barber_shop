@@ -1227,20 +1227,24 @@ export function GestorAgendamentosPage() {
                       return (
                         <div
                           key={index}
-                          className="bg-gray-800 dark:bg-gray-800 rounded-lg p-2.5 border border-gray-700 dark:border-gray-700 flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center"
+                          className="rounded-lg p-2.5 border shadow-md flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center transition-colors duration-300"
+                          style={{ 
+                            backgroundColor: isDark ? "#1f2937" : "#ffffff", 
+                            borderColor: isDark ? "#374151" : "#e5e5e5" 
+                          }}
                         >
-                          <div className="text-white font-semibold mb-1.5 text-center text-sm">
+                          <div className="font-semibold mb-1.5 text-center text-sm transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "#1a1a1a" }}>
                             {diaSemana} {dataFormatada}
                           </div>
 
                           {/* Estatísticas */}
                           <div className="flex justify-between items-center mb-2 text-[10px]">
                             <div className="flex items-center gap-0.5">
-                              <span className="text-green-400 font-bold text-xs">●</span>
+                              <span className="font-bold text-xs" style={{ color: isDark ? "#4ade80" : "#10b981" }}>●</span>
                               <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{disponiveis}</span>
                             </div>
                             <div className="flex items-center gap-0.5">
-                              <span className="text-red-400 font-bold text-xs">●</span>
+                              <span className="font-bold text-xs" style={{ color: isDark ? "#f87171" : "#ef4444" }}>●</span>
                               <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{agendados}</span>
                             </div>
                           </div>
@@ -1253,7 +1257,11 @@ export function GestorAgendamentosPage() {
                                     <div
                                       key={slotIndex}
                                       className="py-1 px-1.5 rounded text-center text-[10px] font-medium transition-colors duration-300"
-                                      style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}
+                                      style={{ 
+                                        backgroundColor: isDark ? "var(--bg-tertiary)" : "#fef3c7", 
+                                        color: isDark ? "var(--text-secondary)" : "#92400e",
+                                        border: isDark ? "none" : "1px solid #fcd34d"
+                                      }}
                                     >
                                       Almoço: {slot.hora}
                                     </div>
@@ -1267,11 +1275,21 @@ export function GestorAgendamentosPage() {
                                   return (
                                     <button
                                       key={slotIndex}
-                                      className="w-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-left p-1.5 rounded transition-all cursor-pointer"
+                                      className="w-full text-left p-1.5 rounded transition-all cursor-pointer"
+                                      style={{
+                                        backgroundColor: isDark ? "rgba(239, 68, 68, 0.2)" : "#fee2e2",
+                                        border: isDark ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid #fca5a5",
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = isDark ? "rgba(239, 68, 68, 0.3)" : "#fecaca";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = isDark ? "rgba(239, 68, 68, 0.2)" : "#fee2e2";
+                                      }}
                                       type="button"
                                       onClick={() => handleClickAgendamento(slot.agendamento!)}
                                     >
-                                      <div className="text-red-400 font-semibold text-[10px] mb-0.5">
+                                      <div className="font-semibold text-[10px] mb-0.5" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
                                         {horarioExibicao}
                                       </div>
                                       <div className="text-[10px] font-medium mb-0.5 line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
@@ -1291,7 +1309,12 @@ export function GestorAgendamentosPage() {
                                   return (
                                     <div
                                       key={slotIndex}
-                                      className="bg-red-500/10 border border-red-500/30 py-1 px-1.5 rounded text-center text-[10px] text-red-400"
+                                      className="py-1 px-1.5 rounded text-center text-[10px] transition-colors duration-300"
+                                      style={{
+                                        backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fee2e2",
+                                        border: isDark ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid #fca5a5",
+                                        color: isDark ? "#f87171" : "#dc2626"
+                                      }}
                                     >
                                       {slot.hora} • Ocupado
                                     </div>
@@ -1302,7 +1325,12 @@ export function GestorAgendamentosPage() {
                                 return (
                                   <div
                                     key={slotIndex}
-                                    className="bg-green-500/20 text-green-400 py-1 px-1.5 rounded text-center text-[10px]"
+                                    className="py-1 px-1.5 rounded text-center text-[10px] transition-colors duration-300"
+                                    style={{
+                                      backgroundColor: isDark ? "rgba(34, 197, 94, 0.2)" : "#d1fae5",
+                                      border: isDark ? "1px solid rgba(34, 197, 94, 0.3)" : "1px solid #86efac",
+                                      color: isDark ? "#4ade80" : "#059669"
+                                    }}
                                   >
                                     {slot.hora} • Disp.
                                   </div>
@@ -1311,7 +1339,7 @@ export function GestorAgendamentosPage() {
                             </div>
                           ) : (
                             <div className="text-center py-3">
-                              <div className="text-red-400 font-semibold text-xs">FECHADO</div>
+                              <div className="font-semibold text-xs transition-colors duration-300" style={{ color: isDark ? "#f87171" : "#dc2626" }}>FECHADO</div>
                               {diaInfo.horario?.is_feriado && (
                                 <div className="text-[10px] mt-0.5 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>(Feriado)</div>
                               )}
@@ -1372,20 +1400,24 @@ export function GestorAgendamentosPage() {
                     return (
                       <div
                         key={index}
-                        className="bg-gray-800 dark:bg-gray-600/50 rounded-lg p-2.5 border border-gray-700 dark:border-gray-700"
+                        className="rounded-lg p-2.5 border shadow-md transition-colors duration-300"
+                        style={{ 
+                          backgroundColor: isDark ? "#1f2937" : "#ffffff", 
+                          borderColor: isDark ? "#374151" : "#e5e5e5" 
+                        }}
                       >
-                        <div className="text-white font-semibold mb-1.5 text-center text-sm">
+                        <div className="font-semibold mb-1.5 text-center text-sm transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "#1a1a1a" }}>
                           {diaSemana} {dataFormatada}
                         </div>
 
                         {/* Estatísticas */}
                         <div className="flex justify-between items-center mb-2 text-[10px]">
                           <div className="flex items-center gap-0.5">
-                            <span className="text-green-400 font-bold text-xs">●</span>
+                            <span className="font-bold text-xs" style={{ color: isDark ? "#4ade80" : "#10b981" }}>●</span>
                             <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{disponiveis}</span>
                           </div>
                           <div className="flex items-center gap-0.5">
-                            <span className="text-red-400 font-bold text-xs">●</span>
+                            <span className="font-bold text-xs" style={{ color: isDark ? "#f87171" : "#ef4444" }}>●</span>
                             <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>{agendados}</span>
                           </div>
                         </div>
@@ -1398,7 +1430,11 @@ export function GestorAgendamentosPage() {
                                   <div
                                     key={slotIndex}
                                     className="py-1 px-1.5 rounded text-center text-[10px] font-medium transition-colors duration-300"
-                                    style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}
+                                    style={{ 
+                                      backgroundColor: isDark ? "var(--bg-tertiary)" : "#fef3c7", 
+                                      color: isDark ? "var(--text-secondary)" : "#92400e",
+                                      border: isDark ? "none" : "1px solid #fcd34d"
+                                    }}
                                   >
                                     Almoço: {slot.hora}
                                   </div>
@@ -1412,11 +1448,21 @@ export function GestorAgendamentosPage() {
                                 return (
                                   <button
                                     key={slotIndex}
-                                    className="w-full bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-left p-1.5 rounded transition-all cursor-pointer"
+                                    className="w-full text-left p-1.5 rounded transition-all cursor-pointer"
+                                    style={{
+                                      backgroundColor: isDark ? "rgba(239, 68, 68, 0.2)" : "#fee2e2",
+                                      border: isDark ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid #fca5a5",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = isDark ? "rgba(239, 68, 68, 0.3)" : "#fecaca";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = isDark ? "rgba(239, 68, 68, 0.2)" : "#fee2e2";
+                                    }}
                                     type="button"
                                     onClick={() => handleClickAgendamento(slot.agendamento!)}
                                   >
-                                    <div className="text-red-400 font-semibold text-[10px] mb-0.5">
+                                    <div className="font-semibold text-[10px] mb-0.5" style={{ color: isDark ? "#f87171" : "#dc2626" }}>
                                       {horarioExibicao}
                                     </div>
                                     <div className="text-[10px] font-medium mb-0.5 line-clamp-1 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
@@ -1436,7 +1482,12 @@ export function GestorAgendamentosPage() {
                                 return (
                                   <div
                                     key={slotIndex}
-                                    className="bg-red-500/10 border border-red-500/30 py-1 px-1.5 rounded text-center text-[10px] text-red-400"
+                                    className="py-1 px-1.5 rounded text-center text-[10px] transition-colors duration-300"
+                                    style={{
+                                      backgroundColor: isDark ? "rgba(239, 68, 68, 0.1)" : "#fee2e2",
+                                      border: isDark ? "1px solid rgba(239, 68, 68, 0.3)" : "1px solid #fca5a5",
+                                      color: isDark ? "#f87171" : "#dc2626"
+                                    }}
                                   >
                                     {slot.hora} • Ocupado
                                   </div>
@@ -1447,7 +1498,12 @@ export function GestorAgendamentosPage() {
                               return (
                                 <div
                                   key={slotIndex}
-                                  className="bg-green-500/20 text-green-400 py-1 px-1.5 rounded text-center text-[10px]"
+                                  className="py-1 px-1.5 rounded text-center text-[10px] transition-colors duration-300"
+                                  style={{
+                                    backgroundColor: isDark ? "rgba(34, 197, 94, 0.2)" : "#d1fae5",
+                                    border: isDark ? "1px solid rgba(34, 197, 94, 0.3)" : "1px solid #86efac",
+                                    color: isDark ? "#4ade80" : "#059669"
+                                  }}
                                 >
                                   {slot.hora} • Disp.
                                 </div>
@@ -1456,7 +1512,7 @@ export function GestorAgendamentosPage() {
                           </div>
                         ) : (
                           <div className="text-center py-3">
-                            <div className="text-red-400 font-semibold text-xs">FECHADO</div>
+                            <div className="font-semibold text-xs transition-colors duration-300" style={{ color: isDark ? "#f87171" : "#dc2626" }}>FECHADO</div>
                             {diaInfo.horario?.is_feriado && (
                               <div className="text-[10px] mt-0.5 transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>(Feriado)</div>
                             )}
@@ -1470,24 +1526,24 @@ export function GestorAgendamentosPage() {
             )}
 
             {/* Legenda */}
-            <div className="mt-6 bg-gray-800 rounded-lg p-4 border border-gray-700">
-              <h4 className="text-sm font-semibold text-white mb-3">Legenda:</h4>
+            <div className="mt-6 rounded-lg p-4 border shadow-md transition-colors duration-300" style={{ backgroundColor: isDark ? "#1f2937" : "#ffffff", borderColor: isDark ? "#374151" : "#e5e5e5" }}>
+              <h4 className="text-sm font-semibold mb-3 transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "#1a1a1a" }}>Legenda:</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500/20 border border-green-500/50 rounded"></div>
-                  <span className="text-gray-300 text-xs">Horário disponível</span>
+                  <div className="w-4 h-4 rounded transition-colors duration-300" style={{ backgroundColor: isDark ? "rgba(34, 197, 94, 0.2)" : "#d1fae5", border: isDark ? "1px solid rgba(34, 197, 94, 0.5)" : "1px solid #86efac" }}></div>
+                  <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Horário disponível</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500/20 border border-red-500/50 rounded"></div>
-                  <span className="text-gray-300 text-xs">Horário agendado (clique para remarcar)</span>
+                  <div className="w-4 h-4 rounded transition-colors duration-300" style={{ backgroundColor: isDark ? "rgba(239, 68, 68, 0.2)" : "#fee2e2", border: isDark ? "1px solid rgba(239, 68, 68, 0.5)" : "1px solid #fca5a5" }}></div>
+                  <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Horário agendado (clique para remarcar)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-700 rounded"></div>
-                  <span className="text-gray-300 text-xs">Intervalo de almoço</span>
+                  <div className="w-4 h-4 rounded transition-colors duration-300" style={{ backgroundColor: isDark ? "var(--bg-tertiary)" : "#fef3c7", border: isDark ? "none" : "1px solid #fcd34d" }}></div>
+                  <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Intervalo de almoço</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500/50 rounded"></div>
-                  <span className="text-gray-300 text-xs">Dia fechado</span>
+                  <div className="w-4 h-4 rounded transition-colors duration-300" style={{ backgroundColor: isDark ? "rgba(239, 68, 68, 0.5)" : "#fee2e2", border: isDark ? "none" : "1px solid #fca5a5" }}></div>
+                  <span className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Dia fechado</span>
                 </div>
               </div>
             </div>
