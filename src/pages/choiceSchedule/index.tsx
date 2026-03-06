@@ -614,7 +614,8 @@ export function ChoiceSchedulePage() {
       <div className="p-4 pb-10 md:px-8">
         <Helmet title="Selecionar data e horário" />
 
-        <div className="mx-auto max-w-2xl">
+        {/* Banner: mesma largura da página Meus Agendamentos (max-w-4xl) */}
+        <div className="mx-auto max-w-4xl mb-6">
           <button
             className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
             style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
@@ -623,21 +624,35 @@ export function ChoiceSchedulePage() {
           >
             <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
           </button>
-
-          {/* Banner */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
+          <div
+            className="relative rounded-xl overflow-hidden shadow-lg h-48 transition-colors duration-300"
+            style={{ backgroundColor: "var(--bg-secondary)" }}
+          >
             <img
-              alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover opacity-100"
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
               src="/image-1.png"
             />
-            <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 45%, transparent 100%)",
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 px-5 pt-6 pb-5">
+              <h1
+                className="banner-title text-2xl font-bold drop-shadow-lg leading-tight select-none outline-none transition-colors duration-300"
+                style={{ color: "var(--text-primary)" }}
+              >
                 Selecione a data e horário
               </h1>
             </div>
           </div>
+        </div>
 
+        {/* Opções: mesma largura do banner para botões mais largos */}
+        <div className="mx-auto max-w-4xl">
           {/* RESUMO DO AGENDAMENTO */}
           {selectedServices && selectedServices.length > 0 && (
             <div className="rounded-lg p-4 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>

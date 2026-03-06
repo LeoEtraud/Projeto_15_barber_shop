@@ -1229,11 +1229,11 @@ export function GestorAgendamentosPage() {
                           key={index}
                           className="rounded-lg p-2.5 border shadow-md flex-shrink-0 w-[calc(85vw-1.5rem)] snap-center transition-colors duration-300"
                           style={{ 
-                            backgroundColor: isDark ? "#1f2937" : "#ffffff", 
-                            borderColor: isDark ? "#374151" : "#e5e5e5" 
+                            backgroundColor: isDark ? "#1f2937" : "var(--bg-card)", 
+                            borderColor: isDark ? "#374151" : "var(--border-primary)" 
                           }}
                         >
-                          <div className="font-semibold mb-1.5 text-center text-sm transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "#1a1a1a" }}>
+                          <div className="font-semibold mb-1.5 text-center text-sm transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "var(--text-primary)" }}>
                             {diaSemana} {dataFormatada}
                           </div>
 
@@ -1402,11 +1402,11 @@ export function GestorAgendamentosPage() {
                         key={index}
                         className="rounded-lg p-2.5 border shadow-md transition-colors duration-300"
                         style={{ 
-                          backgroundColor: isDark ? "#1f2937" : "#ffffff", 
-                          borderColor: isDark ? "#374151" : "#e5e5e5" 
+                          backgroundColor: isDark ? "#1f2937" : "var(--bg-card)", 
+                          borderColor: isDark ? "#374151" : "var(--border-primary)" 
                         }}
                       >
-                        <div className="font-semibold mb-1.5 text-center text-sm transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "#1a1a1a" }}>
+                        <div className="font-semibold mb-1.5 text-center text-sm transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "var(--text-primary)" }}>
                           {diaSemana} {dataFormatada}
                         </div>
 
@@ -1526,8 +1526,8 @@ export function GestorAgendamentosPage() {
             )}
 
             {/* Legenda */}
-            <div className="mt-6 rounded-lg p-4 border shadow-md transition-colors duration-300" style={{ backgroundColor: isDark ? "#1f2937" : "#ffffff", borderColor: isDark ? "#374151" : "#e5e5e5" }}>
-              <h4 className="text-sm font-semibold mb-3 transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "#1a1a1a" }}>Legenda:</h4>
+            <div className="mt-6 rounded-lg p-4 border shadow-md transition-colors duration-300" style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-card)", borderColor: isDark ? "#374151" : "var(--border-primary)" }}>
+              <h4 className="text-sm font-semibold mb-3 transition-colors duration-300" style={{ color: isDark ? "#ffffff" : "var(--text-primary)" }}>Legenda:</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded transition-colors duration-300" style={{ backgroundColor: isDark ? "rgba(34, 197, 94, 0.2)" : "#d1fae5", border: isDark ? "1px solid rgba(34, 197, 94, 0.5)" : "1px solid #86efac" }}></div>

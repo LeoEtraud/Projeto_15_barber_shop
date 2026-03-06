@@ -26,7 +26,7 @@ function Header() {
   }
 
   return (
-    <header className="w-full flex items-center justify-between px-3 py-1.5 bg-[var(--bg-card)] border-b border-[var(--border-primary)] sticky top-0 z-50 transition-colors duration-300 shadow-sm">
+    <header className="w-full flex items-center justify-between px-3 py-1.5 bg-[var(--header-bg)] border-b border-[var(--border-primary)] sticky top-0 z-50 transition-colors duration-300 shadow-sm">
       <div className="flex items-center gap-2">
         <button
           aria-label="Ir para inicial"

@@ -47,17 +47,30 @@ export function HomePage() {
 
         <div className="mx-auto max-w-4xl">
           {/* Banner de boas-vindas */}
-          <div className="relative rounded-xl overflow-hidden shadow-lg h-40 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)" }}>
+          <div
+            className="relative rounded-xl overflow-hidden shadow-lg h-48 mb-6 transition-colors duration-300"
+            style={{ backgroundColor: "var(--bg-secondary)" }}
+          >
             <img
-              alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover opacity-70"
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none opacity-70"
               src="/image-1.png"
             />
-            <div className="absolute bottom-0 left-0 p-4">
-              <h1 className="text-2xl font-bold drop-shadow-lg transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 45%, transparent 100%)",
+              }}
+            />
+            <div className="absolute bottom-0 left-0 right-0 px-5 pt-6 pb-5">
+              <h1
+                className="banner-title text-2xl font-bold drop-shadow-lg leading-tight select-none outline-none transition-colors duration-300"
+                style={{ color: "var(--text-primary)" }}
+              >
                 Bem-vindo à Balata Barbearia
               </h1>
-              <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+              <span className="banner-subtitle mt-1 block text-sm drop-shadow-lg select-none outline-none transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 Cortamos cabelo e contamos histórias.
               </span>
             </div>

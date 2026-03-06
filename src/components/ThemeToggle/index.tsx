@@ -23,7 +23,7 @@ export function ThemeToggle() {
           isDark ? "translate-x-6 border" : "translate-x-1"
         }`}
         style={{
-          backgroundColor: isDark ? "var(--accent-gold)" : "#ffffff",
+          backgroundColor: isDark ? "var(--accent-gold)" : "var(--bg-card)",
           borderColor: isDark ? "#000000" : "transparent",
         }}
       >
