@@ -125,7 +125,7 @@ export function Login() {
         {/* Formulário */}
         <form
           autoComplete="on"
-          className="flex flex-col w-80 gap-4"
+          className="login-form flex flex-col w-80 gap-4"
           onSubmit={handleSubmit(signIn)}
         >
           {/* Campos de Input com espaçamento reduzido */}
@@ -146,12 +146,11 @@ export function Login() {
                   <Input
                     isRequired
                     autoComplete="username"
-                    className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                    style={{
-                      backgroundColor: "var(--input-bg)",
-                      borderColor: "var(--input-border)",
-                      color: "var(--input-text)",
+                    classNames={{
+                      input: "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)]",
+                      inputWrapper: "!bg-[var(--input-bg)] !border-[var(--input-border)]",
                     }}
+                    className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
                     description={
                       hasLettersOrAt
                         ? "Informe seu e-mail cadastrado"
@@ -206,7 +205,11 @@ export function Login() {
                 <Input
                   isRequired
                   autoComplete="current-password"
-                  className="w-full p-3 rounded-lg text-black focus:outline-none"
+                  classNames={{
+                    input: "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)]",
+                    inputWrapper: "!bg-[var(--input-bg)] !border-[var(--input-border)]",
+                  }}
+                  className="w-full p-3 rounded-lg focus:outline-none"
                   description="Digite sua senha de acesso"
                   endContent={
                     field.value && (

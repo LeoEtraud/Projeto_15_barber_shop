@@ -75,6 +75,16 @@ html:not(.dark) .banner-subtitle {
   color: #ffffff !important;
 }
 
+/* Login: texto dos campos sempre visível (tema light e dark) */
+.login-form input[type="text"],
+.login-form input[type="password"],
+.login-form input[type="email"] {
+  color: var(--input-text) !important;
+}
+.login-form input::placeholder {
+  color: var(--input-placeholder) !important;
+}
+
 /* Mobile layout guards */
 html,
 body,
