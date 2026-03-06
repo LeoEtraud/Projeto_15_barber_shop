@@ -201,23 +201,80 @@ export function GestorServicosPage() {
     onClose();
   };
 
+  // FUNÇÃO PARA COMPRIMIR IMAGEM (igual à página de profissionais: redimensiona e converte para JPEG)
+  const compressImage = (file: File, maxWidth: number = 800, maxHeight: number = 800, quality: number = 0.7): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      if (file.size < 200 * 1024) {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxHeight) {
+            if (width > height) {
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+            } else {
+              if (height > maxHeight) {
+                width = Math.round((width * maxHeight) / height);
+                height = maxHeight;
+              }
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Erro ao criar contexto do canvas"));
+            return;
+          }
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+          const mimeType = file.type === "image/png" ? "image/jpeg" : file.type || "image/jpeg";
+          const normalizedMime = mimeType.startsWith("image/") && !["image/jpeg", "image/jpg", "image/png"].includes(mimeType) ? "image/jpeg" : mimeType;
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Erro ao comprimir imagem"));
+                return;
+              }
+              if (blob.size > file.size) resolve(file);
+              else {
+                const ext = normalizedMime === "image/png" ? ".png" : ".jpg";
+                const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ext, { type: normalizedMime, lastModified: Date.now() });
+                resolve(compressedFile);
+              }
+            },
+            normalizedMime,
+            quality
+          );
+        };
+        img.onerror = () => reject(new Error("Erro ao carregar imagem"));
+        if (typeof e.target?.result === "string") img.src = e.target.result;
+        else reject(new Error("Erro ao ler arquivo"));
+      };
+      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
+      reader.readAsDataURL(file);
+    });
+  };
+
   // FUNÇÃO PARA CONVERTER ARQUIVO EM BASE64
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-
       reader.onload = () => {
-        if (typeof reader.result === "string") {
-          resolve(reader.result);
-        } else {
-          reject(new Error("Erro ao converter arquivo"));
-        }
+        if (typeof reader.result === "string") resolve(reader.result);
+        else reject(new Error("Erro ao converter arquivo"));
       };
-
-      reader.onerror = () => {
-        reject(new Error("Erro ao ler arquivo"));
-      };
-
+      reader.onerror = () => reject(new Error("Erro ao ler arquivo"));
       reader.readAsDataURL(file);
     });
   };
@@ -228,7 +285,7 @@ export function GestorServicosPage() {
 
     if (!file) return;
 
-    // Valida tipo de arquivo
+    // Valida tipo (aceita image/* inclusive HEIC/HEIF da câmera; compressão converte para JPEG)
     if (!file.type.startsWith("image/")) {
       addToast({
         title: "Erro",
@@ -236,7 +293,6 @@ export function GestorServicosPage() {
         color: "danger",
         timeout: 3000,
       });
-
       return;
     }
 
@@ -289,9 +345,14 @@ export function GestorServicosPage() {
       let imagemBase64: string | null | undefined = undefined;
 
       if (imageFile) {
-        // Nova imagem selecionada
-        imagemBase64 = await convertFileToBase64(imageFile);
-        setImageRemoved(false); // Reset do flag de remoção
+        try {
+          const compressedFile = await compressImage(imageFile);
+          imagemBase64 = await convertFileToBase64(compressedFile);
+        } catch (err) {
+          console.warn("Compressão falhou, enviando imagem original:", err);
+          imagemBase64 = await convertFileToBase64(imageFile);
+        }
+        setImageRemoved(false);
       } else if (imageRemoved) {
         // Imagem foi removida intencionalmente pelo usuário
         imagemBase64 = null;
