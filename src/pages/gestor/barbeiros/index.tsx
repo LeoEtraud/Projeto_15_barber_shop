@@ -1130,154 +1130,98 @@ export function GestorBarbeirosPage() {
           body: "py-6 transition-colors duration-300 overflow-y-auto max-h-[calc(95vh-200px)]",
           footer: "border-t transition-colors duration-300",
           closeButton:
-            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
-          wrapper: "items-start md:items-center justify-center overflow-y-auto p-2 md:p-4",
+            "transition-colors duration-300 hover:bg-white/20 focus:bg-white/20",
         }}
         isOpen={isOpen}
-        placement="center"
         size="2xl"
         onClose={handleCloseModal}
-        scrollBehavior="inside"
-        motionProps={{
-          variants: {
-            enter: {
-              y: 0,
-              opacity: 1,
-              transition: {
-                duration: 0.3,
-                ease: "easeOut",
-              },
-            },
-            exit: {
-              y: -20,
-              opacity: 0,
-              transition: {
-                duration: 0.2,
-                ease: "easeIn",
-              },
-            },
-          },
-        }}
       >
-        <ModalContent className="transition-colors duration-300 mx-2 md:mx-0" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-              {selectedBarber
-                ? "Editar Profissional"
-                : "Adicionar Profissional"}
+              {selectedBarber ? "Editar Profissional" : "Adicionar Profissional"}
             </h2>
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
             <ModalBody>
-              {/* Upload de Imagem */}
-              <div className="mb-6">
-                <div className="flex flex-col items-center gap-4">
-                  {/* Preview da Imagem - Padrão circular como nos cards */}
-                  <div className="relative">
-                    {/* Mostra preview da nova imagem selecionada */}
-                    {imagePreview && (
-                      <>
-                        <img
-                          alt="Preview do avatar"
-                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                          src={imagePreview}
-                        />
-                        <button
-                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
-                          type="button"
-                          onClick={() => {
-                            setImagePreview(null);
-                            setImageFile(null);
-                            setImageRemoved(true);
-                            const fileInput = document.getElementById(
-                              "avatar-upload"
-                            ) as HTMLInputElement;
-                            if (fileInput) {
-                              fileInput.value = "";
-                            }
-                          }}
-                        >
-                          ×
-                        </button>
-                      </>
-                    )}
-
-                    {/* Mostra avatar existente (modo edição) */}
-                    {!imagePreview && selectedBarber && selectedBarber.avatar && selectedBarber.avatar.trim() !== "" && !imageRemoved && (
-                      <>
-                        <img
-                          alt="Avatar atual"
-                          className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                          src={
-                            selectedBarber.avatar.startsWith("data:image")
-                              ? selectedBarber.avatar
-                              : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(selectedBarber.avatar)}`
-                          }
-                        />
-                        <button
-                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
-                          type="button"
-                          onClick={() => {
-                            setImagePreview(null);
-                            setImageFile(null);
-                            setImageRemoved(true);
-                            const fileInput = document.getElementById(
-                              "avatar-upload"
-                            ) as HTMLInputElement;
-                            if (fileInput) {
-                              fileInput.value = "";
-                            }
-                          }}
-                        >
-                          ×
-                        </button>
-                      </>
-                    )}
-
-                    {/* Mostra imagem padrão do barbeiro (modo edição sem avatar ou removido) */}
-                    {!imagePreview && selectedBarber && (!selectedBarber.avatar || selectedBarber.avatar.trim() === "" || imageRemoved) && (
-                      <img
-                        alt="Imagem padrão do barbeiro"
-                        className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                        src={getDefaultBarberImage(selectedBarber?.nome)}
-                      />
-                    )}
-
-                    {/* Mostra imagem padrão (modo criação) */}
-                    {!imagePreview && !selectedBarber && (
-                      <img
-                        alt="Imagem padrão de perfil"
-                        className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
-                        src="/barbeiros/icons-perfil.png"
-                        onError={(e) => {
-                          e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'/%3E%3C/svg%3E";
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  {/* Botão de Upload */}
-                  <label
-                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                    htmlFor="avatar-upload"
-                  >
-                    <User size={20} weight="bold" />
-                    {selectedBarber ? "Alterar imagem" : "Adicionar imagem"}
-                  </label>
-                  <input
-                    accept="image/*"
-                    className="hidden"
-                    id="avatar-upload"
-                    type="file"
-                    onChange={handleImageChange}
-                  />
-                  <p className="text-xs text-gray-400 text-center">
-                    Formatos: PNG, JPG ou JPEG (máx. 5MB)
-                  </p>
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Upload de Imagem - mesmo layout do modal de serviços */}
+                <div className="w-full md:col-span-2">
+                  <div className="flex flex-col items-center gap-10">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="relative">
+                        {imagePreview ? (
+                          <>
+                            <img
+                              alt="Preview do avatar"
+                              className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                              src={imagePreview}
+                            />
+                            <button
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
+                              type="button"
+                              onClick={() => {
+                                setImagePreview(null);
+                                setImageFile(null);
+                                setImageRemoved(true);
+                                const fileInput = document.getElementById("avatar-upload") as HTMLInputElement;
+                                if (fileInput) fileInput.value = "";
+                              }}
+                            >
+                              ×
+                            </button>
+                          </>
+                        ) : selectedBarber && selectedBarber.avatar && selectedBarber.avatar.trim() !== "" && !imageRemoved ? (
+                          <>
+                            <img
+                              alt="Avatar atual"
+                              className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                              src={
+                                selectedBarber.avatar.startsWith("data:image")
+                                  ? selectedBarber.avatar
+                                  : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(selectedBarber.avatar)}`
+                              }
+                            />
+                            <button
+                              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors shadow-lg z-10"
+                              type="button"
+                              onClick={() => {
+                                setImagePreview(null);
+                                setImageFile(null);
+                                setImageRemoved(true);
+                                const fileInput = document.getElementById("avatar-upload") as HTMLInputElement;
+                                if (fileInput) fileInput.value = "";
+                              }}
+                            >
+                              ×
+                            </button>
+                          </>
+                        ) : selectedBarber && (!selectedBarber.avatar || selectedBarber.avatar.trim() === "" || imageRemoved) ? (
+                          <img
+                            alt="Imagem padrão do barbeiro"
+                            className="w-32 h-32 rounded-full object-cover border-2 border-gray-700"
+                            src={getDefaultBarberImage(selectedBarber?.nome)}
+                          />
+                        ) : (
+                          <div className="w-32 h-32 rounded-full border-2 border-dashed flex items-center justify-center transition-colors duration-300" style={{ borderColor: "var(--border-secondary)", backgroundColor: "var(--bg-tertiary)" }}>
+                            <svg className="w-12 h-12 transition-colors duration-300" style={{ color: "var(--text-tertiary)" }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors" htmlFor="avatar-upload">
+                        <User size={20} weight="bold" />
+                        {selectedBarber ? "Alterar imagem" : "Adicionar imagem"}
+                      </label>
+                      <input accept="image/*" className="hidden" id="avatar-upload" type="file" onChange={handleImageChange} />
+                      <p className="text-xs text-gray-400 text-center">Formatos: PNG, JPG ou JPEG (máx. 5MB)</p>
+                    </div>
+                  </div>
+                </div>
+
                 <Controller
                   control={control}
                   name="nome"
@@ -1291,34 +1235,15 @@ export function GestorBarbeirosPage() {
                         label: "transition-colors duration-300",
                         inputWrapper: "transition-colors duration-300",
                       }}
-                      style={{
-                        ["--input-bg" as string]: "var(--input-bg)",
-                        ["--input-border" as string]: "var(--input-border)",
-                        ["--input-text" as string]: "var(--input-text)",
-                      }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
                       label="Nome Completo"
                       maxLength={100}
                       placeholder="Digite o nome completo"
-                      onFocus={(e) => {
-                        // No mobile, faz scroll para o campo quando focado
-                        if (window.innerWidth <= 768) {
-                          setTimeout(() => {
-                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }, 300);
-                        }
-                      }}
                       onChange={(e) => {
                         const value = e.target.value;
-
-                        // Permite apenas letras, espaços e caracteres acentuados
-                        const sanitized = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "");
-
-                        // Limita a 100 caracteres
-                        const limited = sanitized.substring(0, 100);
-
-                        field.onChange(limited);
+                        const sanitized = value.replace(/[^a-zA-ZÀ-ÿ\s]/g, "").substring(0, 100);
+                        field.onChange(sanitized);
                       }}
                     />
                   )}
@@ -1337,34 +1262,15 @@ export function GestorBarbeirosPage() {
                         label: "transition-colors duration-300",
                         inputWrapper: "transition-colors duration-300",
                       }}
-                      style={{
-                        ["--input-bg" as string]: "var(--input-bg)",
-                        ["--input-border" as string]: "var(--input-border)",
-                        ["--input-text" as string]: "var(--input-text)",
-                      }}
                       errorMessage={errors.email?.message}
                       isInvalid={!!errors.email}
                       label="Email"
                       maxLength={60}
                       placeholder="Digite o email"
                       type="email"
-                      onFocus={(e) => {
-                        // No mobile, faz scroll para o campo quando focado
-                        if (window.innerWidth <= 768) {
-                          setTimeout(() => {
-                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }, 300);
-                        }
-                      }}
                       onChange={(e) => {
-                        const value = e.target.value;
-
-                        // Remove espaços e limita a 60 caracteres
-                        const sanitized = value
-                          .replace(/\s/g, "")
-                          .substring(0, 60);
-
-                        field.onChange(sanitized);
+                        const value = e.target.value.replace(/\s/g, "").substring(0, 60);
+                        field.onChange(value);
                       }}
                     />
                   )}
@@ -1383,11 +1289,6 @@ export function GestorBarbeirosPage() {
                         label: "transition-colors duration-300",
                         inputWrapper: "transition-colors duration-300",
                       }}
-                      style={{
-                        ["--input-bg" as string]: "var(--input-bg)",
-                        ["--input-border" as string]: "var(--input-border)",
-                        ["--input-text" as string]: "var(--input-text)",
-                      }}
                       errorMessage={errors.telefone?.message}
                       isInvalid={!!errors.telefone}
                       inputMode="numeric"
@@ -1395,21 +1296,9 @@ export function GestorBarbeirosPage() {
                       maxLength={15}
                       placeholder="(00) 00000-0000"
                       type="tel"
-                      onFocus={(e) => {
-                        // No mobile, faz scroll para o campo quando focado
-                        if (window.innerWidth <= 768) {
-                          setTimeout(() => {
-                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }, 300);
-                        }
-                      }}
                       value={formatPhone(field.value || "")}
                       onChange={(e) => {
-                        const formatted = formatPhone(e.target.value);
-
-                        // Limita a 15 caracteres (formato: (00) 00000-0000)
-                        const limited = formatted.substring(0, 15);
-
+                        const limited = formatPhone(e.target.value).substring(0, 15);
                         field.onChange(limited);
                       }}
                     />
@@ -1429,36 +1318,15 @@ export function GestorBarbeirosPage() {
                         label: "transition-colors duration-300",
                         inputWrapper: "transition-colors duration-300",
                       }}
-                      style={{
-                        ["--input-bg" as string]: "var(--input-bg)",
-                        ["--input-border" as string]: "var(--input-border)",
-                        ["--input-text" as string]: "var(--input-text)",
-                      }}
                       errorMessage={errors.data_nascimento?.message}
                       isInvalid={!!errors.data_nascimento}
                       label="Data de Nascimento"
                       maxLength={10}
                       placeholder="DD/MM/AAAA"
-                      onFocus={(e) => {
-                        // No mobile, faz scroll para o campo quando focado
-                        if (window.innerWidth <= 768) {
-                          setTimeout(() => {
-                            e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                          }, 300);
-                        }
-                      }}
                       value={field.value ? formatDate(field.value) : ""}
                       onChange={(e) => {
-                        // Remove tudo que não é número
-                        const digitsOnly = e.target.value.replace(/\D/g, "");
-
-                        // Limita a 8 dígitos
-                        const limited = digitsOnly.substring(0, 8);
-
-                        // Formata como DD/MM/AAAA
-                        const formatted = formatDate(limited);
-
-                        field.onChange(formatted);
+                        const limited = e.target.value.replace(/\D/g, "").substring(0, 8);
+                        field.onChange(formatDate(limited));
                       }}
                     />
                   )}
@@ -1469,24 +1337,19 @@ export function GestorBarbeirosPage() {
                   name="funcao"
                   render={({ field }) => (
                     <div className="w-full">
+                      <label className="block text-sm font-medium mb-2 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                        Função <span className="text-red-500">*</span>
+                      </label>
                       <select
                         {...field}
                         required
-                        className="w-full p-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors duration-300"
+                        className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors duration-300"
                         style={{
                           backgroundColor: "var(--input-bg)",
                           borderColor: "var(--input-border)",
                           color: "var(--input-text)",
                         }}
                         id="funcao-select"
-                        onFocus={(e) => {
-                          // No mobile, faz scroll para o campo quando focado
-                          if (window.innerWidth <= 768) {
-                            setTimeout(() => {
-                              e.target.scrollIntoView({ behavior: "smooth", block: "center" });
-                            }, 300);
-                          }
-                        }}
                       >
                         <option value="">Selecione uma função</option>
                         {FUNCOES.map((funcao) => (
@@ -1496,9 +1359,7 @@ export function GestorBarbeirosPage() {
                         ))}
                       </select>
                       {errors.funcao && (
-                        <p className="text-red-400 text-xs mt-1">
-                          {errors.funcao.message}
-                        </p>
+                        <p className="text-red-400 text-xs mt-1">{errors.funcao.message}</p>
                       )}
                     </div>
                   )}
@@ -1506,40 +1367,27 @@ export function GestorBarbeirosPage() {
 
               </div>
             </ModalBody>
-            <ModalFooter className="justify-between items-center">
-              {selectedBarber ? (
-                <div className="flex items-center gap-3">
+            <ModalFooter>
+              {selectedBarber && (
+                <div className="flex items-center gap-3 mr-auto">
                   <Switch
                     color={isActive ? "primary" : "danger"}
                     isSelected={isActive}
                     size="sm"
                     onValueChange={setIsActive}
                   >
-                    <span
-                      className={`text-sm font-medium ${
-                        isActive ? "text-blue-400" : "text-red-400"
-                      }`}
-                    >
+                    <span className={`text-sm font-medium ${isActive ? "text-blue-400" : "text-red-400"}`}>
                       {isActive ? "Ativo" : "Inativo"}
                     </span>
                   </Switch>
                 </div>
-              ) : (
-                <div />
               )}
-              <div className="flex gap-2">
-                <Button
-                  color="danger"
-                  isDisabled={isSubmitting}
-                  variant="solid"
-                  onPress={handleCloseModal}
-                >
-                  Cancelar
-                </Button>
-                <Button color="primary" isLoading={isSubmitting} type="submit">
-                  {selectedBarber ? "Atualizar" : "Cadastrar"}
-                </Button>
-              </div>
+              <Button color="danger" isDisabled={isSubmitting} variant="solid" onPress={handleCloseModal}>
+                Cancelar
+              </Button>
+              <Button color="primary" isLoading={isSubmitting} type="submit">
+                {selectedBarber ? "Atualizar" : "Cadastrar"}
+              </Button>
             </ModalFooter>
           </form>
         </ModalContent>
