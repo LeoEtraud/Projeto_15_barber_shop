@@ -21,7 +21,6 @@ import {
 } from "@/contexts/GestorProvider/util";
 import { formatPrice } from "@/utils/format-price";
 import { useLoading } from "@/contexts/LoadingProvider";
-import { useTheme } from "@/contexts/ThemeProvider";
 
 /**
  * Dashboard do Gestor
@@ -39,8 +38,6 @@ export function GestorDashboardPage() {
   const { isGestor } = usePermissions();
   const { withLoading } = useLoading();
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const isLight = theme === "light";
   const [stats, setStats] = useState<DashboardStats>({
     totalClientes: 0,
     agendamentosHoje: 0,
