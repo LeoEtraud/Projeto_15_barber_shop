@@ -934,7 +934,7 @@ export function GestorBarbeirosPage() {
                   </p>
                   <PermissionGate requiredPermissions={["manage_barbers"]}>
                     <Button
-                      className="text-black"
+                      className="!bg-[var(--accent-primary)] text-white hover:!opacity-90 dark:!bg-primary dark:!text-black"
                       color="primary"
                       startContent={<UserPlus size={20} />}
                       onPress={() => handleOpenModal()}
@@ -966,7 +966,7 @@ export function GestorBarbeirosPage() {
                     <PermissionGate requiredPermissions={["manage_barbers"]}>
                       <div className="flex items-center">
                         <Button
-                          className="bg-white text-black font-normal hover:bg-gray-50 shadow-sm hover:shadow transition-all duration-200 md:whitespace-nowrap !min-w-0 md:!min-w-fit !h-10 md:!h-auto !w-10 md:!w-auto px-0 md:px-3.5 md:py-2 md:text-sm"
+                          className="!bg-[var(--accent-primary)] !text-white hover:!opacity-90 font-normal shadow-sm hover:shadow transition-all duration-200 md:whitespace-nowrap !min-w-0 md:!min-w-fit !h-10 md:!h-auto !w-10 md:!w-auto px-0 md:px-3.5 md:py-2 md:text-sm dark:!bg-white dark:!text-black dark:hover:!bg-gray-50"
                           color="primary"
                           size="sm"
                           startContent={<UserPlus size={20} className="md:w-[18px] md:h-[18px]" />}
@@ -1145,7 +1145,7 @@ export function GestorBarbeirosPage() {
             </h2>
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <ModalBody>
+            <ModalBody className="gestor-modal-form-body">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Upload de Imagem - mesmo layout do modal de serviços */}
                 <div className="w-full md:col-span-2">
@@ -1235,7 +1235,7 @@ export function GestorBarbeirosPage() {
                         base: "w-full",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
@@ -1262,7 +1262,7 @@ export function GestorBarbeirosPage() {
                         base: "w-full",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       errorMessage={errors.email?.message}
                       isInvalid={!!errors.email}
@@ -1289,7 +1289,7 @@ export function GestorBarbeirosPage() {
                         base: "w-full",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       errorMessage={errors.telefone?.message}
                       isInvalid={!!errors.telefone}
@@ -1318,7 +1318,7 @@ export function GestorBarbeirosPage() {
                         base: "w-full",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       errorMessage={errors.data_nascimento?.message}
                       isInvalid={!!errors.data_nascimento}
@@ -1347,7 +1347,7 @@ export function GestorBarbeirosPage() {
                         required
                         className="w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors duration-300"
                         style={{
-                          backgroundColor: "var(--input-bg)",
+                          backgroundColor: "var(--input-bg-modal)",
                           borderColor: "var(--input-border)",
                           color: "var(--input-text)",
                         }}

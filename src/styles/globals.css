@@ -93,6 +93,14 @@
   --client-card-text-secondary: #d4d4d4;
 }
 
+/* Modais de cadastro (gestor) no light: cor de fundo do cabeçalho nos campos */
+html:not(.dark) .gestor-modal-form-body {
+  --input-bg: var(--header-bg);
+  --input-border: var(--client-card-border);
+  --input-text: var(--text-primary);
+  --input-placeholder: var(--text-secondary);
+}
+
 /* Título e subtítulo dos banners: branco no tema light (overlay escuro) */
 html:not(.dark) .banner-title,
 html:not(.dark) .banner-subtitle {

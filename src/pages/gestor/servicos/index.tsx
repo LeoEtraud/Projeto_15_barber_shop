@@ -731,7 +731,7 @@ export function GestorServicosPage() {
             </h2>
           </ModalHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <ModalBody>
+            <ModalBody className="gestor-modal-form-body">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Upload de Imagem - PRIMEIRO CAMPO */}
                 <div className="w-full md:col-span-2">
@@ -917,7 +917,7 @@ export function GestorServicosPage() {
                         base: "w-full md:col-span-2",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       errorMessage={errors.nome?.message}
                       isInvalid={!!errors.nome}
@@ -938,7 +938,7 @@ export function GestorServicosPage() {
                         base: "w-full",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       errorMessage={errors.preco?.message}
                       isInvalid={!!errors.preco}
@@ -960,7 +960,7 @@ export function GestorServicosPage() {
                         base: "w-full",
                         input: "transition-colors duration-300",
                         label: "transition-colors duration-300",
-                        inputWrapper: "transition-colors duration-300",
+                        inputWrapper: "transition-colors duration-300 !bg-[var(--input-bg-modal)]",
                       }}
                       endContent={<span className="text-gray-400">min</span>}
                       errorMessage={errors.duracao?.message}
