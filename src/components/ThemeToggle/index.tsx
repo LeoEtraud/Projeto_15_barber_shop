@@ -19,25 +19,26 @@ export function ThemeToggle() {
       aria-label={`Alternar para tema ${isDark ? "claro" : "escuro"}`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full shadow-lg transition-transform duration-300 ease-in-out flex items-center justify-center ${
-          isDark ? "translate-x-6 border" : "translate-x-1"
-        }`}
+        className="inline-block h-5 w-5 transform rounded-full shadow-lg transition-transform duration-300 ease-in-out flex items-center justify-center border"
         style={{
-          backgroundColor: isDark ? "var(--accent-gold)" : "var(--bg-card)",
-          borderColor: isDark ? "#000000" : "transparent",
+          transform: isDark ? "translateX(1.5rem)" : "translateX(0.25rem)",
+          backgroundColor: "transparent",
+          borderColor: "rgba(0,0,0,0.65)",
+          borderWidth: "1px",
         }}
       >
         {isDark ? (
+          <Sun
+            size={14}
+            weight="fill"
+            className="drop-shadow-sm"
+            style={{ color: "#eab308" }}
+          />
+        ) : (
           <Moon
             size={12}
             weight="fill"
-            style={{ color: "var(--bg-primary)" }}
-          />
-        ) : (
-          <Sun
-            size={12}
-            weight="fill"
-            style={{ color: "var(--accent-amber)" }}
+            style={{ color: "var(--text-primary)" }}
           />
         )}
       </span>

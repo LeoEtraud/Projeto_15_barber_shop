@@ -115,7 +115,7 @@ export function CreateAccount() {
 
         <form
           autoComplete="on"
-          className="flex flex-col w-80 gap-4"
+          className="flex flex-col w-80 gap-2"
           onSubmit={handleSubmit(CreateUser)}
         >
           {/* NOME */}

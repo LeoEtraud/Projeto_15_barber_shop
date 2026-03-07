@@ -216,15 +216,12 @@ export function Login() {
                       <button
                         aria-label="toggle password visibility"
                         className="focus:outline-none transition-opacity hover:opacity-70"
+                        title={isVisible ? "Ocultar senha" : "Mostrar senha"}
                         type="button"
                         onClick={toggleVisibility}
                       >
                         {isVisible ? (
-                          <Image
-                            alt="Ocultar senha"
-                            src={eye_slash}
-                            width={30}
-                          />
+                          <Image alt="Ocultar senha" src={eye_slash} width={30} />
                         ) : (
                           <Image alt="Mostrar senha" src={eye} width={30} />
                         )}

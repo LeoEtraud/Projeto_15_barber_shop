@@ -360,12 +360,14 @@ export function ConfirmAppointmentPage() {
         {/* Banner: mesma largura da página Meus Agendamentos (max-w-4xl) */}
         <div className="mx-auto max-w-4xl mb-6">
           <button
-            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
-            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
+            className="text-sm mb-4 min-w-[44px] min-h-[44px] px-3 flex items-center justify-center gap-2 border-2 rounded-full transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+            style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)", color: "var(--client-card-text)" }}
             type="button"
             onClick={() => navigate(-1)}
+            title="Voltar"
           >
-            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
           <div
             className="relative rounded-xl overflow-hidden shadow-lg h-48 transition-colors duration-300"
@@ -400,78 +402,68 @@ export function ConfirmAppointmentPage() {
           {/*   RESUMO DO AGENDAMENTO          */}
           {/* ================================ */}
           {selectedServices && selectedServices.length > 0 && (
-            <div className="rounded-lg p-4 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
-              <h3 className="font-medium mb-4 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+            <div className="rounded-xl p-5 mb-6 transition-colors duration-300 border-2 shadow-md" style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)" }}>
+              <h3 className="font-semibold text-lg mb-4 transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
                 Resumo do Agendamento
               </h3>
 
-              <div className="space-y-2 mb-4 pb-4 border-b text-sm transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 pb-4 border-b text-sm transition-colors duration-300" style={{ borderColor: "var(--client-card-border)" }}>
                 {barber && (
-                  <div className="flex justify-between">
-                    <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Barbeiro:</span>
-                    <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-                      {barber.nome}
-                    </span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs uppercase tracking-wide transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>Barbeiro</span>
+                    <span className="font-medium transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>{barber.nome}</span>
                   </div>
                 )}
-
-                <div className="flex justify-between">
-                  <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Data:</span>
-                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-                    {formatDate(selectedDate)}
-                  </span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs uppercase tracking-wide transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>Data</span>
+                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>{formatDate(selectedDate)}</span>
                 </div>
-
-                <div className="flex justify-between">
-                  <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Horário:</span>
-                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>{selectedTime}</span>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs uppercase tracking-wide transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>Horário</span>
+                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>{selectedTime}</span>
                 </div>
               </div>
 
               <div className="mb-4">
-                <h4 className="text-xs font-medium mb-3 uppercase transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-                  {selectedServices.length > 1
-                    ? "Serviços Contratados:"
-                    : "Serviço Contratado:"}
+                <h4 className="text-xs font-semibold mb-3 uppercase tracking-wide transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>
+                  {selectedServices.length > 1 ? "Serviços" : "Serviço"}
                 </h4>
 
                 <div className="space-y-2">
                   {selectedServices.map((service, index) => (
                     <div
                       key={service.id}
-                      className="rounded-lg p-3 transition-colors duration-300"
-                      style={{ backgroundColor: "var(--bg-secondary)" }}
+                      className="rounded-lg p-3 transition-colors duration-300 flex justify-between items-center gap-3"
+                      style={{ backgroundColor: "var(--client-card-bg-hover)", borderColor: "var(--client-card-border)", borderWidth: "1px" }}
                     >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-yellow-400 text-sm font-medium">
+                      <div className="min-w-0">
+                        <span className="font-medium text-sm transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
                           {index + 1}. {service.nome}
                         </span>
-                        <span className="text-green-400 font-semibold text-sm">
-                          {formatPrice(Number(service.preco))}
+                        <span className="text-xs block mt-0.5 transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>
+                          {service.duracao} min
                         </span>
                       </div>
-
-                      <div className="text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-                        Duração: {service.duracao} min
-                      </div>
+                      <span className="font-semibold text-sm shrink-0 transition-colors duration-300" style={{ color: "var(--accent-amber)" }}>
+                        {formatPrice(Number(service.preco))}
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="space-y-2 pt-4 border-t transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
-                <div className="flex justify-between text-sm">
-                  <span className="transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>Tempo total:</span>
-                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+              <div className="rounded-lg p-4 space-y-3 transition-colors duration-300" style={{ backgroundColor: "var(--client-card-bg-hover)", borderColor: "var(--client-card-border)", borderWidth: "1px" }}>
+                <div className="flex justify-between text-sm items-center">
+                  <span className="transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>Tempo total</span>
+                  <span className="font-medium transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
                     {totalDuration} min
                   </span>
                 </div>
-
-                <div className="flex justify-between text-base">
-                  <span className="font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-                    Total a pagar:
+                <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: "var(--client-card-border)" }}>
+                  <span className="font-semibold transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
+                    Total a pagar
                   </span>
-                  <span className="text-green-400 font-bold">
+                  <span className="font-bold text-lg transition-colors duration-300" style={{ color: "var(--accent-amber)" }}>
                     {formatPrice(totalPrice)}
                   </span>
                 </div>

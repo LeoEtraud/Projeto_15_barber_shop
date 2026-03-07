@@ -865,12 +865,14 @@ export function GestorBarbeirosPage() {
         <div className="mx-auto max-w-6xl">
           {/* Botão Voltar */}
           <button
-            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
-            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
+            className="text-sm mb-4 min-w-[44px] min-h-[44px] px-3 flex items-center justify-center gap-2 border-2 rounded-full transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+            style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)", color: "var(--client-card-text)" }}
             type="button"
             onClick={() => navigate(-1)}
+            title="Voltar"
           >
-            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
 
           {/* Banner */}
@@ -997,8 +999,8 @@ export function GestorBarbeirosPage() {
                               : "bg-red-500/20 text-red-400 border border-red-500/30"
                           }`}
                           style={isActive ? {
-                            backgroundColor: "#2563eb",
-                            borderColor: "#1d4ed8",
+                            backgroundColor: "#22c55e",
+                            borderColor: "#16a34a",
                           } : undefined}
                         >
                           {isActive ? "Ativo" : "Inativo"}
@@ -1076,8 +1078,8 @@ export function GestorBarbeirosPage() {
                               <Button
                                 className="transition-colors duration-300 font-semibold min-w-[50px]"
                                 style={{ 
-                                  backgroundColor: "#4ade80",
-                                  color: "#000000",
+                                  backgroundColor: "#2563eb",
+                                  color: "#ffffff",
                                 }}
                                 size="sm"
                                 isIconOnly
@@ -1085,7 +1087,7 @@ export function GestorBarbeirosPage() {
                                 variant="solid"
                                 onPress={() => handleOpenModal(barber)}
                               >
-                                <PencilIcon className="w-4 h-4" style={{ color: "#000000" }} />
+                                <PencilIcon className="w-4 h-4" style={{ color: "#ffffff" }} />
                               </Button>
                             </PermissionGate>
                             <PermissionGate
@@ -1371,12 +1373,12 @@ export function GestorBarbeirosPage() {
               {selectedBarber && (
                 <div className="flex items-center gap-3 mr-auto">
                   <Switch
-                    color={isActive ? "primary" : "danger"}
+                    color={isActive ? "success" : "danger"}
                     isSelected={isActive}
                     size="sm"
                     onValueChange={setIsActive}
                   >
-                    <span className={`text-sm font-medium ${isActive ? "text-blue-400" : "text-red-400"}`}>
+                    <span className={`text-sm font-medium ${isActive ? "text-green-400" : "text-red-400"}`}>
                       {isActive ? "Ativo" : "Inativo"}
                     </span>
                   </Switch>

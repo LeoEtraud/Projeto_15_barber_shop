@@ -174,12 +174,14 @@ export function ChoiceServicePage() {
         {/* Banner: mesma largura da página Meus Agendamentos (max-w-4xl) */}
         <div className="mx-auto max-w-4xl mb-6">
           <button
-            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
-            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
+            className="text-sm mb-4 min-w-[44px] min-h-[44px] px-3 flex items-center justify-center gap-2 border-2 rounded-full transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+            style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)", color: "var(--client-card-text)" }}
             type="button"
             onClick={() => navigate(-1)}
+            title="Voltar"
           >
-            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
           <div
             className="relative rounded-xl overflow-hidden shadow-lg h-48 transition-colors duration-300"
@@ -228,23 +230,21 @@ export function ChoiceServicePage() {
                         : "md:hover:shadow-xl",
                   ].join(" ")}
                   style={isSelected 
-                    ? { backgroundColor: "var(--bg-card)", borderColor: "#22c55e" }
+                    ? { backgroundColor: "var(--client-card-bg)", borderColor: "#22c55e" }
                     : isDisabled
                       ? { backgroundColor: "var(--bg-tertiary)", borderColor: "var(--border-secondary)", opacity: 0.5 }
-                      : { backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }
+                      : { backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)" }
                   }
                   onMouseEnter={(e) => {
-                    // Só aplica hover em telas maiores (desktop)
                     if (!isSelected && !isDisabled && window.innerWidth >= 768) {
-                      e.currentTarget.style.backgroundColor = "var(--bg-card-hover)";
-                      e.currentTarget.style.borderColor = "var(--accent-amber)";
+                      e.currentTarget.style.backgroundColor = "var(--client-card-bg-hover)";
+                      e.currentTarget.style.borderColor = "var(--client-card-border)";
                     }
                   }}
                   onMouseLeave={(e) => {
-                    // Só aplica hover em telas maiores (desktop)
                     if (!isSelected && !isDisabled && window.innerWidth >= 768) {
-                      e.currentTarget.style.backgroundColor = "var(--bg-card)";
-                      e.currentTarget.style.borderColor = "var(--border-primary)";
+                      e.currentTarget.style.backgroundColor = "var(--client-card-bg)";
+                      e.currentTarget.style.borderColor = "var(--client-card-border)";
                     }
                   }}
                   disabled={isDisabled}
@@ -260,7 +260,7 @@ export function ChoiceServicePage() {
                   <div className="flex-1 p-2.5 flex flex-col justify-between min-h-0">
                     <div className="min-w-0">
                       <div className="mb-1.5 text-left">
-                        <div className="font-semibold text-sm leading-tight line-clamp-2 text-left transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                        <div className="font-semibold text-sm leading-tight line-clamp-2 text-left transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
                           {service.nome}
                         </div>
                       </div>

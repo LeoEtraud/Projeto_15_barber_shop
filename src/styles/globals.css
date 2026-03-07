@@ -3,37 +3,49 @@
 @tailwind utilities;
 
 /* Variáveis CSS para temas - Light Theme (padrão)
-   Paleta off-white / papel: evita branco puro, reduz cansaço visual e dá sensação premium */
+   Estilo clean/minimal: fundo branco, sidebar cinza claro, azul como destaque (referência dashboards modernos) */
 :root {
-  --bg-primary: #ebeae8;
-  --bg-secondary: #e2e0dd;
-  --bg-tertiary: #d6d4d1;
-  --header-bg: #d2d0cd;
-  --bg-card: #e0dedb;
-  --bg-card-hover: #d4d2cf;
-  --bg-hover: #d4d2cf;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --header-bg: #e6e6e6;
+  --footer-bg: #e6e6e6;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8f9fa;
+  --bg-hover: #f1f3f5;
   
-  --text-primary: #1c1c1c;
-  --text-secondary: #3d3d3d;
-  --text-tertiary: #5c5c5c;
-  --text-muted: #787878;
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-tertiary: #a1a1aa;
+  --text-muted: #71717a;
   
+  --accent-primary: #2563eb;
+  --accent-primary-hover: #1d4ed8;
   --accent-gold: #a67c00;
   --accent-amber: #c4a82a;
   --accent-bronze: #7d5a2e;
+  --accent-success: #22c55e;
+  --accent-danger: #ef4444;
   
-  --border-primary: #d4d2cf;
-  --border-secondary: #c9c7c4;
-  --border-accent: #a67c00;
+  --border-primary: #e4e4e7;
+  --border-secondary: #d4d4d8;
+  --border-accent: #2563eb;
   
-  --input-bg: #e0dedb;
-  --input-border: #c9c7c4;
-  --input-text: #1c1c1c;
-  --input-placeholder: #787878;
-  --input-focus-border: #a67c00;
+  --input-bg: #ffffff;
+  --input-border: #e4e4e7;
+  --input-text: #18181b;
+  --input-placeholder: #71717a;
+  --input-focus-border: #2563eb;
   
-  --scrollbar-track: #e2e0dd;
-  --scrollbar-thumb: #c9c7c4;
+  --scrollbar-track: #f8f9fa;
+  --scrollbar-thumb: #d4d4d8;
+
+  /* Perfil do cliente: cards na mesma cor do cabeçalho (cinza no light) */
+  --client-card-bg: #e6e6e6;
+  --client-card-bg-hover: #d6d6d6;
+  --client-card-border: #d0d0d0;
+  --client-card-text: #18181b;
+  --client-card-text-secondary: #71717a;
 }
 
 /* Dark Theme */
@@ -42,6 +54,7 @@
   --bg-secondary: #1a1a1a;
   --bg-tertiary: #2a2a2a;
   --header-bg: var(--bg-card);
+  --footer-bg: var(--bg-card);
   --bg-card: #1a1a1a;
   --bg-card-hover: #252525;
   --bg-hover: #2f2f2f;
@@ -51,9 +64,13 @@
   --text-tertiary: #a3a3a3;
   --text-muted: #737373;
   
+  --accent-primary: #3b82f6;
+  --accent-primary-hover: #2563eb;
   --accent-gold: #d4af37;
   --accent-amber: #F7F745;
   --accent-bronze: #cd7f32;
+  --accent-success: #22c55e;
+  --accent-danger: #ef4444;
   
   --border-primary: #3a3a3a;
   --border-secondary: #2a2a2a;
@@ -67,6 +84,13 @@
   
   --scrollbar-track: #1a1a1a;
   --scrollbar-thumb: #3a3a3a;
+
+  /* Perfil do cliente: cards na mesma cor do cabeçalho (dark) */
+  --client-card-bg: var(--header-bg);
+  --client-card-bg-hover: #252525;
+  --client-card-border: #3a3a3a;
+  --client-card-text: #f5f5f5;
+  --client-card-text-secondary: #d4d4d4;
 }
 
 /* Título e subtítulo dos banners: branco no tema light (overlay escuro) */
@@ -83,6 +107,35 @@ html:not(.dark) .banner-subtitle {
 }
 .login-form input::placeholder {
   color: var(--input-placeholder) !important;
+}
+
+/* Login: ícones mostrar/ocultar senha em branco no tema dark */
+.dark .login-form button[aria-label="toggle password visibility"] img,
+.dark .login-form [aria-label="toggle password visibility"] img {
+  filter: brightness(0) invert(1);
+}
+
+/* Cards no estilo dashboard/métricas - light: sombra sutil; dark: sombra mais marcada */
+.metric-card {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(128, 128, 128, 0.6);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  transition: box-shadow 0.25s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+.metric-card:hover {
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.12);
+}
+.dark .metric-card {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 4px 10px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.dark .metric-card:hover {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 12px 20px -8px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Cards azuis do dashboard (estatísticas, relatórios, agendamentos) - força cor de fundo */
+.metric-card-dashboard-blue {
+  background-color: #0080ff !important;
+  border-color: rgba(128, 128, 128, 0.6) !important;
 }
 
 /* Mobile layout guards */
@@ -137,7 +190,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--accent-amber);
+  background-color: var(--accent-primary);
 }
 
 /* Cursor de bloqueado para botões desabilitados */

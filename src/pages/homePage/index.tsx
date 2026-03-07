@@ -88,7 +88,7 @@ export function HomePage() {
               {filteredItems.map((item) => (
                 <button
                   key={item.id}
-                  className="flex flex-col items-center gap-4 rounded-lg p-6 shadow hover:shadow-md hover:border-yellow-400 border transition-all text-center transition-colors duration-300"
+                  className="metric-card flex flex-col items-center gap-4 p-6 border text-center transition-colors duration-300 hover:border-yellow-400"
                   style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
                   type="button"
                   onClick={() => navigate(item.path)}
@@ -110,7 +110,7 @@ export function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-lg p-12 text-center border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+            <div className="metric-card p-12 text-center border transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
               <p className="text-lg transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 Nenhuma página disponível para seu perfil.
               </p>

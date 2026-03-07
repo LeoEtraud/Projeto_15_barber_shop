@@ -44,12 +44,14 @@ export function ChoiceBarberPage() {
         {/* Banner: mesma largura da página Meus Agendamentos (max-w-4xl) */}
         <div className="mx-auto max-w-4xl mb-6">
           <button
-            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
-            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
+            className="text-sm mb-4 min-w-[44px] min-h-[44px] px-3 flex items-center justify-center gap-2 border-2 rounded-full transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+            style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)", color: "var(--client-card-text)" }}
             type="button"
             onClick={() => navigate(-1)}
+            title="Voltar"
           >
-            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
           <div
             className="relative rounded-xl overflow-hidden shadow-lg h-48 transition-colors duration-300"
@@ -87,7 +89,7 @@ export function ChoiceBarberPage() {
               <button
                 key={barber.id}
                 className="flex items-center gap-3 rounded-lg p-4 border-2 transition-all duration-300 shadow-lg md:hover:shadow-xl md:hover:scale-[1.02] text-left relative"
-                style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
+                style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)" }}
                 type="button"
                 onClick={() =>
                   navigate("/choice-service", {
@@ -101,17 +103,15 @@ export function ChoiceBarberPage() {
                   })
                 }
                 onMouseEnter={(e) => {
-                  // Só aplica hover em telas maiores (desktop)
                   if (window.innerWidth >= 768) {
-                    e.currentTarget.style.backgroundColor = "var(--bg-card-hover)";
-                    e.currentTarget.style.borderColor = "var(--accent-amber)";
+                    e.currentTarget.style.backgroundColor = "var(--client-card-bg-hover)";
+                    e.currentTarget.style.borderColor = "var(--client-card-border)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  // Só aplica hover em telas maiores (desktop)
                   if (window.innerWidth >= 768) {
-                    e.currentTarget.style.backgroundColor = "var(--bg-card)";
-                    e.currentTarget.style.borderColor = "var(--border-primary)";
+                    e.currentTarget.style.backgroundColor = "var(--client-card-bg)";
+                    e.currentTarget.style.borderColor = "var(--client-card-border)";
                   }
                 }}
               >
@@ -160,16 +160,14 @@ export function ChoiceBarberPage() {
                   );
                 })()}
                 <div className="flex-1">
-                  <div className="font-medium transition-colors duration-300" style={{ color: "var(--text-primary)" }}>{barber.nome}</div>
-                  {/* Selo de avaliação - só exibe se for 3 estrelas ou mais */}
+                  <div className="font-medium transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>{barber.nome}</div>
                   {barber.nota_avaliacao >= 3 && (
-                    <div className="mt-1 text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                    <div className="mt-1 text-xs transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>
                       {getRatingBadge(barber.nota_avaliacao)}
                     </div>
                   )}
                 </div>
-                {/* Seta amarela, mais cheia e maior */}
-                <ArrowRightIcon className="absolute right-4 text-yellow-400 w-8 h-8" />
+                <ArrowRightIcon className="absolute right-4 text-amber-300 w-8 h-8" />
               </button>
             ))}
           </div>

@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="bg-[var(--bg-card)] border-t border-[var(--border-primary)] py-2 px-4 mt-auto transition-colors duration-300">
+    <footer className="bg-[var(--footer-bg)] border-t border-[var(--border-primary)] py-2 px-4 mt-auto transition-colors duration-300">
       <div className="max-w-2xl mx-auto text-center">
         <h3 className="text-xs font-normal text-[var(--text-secondary)] my-1 transition-colors duration-300">
           Desenvolvido por{" "}

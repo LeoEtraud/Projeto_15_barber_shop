@@ -617,12 +617,14 @@ export function ChoiceSchedulePage() {
         {/* Banner: mesma largura da página Meus Agendamentos (max-w-4xl) */}
         <div className="mx-auto max-w-4xl mb-6">
           <button
-            className="text-sm mb-4 w-8 h-8 flex items-center justify-center border rounded-full transition-colors duration-300 hover:bg-[var(--bg-hover)]"
-            style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}
+            className="text-sm mb-4 min-w-[44px] min-h-[44px] px-3 flex items-center justify-center gap-2 border-2 rounded-full transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-100"
+            style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)", color: "var(--client-card-text)" }}
             type="button"
             onClick={() => navigate(-1)}
+            title="Voltar"
           >
-            <ArrowLeftIcon className="w-6 h-6 text-yellow-400" />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
           <div
             className="relative rounded-xl overflow-hidden shadow-lg h-48 transition-colors duration-300"
@@ -655,28 +657,40 @@ export function ChoiceSchedulePage() {
         <div className="mx-auto max-w-4xl">
           {/* RESUMO DO AGENDAMENTO */}
           {selectedServices && selectedServices.length > 0 && (
-            <div className="rounded-lg p-4 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
-              <h3 className="font-medium mb-2 transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+            <div className="rounded-xl p-5 mb-6 transition-colors duration-300 border-2 shadow-sm" style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)" }}>
+              <h3 className="font-semibold text-lg mb-4 transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
                 Resumo do agendamento
               </h3>
-              <div className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-                {barber && <div>Barbeiro: {barber.nome}</div>}
 
-                {selectedServices.map((service) => (
-                  <div
-                    key={service.id}
-                    className="border-b pb-2 last:border-0 last:pb-0 transition-colors duration-300"
-                    style={{ borderColor: "var(--border-primary)" }}
-                  >
-                    <div>Serviço: {service.nome}</div>
-                    <div>Preço: {formatPrice(Number(service.preco))}</div>
-                    <div>Duração: {service.duracao} min</div>
-                  </div>
-                ))}
-
-                <div className="mt-2 font-medium text-green-400">
-                  Tempo total: {totalDuration} min
+              {barber && (
+                <div className="flex justify-between text-sm mb-2 transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>
+                  <span>Barbeiro</span>
+                  <span className="font-medium" style={{ color: "var(--client-card-text)" }}>{barber.nome}</span>
                 </div>
+              )}
+
+              {selectedServices.map((service) => (
+                <div
+                  key={service.id}
+                  className="rounded-lg p-3 mb-2 last:mb-0 transition-colors duration-300 text-sm"
+                  style={{ backgroundColor: "var(--client-card-bg-hover)", borderColor: "var(--client-card-border)", borderWidth: "1px" }}
+                >
+                  <div className="font-medium mb-1 transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
+                    {service.nome}
+                  </div>
+                  <div className="flex justify-between text-xs transition-colors duration-300" style={{ color: "var(--client-card-text-secondary)" }}>
+                    <span>{formatPrice(Number(service.preco))} · {service.duracao} min</span>
+                  </div>
+                </div>
+              ))}
+
+              <div className="mt-4 pt-4 flex justify-between items-center transition-colors duration-300" style={{ borderColor: "var(--client-card-border)", borderTopWidth: "2px" }}>
+                <span className="font-semibold transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>
+                  Tempo total
+                </span>
+                <span className="font-bold transition-colors duration-300" style={{ color: "var(--accent-amber)" }}>
+                  {totalDuration} min
+                </span>
               </div>
             </div>
           )}
@@ -815,13 +829,13 @@ export function ChoiceSchedulePage() {
                               ? "opacity-50 cursor-not-allowed"
                               : selectedDate === date.value
                                 ? "bg-blue-600 text-white"
-                                : "hover:bg-[var(--bg-hover)]"
+                                : "hover:bg-[var(--client-card-bg-hover)]"
                           }`}
                           style={isDisabled
                             ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)", borderColor: "var(--border-primary)" }
                             : selectedDate === date.value 
                               ? undefined 
-                              : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                              : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
                           }
                           type="button"
                           disabled={isDisabled}
@@ -912,18 +926,18 @@ export function ChoiceSchedulePage() {
                           {turnos.manha.map(({ time, isOccupied }) => (
                             <button
                               key={time}
-                              className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                              className={`p-2 rounded-lg text-center text-sm transition-colors border ${
                                 isOccupied
                                   ? "cursor-not-allowed opacity-50"
                                   : selectedTime === time
                                     ? "bg-green-600 text-white"
-                                    : "hover:bg-[var(--bg-hover)]"
+                                    : "hover:bg-[var(--client-card-bg-hover)]"
                               }`}
                               style={isOccupied 
                                 ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
                                 : selectedTime === time
                                   ? undefined
-                                  : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                                  : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
                               }
                               disabled={isOccupied}
                               title={
@@ -958,18 +972,18 @@ export function ChoiceSchedulePage() {
                           {turnos.tarde.map(({ time, isOccupied }) => (
                             <button
                               key={time}
-                              className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                              className={`p-2 rounded-lg text-center text-sm transition-colors border ${
                                 isOccupied
                                   ? "cursor-not-allowed opacity-50"
                                   : selectedTime === time
                                     ? "bg-green-600 text-white"
-                                    : "hover:bg-[var(--bg-hover)]"
+                                    : "hover:bg-[var(--client-card-bg-hover)]"
                               }`}
                               style={isOccupied 
                                 ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
                                 : selectedTime === time
                                   ? undefined
-                                  : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                                  : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
                               }
                               disabled={isOccupied}
                               title={
@@ -1004,18 +1018,18 @@ export function ChoiceSchedulePage() {
                           {turnos.noite.map(({ time, isOccupied }) => (
                             <button
                               key={time}
-                              className={`p-2 rounded-lg text-center text-sm transition-colors ${
+                              className={`p-2 rounded-lg text-center text-sm transition-colors border ${
                                 isOccupied
                                   ? "cursor-not-allowed opacity-50"
                                   : selectedTime === time
                                     ? "bg-green-600 text-white"
-                                    : "hover:bg-[var(--bg-hover)]"
+                                    : "hover:bg-[var(--client-card-bg-hover)]"
                               }`}
                               style={isOccupied 
                                 ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
                                 : selectedTime === time
                                   ? undefined
-                                  : { backgroundColor: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }
+                                  : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
                               }
                               disabled={isOccupied}
                               title={
