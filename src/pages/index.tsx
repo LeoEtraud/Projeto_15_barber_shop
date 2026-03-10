@@ -8,6 +8,7 @@ import * as yup from "yup";
 import { useForm, Controller } from "react-hook-form";
 import { addToast, Divider, Image } from "@heroui/react";
 import { Button } from "@heroui/react";
+import { motion } from "framer-motion";
 
 import eye_slash from "../assets/eye-slash.svg";
 import eye from "../assets/eye.svg";
@@ -20,6 +21,19 @@ import { useLoading } from "@/contexts/LoadingProvider";
 type LoginFormData = {
   telefone: string;
   senha: string;
+};
+
+const container = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0 },
 };
 
 export function Login() {
@@ -101,14 +115,40 @@ export function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen text-white bg-[#6666ff]">
-      <section className="border border-gray-800 bg-zinc-950 rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl max-w-md lg:max-w-lg w-[calc(100%-2rem)] mx-4">
+    <motion.div
+      className="flex items-center justify-center min-h-screen text-white bg-[#6666ff]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+    >
+      <motion.section
+        className="border border-gray-800 bg-zinc-950 rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 max-w-md lg:max-w-lg w-[calc(100%-2rem)] mx-4"
+        style={{
+          boxShadow:
+            "0 25px 50px -12px rgba(102, 102, 255, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
         <Helmet title="Login" />
 
         {/* Header com Logo */}
-        <div className="flex flex-col items-center gap-4 w-full">
-          <div className="relative flex items-center justify-center">
-            <Image
+        <motion.div
+          className="flex flex-col items-center gap-4 w-full"
+          variants={container}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div
+            className="relative flex items-center justify-center"
+            variants={item}
+          >
+            <motion.div
+              whileHover={{ scale: 1.03 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            >
+              <Image
               alt="Logo Balata Barbearia"
               className="drop-shadow-lg object-contain"
               height={200}
@@ -116,17 +156,22 @@ export function Login() {
               src="/logo_balata.jpeg"
               width={300}
             />
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
 
         {/* Formulário */}
-        <form
+        <motion.form
           autoComplete="on"
           className="login-form flex flex-col w-full gap-4"
           onSubmit={handleSubmit(signIn)}
+          variants={container}
+          initial="hidden"
+          animate="visible"
         >
           <div className="flex flex-col gap-2">
-            <Controller
+            <motion.div variants={item}>
+              <Controller
               control={control}
               name="telefone"
               render={({ field, fieldState }) => {
@@ -197,10 +242,12 @@ export function Login() {
                 },
               }}
             />
+            </motion.div>
 
-            <Controller
-              control={control}
-              name="senha"
+            <motion.div variants={item}>
+              <Controller
+                control={control}
+                name="senha"
               render={({ field, fieldState }) => (
                 <Input
                   isRequired
@@ -257,9 +304,13 @@ export function Login() {
                     : true,
               }}
             />
+            </motion.div>
           </div>
 
-          <div className="flex items-center justify-end -mt-2">
+          <motion.div
+            className="flex items-center justify-end -mt-2"
+            variants={item}
+          >
             <Link
               className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
               href="../recovery"
@@ -268,28 +319,41 @@ export function Login() {
             >
               Esqueceu sua senha?
             </Link>
-          </div>
+          </motion.div>
 
-          <Button
-            className={`${buttonStyles({
-              color: "primary",
-              radius: "full",
-              variant: "shadow",
-            })} w-64 mx-auto mt-2 font-extrabold text-base py-6`}
-            disabled={isSubmitting}
-            isLoading={isSubmitting}
-            type="submit"
+          <motion.div variants={item} className="flex justify-center">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                className={`${buttonStyles({
+                  color: "primary",
+                  radius: "full",
+                  variant: "shadow",
+                })} w-64 mx-auto mt-2 font-extrabold text-base py-6`}
+                disabled={isSubmitting}
+                isLoading={isSubmitting}
+                type="submit"
+              >
+                {isSubmitting ? "Entrando..." : "ENTRAR"}
+              </Button>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            className="flex items-center my-4"
+            variants={item}
           >
-            {isSubmitting ? "Entrando..." : "ENTRAR"}
-          </Button>
-
-          <div className="flex items-center my-4">
             <Divider className="flex-1 bg-gray-800" />
             <span className="mx-4 text-gray-600 text-sm">Ou</span>
             <Divider className="flex-1 bg-gray-800" />
-          </div>
+          </motion.div>
 
-          <div className="flex items-center justify-center">
+          <motion.div
+            className="flex items-center justify-center"
+            variants={item}
+          >
             <p className="text-gray-400 text-sm mr-2">Não tem uma conta?</p>
             <Link
               className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
@@ -298,9 +362,9 @@ export function Login() {
             >
               Criar conta
             </Link>
-          </div>
-        </form>
-      </section>
-    </div>
+          </motion.div>
+        </motion.form>
+      </motion.section>
+    </motion.div>
   );
 }

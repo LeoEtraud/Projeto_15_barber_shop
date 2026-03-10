@@ -123,6 +123,26 @@ html:not(.dark) .banner-subtitle {
   color: var(--input-placeholder) !important;
 }
 
+/* Autopreenchimento: texto sempre visível (evita texto cinza/apagado) */
+.login-form input:-webkit-autofill,
+.login-form input:-webkit-autofill:hover,
+.login-form input:-webkit-autofill:focus,
+.login-form input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--input-text) !important;
+  box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+  transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+}
+
+/* Geral: inputs com autofill em toda a aplicação */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--input-text) !important;
+  box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
+  transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+}
+
 /* Login: ícones mostrar/ocultar senha em branco no tema dark */
 .dark .login-form button[aria-label="toggle password visibility"] img,
 .dark .login-form [aria-label="toggle password visibility"] img {

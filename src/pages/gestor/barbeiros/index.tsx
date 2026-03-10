@@ -1138,7 +1138,15 @@ export function GestorBarbeirosPage() {
         size="2xl"
         onClose={handleCloseModal}
       >
-        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+        <ModalContent
+          className="transition-colors duration-300"
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "var(--border-primary)",
+            boxShadow:
+              "0 25px 50px -12px rgba(102, 102, 255, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+          }}
+        >
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold text-white transition-colors duration-300">
               {selectedBarber ? "Editar Profissional" : "Adicionar Profissional"}
@@ -1409,7 +1417,15 @@ export function GestorBarbeirosPage() {
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}
       >
-        <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+        <ModalContent
+          className="transition-colors duration-300"
+          style={{
+            backgroundColor: "var(--bg-card)",
+            borderColor: "var(--border-primary)",
+            boxShadow:
+              "0 25px 50px -12px rgba(102, 102, 255, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+          }}
+        >
           <ModalHeader>
             <h2 className="text-xl font-bold text-white">Confirmar Exclusão</h2>
           </ModalHeader>
