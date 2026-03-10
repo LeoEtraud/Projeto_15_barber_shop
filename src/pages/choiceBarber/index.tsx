@@ -167,7 +167,7 @@ export function ChoiceBarberPage() {
                     </div>
                   )}
                 </div>
-                <ArrowRightIcon className="absolute right-4 text-amber-300 w-8 h-8" />
+                <ArrowRightIcon className="absolute right-4 text-black dark:text-amber-300 w-8 h-8" />
               </button>
             ))}
           </div>
