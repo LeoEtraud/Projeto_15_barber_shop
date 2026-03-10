@@ -52,7 +52,6 @@ export function Login() {
     senha: yup.string().required("A senha é obrigatória"),
   });
 
-  // Habilita validação onChange para usar isValid
   const {
     handleSubmit,
     control,
@@ -61,8 +60,8 @@ export function Login() {
   } = useForm<LoginFormData>({
     resolver: yupResolver(schema),
     defaultValues: initialValues,
-    mode: "onChange", // valida a cada mudança
-    reValidateMode: "onChange", // revalida a cada mudança
+    mode: "onChange",
+    reValidateMode: "onChange",
   });
 
   const toggleVisibility = () => setIsVisible((prev) => !prev);
@@ -77,13 +76,11 @@ export function Login() {
 
       const response = await LoginRequest(identifier, formData.senha);
 
-      // Evita reload do SW logo após o login para não perder o toast
       sessionStorage.setItem("skipReloadForToast", "1");
 
       authenticate(response);
       reset(initialValues);
 
-      // Mostrar toast após a navegação ser iniciada
       setTimeout(() => {
         addToast({
           title: "Login",
@@ -94,7 +91,7 @@ export function Login() {
       }, 400);
     } catch {
       addToast({
-        title: "Erro de Auntenticação",
+        title: "Erro de Autenticação",
         description: "Credenciais inválidas!",
         color: "danger",
       });
@@ -104,8 +101,8 @@ export function Login() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl">
+    <div className="flex items-center justify-center min-h-screen text-white bg-[#6666ff]">
+      <section className="border border-gray-800 bg-zinc-950 rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl max-w-md lg:max-w-lg w-[calc(100%-2rem)] mx-4">
         <Helmet title="Login" />
 
         {/* Header com Logo */}
@@ -125,10 +122,9 @@ export function Login() {
         {/* Formulário */}
         <form
           autoComplete="on"
-          className="login-form flex flex-col w-80 gap-4"
+          className="login-form flex flex-col w-full gap-4"
           onSubmit={handleSubmit(signIn)}
         >
-          {/* Campos de Input com espaçamento reduzido */}
           <div className="flex flex-col gap-2">
             <Controller
               control={control}
@@ -147,10 +143,12 @@ export function Login() {
                     isRequired
                     autoComplete="username"
                     classNames={{
-                      input: "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)]",
-                      inputWrapper: "!bg-[var(--input-bg)] !border-[var(--input-border)]",
+                      input:
+                        "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)] !text-lg",
+                      inputWrapper:
+                        "!bg-[var(--input-bg)] !border-[var(--input-border)] !min-h-12",
                     }}
-                    className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                    className="w-full p-4 rounded-lg focus:outline-none transition-colors duration-300"
                     description={
                       hasLettersOrAt
                         ? "Informe seu e-mail cadastrado"
@@ -162,7 +160,7 @@ export function Login() {
                     isInvalid={!!fieldState.error}
                     label="E-mail ou Telefone"
                     maxLength={60}
-                    size="sm"
+                    size="lg"
                     type="text"
                     {...field}
                     value={displayValue}
@@ -172,7 +170,9 @@ export function Login() {
                       if (/[A-Za-z@]/.test(val)) {
                         field.onChange(val);
                       } else {
-                        const onlyDigits = val.replace(/\D/g, "").slice(0, 11);
+                        const onlyDigits = val
+                          .replace(/\D/g, "")
+                          .slice(0, 11);
 
                         field.onChange(formatPhone(onlyDigits));
                       }
@@ -206,24 +206,36 @@ export function Login() {
                   isRequired
                   autoComplete="current-password"
                   classNames={{
-                    input: "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)]",
-                    inputWrapper: "!bg-[var(--input-bg)] !border-[var(--input-border)]",
+                    input:
+                      "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)] !text-lg",
+                    inputWrapper:
+                      "!bg-[var(--input-bg)] !border-[var(--input-border)] !min-h-12",
                   }}
-                  className="w-full p-3 rounded-lg focus:outline-none"
+                  className="w-full p-4 rounded-lg focus:outline-none"
                   description="Digite sua senha de acesso"
                   endContent={
                     field.value && (
                       <button
                         aria-label="toggle password visibility"
                         className="focus:outline-none transition-opacity hover:opacity-70"
-                        title={isVisible ? "Ocultar senha" : "Mostrar senha"}
+                        title={
+                          isVisible ? "Ocultar senha" : "Mostrar senha"
+                        }
                         type="button"
                         onClick={toggleVisibility}
                       >
                         {isVisible ? (
-                          <Image alt="Ocultar senha" src={eye_slash} width={30} />
+                          <Image
+                            alt="Ocultar senha"
+                            src={eye_slash}
+                            width={30}
+                          />
                         ) : (
-                          <Image alt="Mostrar senha" src={eye} width={30} />
+                          <Image
+                            alt="Mostrar senha"
+                            src={eye}
+                            width={30}
+                          />
                         )}
                       </button>
                     )
@@ -232,7 +244,7 @@ export function Login() {
                   id="senha"
                   isInvalid={!!fieldState.error}
                   label="Senha"
-                  size="sm"
+                  size="lg"
                   type={isVisible ? "text" : "password"}
                   {...field}
                 />

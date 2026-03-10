@@ -871,7 +871,7 @@ export function GestorBarbeirosPage() {
             onClick={() => navigate(-1)}
             title="Voltar"
           >
-            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--back-arrow-color)" }} />
             <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
 
@@ -934,7 +934,7 @@ export function GestorBarbeirosPage() {
                   </p>
                   <PermissionGate requiredPermissions={["manage_barbers"]}>
                     <Button
-                      className="!bg-[var(--accent-primary)] text-white hover:!opacity-90 dark:!bg-primary dark:!text-black"
+                      className="!bg-[var(--accent-success)] !text-white font-bold hover:!opacity-90"
                       color="primary"
                       startContent={<UserPlus size={20} />}
                       onPress={() => handleOpenModal()}
@@ -966,7 +966,7 @@ export function GestorBarbeirosPage() {
                     <PermissionGate requiredPermissions={["manage_barbers"]}>
                       <div className="flex items-center">
                         <Button
-                          className="!bg-[var(--accent-primary)] !text-white hover:!opacity-90 font-normal shadow-sm hover:shadow transition-all duration-200 md:whitespace-nowrap !min-w-0 md:!min-w-fit !h-10 md:!h-auto !w-10 md:!w-auto px-0 md:px-3.5 md:py-2 md:text-sm dark:!bg-white dark:!text-black dark:hover:!bg-gray-50"
+                          className="!bg-[var(--accent-success)] !text-white font-bold hover:!opacity-90 shadow-sm hover:shadow transition-all duration-200 md:whitespace-nowrap !min-w-0 md:!min-w-fit !h-10 md:!h-auto !w-10 md:!w-auto px-0 md:px-3.5 md:py-2 md:text-sm"
                           color="primary"
                           size="sm"
                           startContent={<UserPlus size={20} className="md:w-[18px] md:h-[18px]" />}
@@ -989,7 +989,7 @@ export function GestorBarbeirosPage() {
                       <Card
                         key={barber.id}
                         className="border hover:border-teal-500 transition-all duration-300 shadow-md hover:shadow-lg relative"
-                        style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
+                        style={{ backgroundColor: "var(--header-bg)", borderColor: "var(--border-primary)" }}
                       >
                         {/* Badge de Status */}
                         <div
@@ -1132,7 +1132,7 @@ export function GestorBarbeirosPage() {
           body: "py-6 transition-colors duration-300 overflow-y-auto max-h-[calc(95vh-200px)]",
           footer: "border-t transition-colors duration-300",
           closeButton:
-            "transition-colors duration-300 hover:bg-white/20 focus:bg-white/20",
+            "text-black transition-colors duration-300 hover:bg-white/20 focus:bg-white/20",
         }}
         isOpen={isOpen}
         size="2xl"
@@ -1140,7 +1140,7 @@ export function GestorBarbeirosPage() {
       >
         <ModalContent className="transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-2xl font-bold text-white transition-colors duration-300">
               {selectedBarber ? "Editar Profissional" : "Adicionar Profissional"}
             </h2>
           </ModalHeader>
@@ -1404,7 +1404,7 @@ export function GestorBarbeirosPage() {
           body: "transition-colors duration-300",
           footer: "border-t transition-colors duration-300",
           closeButton:
-            "text-white hover:bg-white/20 hover:text-white focus:bg-white/20",
+            "text-black hover:bg-white/20 hover:text-black focus:bg-white/20",
         }}
         isOpen={isDeleteOpen}
         onClose={onDeleteClose}

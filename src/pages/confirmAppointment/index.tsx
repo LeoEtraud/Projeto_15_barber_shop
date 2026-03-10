@@ -366,7 +366,7 @@ export function ConfirmAppointmentPage() {
             onClick={() => navigate(-1)}
             title="Voltar"
           >
-            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--accent-amber)" }} />
+            <ArrowLeftIcon className="w-5 h-5 shrink-0" style={{ color: "var(--back-arrow-color)" }} />
             <span className="hidden sm:inline font-medium">Voltar</span>
           </button>
           <div

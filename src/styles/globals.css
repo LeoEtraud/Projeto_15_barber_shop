@@ -46,6 +46,9 @@
   --client-card-border: #d0d0d0;
   --client-card-text: #18181b;
   --client-card-text-secondary: #71717a;
+
+  /* Seta de voltar: preta no light */
+  --back-arrow-color: #000000;
 }
 
 /* Dark Theme */
@@ -91,6 +94,9 @@
   --client-card-border: #3a3a3a;
   --client-card-text: #f5f5f5;
   --client-card-text-secondary: #d4d4d4;
+
+  /* Seta de voltar: branca no dark */
+  --back-arrow-color: #ffffff;
 }
 
 /* Modais de cadastro (gestor) no light: cor de fundo do cabeçalho nos campos */
