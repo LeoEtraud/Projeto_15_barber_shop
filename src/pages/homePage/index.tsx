@@ -89,7 +89,10 @@ export function HomePage() {
                 <button
                   key={item.id}
                   className="metric-card flex flex-col items-center gap-4 p-6 border text-center transition-colors duration-300 hover:border-yellow-400"
-                  style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}
+                  style={{
+                    backgroundColor: userRole === UserRole.CLIENTE ? "var(--header-bg)" : "var(--bg-card)",
+                    borderColor: "var(--border-primary)",
+                  }}
                   type="button"
                   onClick={() => navigate(item.path)}
                   onMouseEnter={(e) => {

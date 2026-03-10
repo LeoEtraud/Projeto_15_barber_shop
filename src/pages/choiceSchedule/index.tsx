@@ -934,7 +934,7 @@ export function ChoiceSchedulePage() {
                                     : "hover:bg-[var(--client-card-bg-hover)]"
                               }`}
                               style={isOccupied 
-                                ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
+                                ? { backgroundColor: "var(--slot-occupied-bg)", color: "var(--slot-occupied-text)", borderColor: "var(--slot-occupied-border)" }
                                 : selectedTime === time
                                   ? undefined
                                   : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
@@ -980,7 +980,7 @@ export function ChoiceSchedulePage() {
                                     : "hover:bg-[var(--client-card-bg-hover)]"
                               }`}
                               style={isOccupied 
-                                ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
+                                ? { backgroundColor: "var(--slot-occupied-bg)", color: "var(--slot-occupied-text)", borderColor: "var(--slot-occupied-border)" }
                                 : selectedTime === time
                                   ? undefined
                                   : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
@@ -1026,7 +1026,7 @@ export function ChoiceSchedulePage() {
                                     : "hover:bg-[var(--client-card-bg-hover)]"
                               }`}
                               style={isOccupied 
-                                ? { backgroundColor: "var(--bg-tertiary)", color: "var(--text-tertiary)" }
+                                ? { backgroundColor: "var(--slot-occupied-bg)", color: "var(--slot-occupied-text)", borderColor: "var(--slot-occupied-border)" }
                                 : selectedTime === time
                                   ? undefined
                                   : { backgroundColor: "var(--client-card-bg)", color: "var(--client-card-text)", borderColor: "var(--client-card-border)" }
@@ -1050,17 +1050,23 @@ export function ChoiceSchedulePage() {
                 );
               })()}
 
-              <div className="mt-3 flex gap-4 text-xs text-gray-400">
+              <div className="mt-3 flex gap-4 text-xs transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-600 rounded" />
                   <span>Selecionado</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-900 rounded" />
+                  <div
+                    className="w-4 h-4 rounded border"
+                    style={{ backgroundColor: "var(--client-card-bg)", borderColor: "var(--client-card-border)" }}
+                  />
                   <span>Disponível</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-700 rounded" />
+                  <div
+                    className="w-4 h-4 rounded border"
+                    style={{ backgroundColor: "var(--slot-occupied-bg)", borderColor: "var(--slot-occupied-border)" }}
+                  />
                   <span>Ocupado</span>
                 </div>
               </div>

@@ -49,6 +49,11 @@
 
   /* Seta de voltar: preta no light */
   --back-arrow-color: #000000;
+
+  /* Horário ocupado: tonalidade vermelha (legenda e botões) - light: vermelho visível */
+  --slot-occupied-bg: #fecaca;
+  --slot-occupied-text: #991b1b;
+  --slot-occupied-border: #f87171;
 }
 
 /* Dark Theme */
@@ -97,6 +102,11 @@
 
   /* Seta de voltar: branca no dark */
   --back-arrow-color: #ffffff;
+
+  /* Horário ocupado: tonalidade vermelha (legenda e botões) - dark */
+  --slot-occupied-bg: rgba(185, 28, 28, 0.45);
+  --slot-occupied-text: #fca5a5;
+  --slot-occupied-border: rgba(248, 113, 113, 0.6);
 }
 
 /* Modais de cadastro (gestor) no light: cor de fundo do cabeçalho nos campos */
