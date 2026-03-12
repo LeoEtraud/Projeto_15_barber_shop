@@ -268,13 +268,60 @@ export function UserProfilePage() {
   };
 
   const [initials, setInitials] = useState<string>("");
+  const userId = user?.user?.id ?? id ?? "";
+  const storageKey = `profile_image_${userId}`;
+
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved && saved.startsWith("data:image") ? saved : null;
+    } catch {
+      return null;
+    }
+  });
 
   useEffect(() => {
-    // Atualiza as iniciais sempre que o nome mudar
     const newInitials = getInitials(user?.user.nome ?? "");
-
     setInitials(newInitials);
   }, [user?.user.nome]);
+
+  useEffect(() => {
+    if (!userId) return;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setProfileImageUrl(saved && saved.startsWith("data:image") ? saved : null);
+    } catch {
+      setProfileImageUrl(null);
+    }
+  }, [userId, storageKey]);
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setProfileImageUrl(dataUrl);
+      try {
+        localStorage.setItem(storageKey, dataUrl);
+        window.dispatchEvent(new CustomEvent("profile-image-updated"));
+      } catch {
+        // localStorage cheio ou indisponível
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const handleRemoveProfileImage = () => {
+    setProfileImageUrl(null);
+    try {
+      localStorage.removeItem(storageKey);
+      window.dispatchEvent(new CustomEvent("profile-image-updated"));
+    } catch {
+      //
+    }
+  };
 
   return (
     <section className="client-area min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
@@ -283,7 +330,7 @@ export function UserProfilePage() {
 
       {/* Conteúdo principal */}
       <div className="flex items-center justify-center flex-1 px-4 py-8 md:px-8">
-        <div className="relative rounded-xl shadow-2xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-4xl transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
+        <div className="profile-content-card relative rounded-xl shadow-2xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col gap-8 w-full max-w-4xl transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
           <Helmet title="Perfil" />
           <ToastProvider placement={"top-right"} toastOffset={60} />
 
@@ -306,11 +353,43 @@ export function UserProfilePage() {
 
           {/* Header do Perfil */}
           <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 pb-6 border-b transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
-            <div className="flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none">
-              {initials}
+            <div className="relative group">
+              <div className="flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none ring-2 ring-offset-2 ring-offset-[var(--bg-card)]" style={{ ringColor: "var(--border-primary)" }}>
+                {profileImageUrl ? (
+                  <img
+                    alt="Foto de perfil"
+                    className="w-full h-full object-cover"
+                    src={profileImageUrl}
+                  />
+                ) : (
+                  <span>{initials}</span>
+                )}
+              </div>
+              <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <span className="text-white text-xs font-medium text-center px-1">Alterar</span>
+                <input
+                  accept="image/*"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  type="file"
+                  onChange={handleProfileImageChange}
+                />
+              </label>
+              {profileImageUrl && (
+                <button
+                  aria-label="Remover foto de perfil"
+                  className="absolute -bottom-1 -right-1 rounded-full bg-red-500 text-white p-1 shadow hover:bg-red-600 transition-colors"
+                  title="Remover foto"
+                  type="button"
+                  onClick={handleRemoveProfileImage}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
             <div className="flex flex-col items-center sm:items-start gap-2 flex-1">
-              <h1 className="text-3xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+              <h1 className="profile-user-name text-3xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 {currentUser?.nome || "Meu Perfil"}
               </h1>
             </div>

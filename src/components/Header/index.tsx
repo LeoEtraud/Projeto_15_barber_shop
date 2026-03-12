@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Dropdown,
   DropdownItem,
@@ -10,9 +11,41 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+const PROFILE_IMAGE_EVENT = "profile-image-updated";
+
 function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const userId = user?.user?.id ?? "";
+  const storageKey = userId ? `profile_image_${userId}` : "";
+
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(() => {
+    if (!storageKey) return null;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved && saved.startsWith("data:image") ? saved : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    if (!storageKey) {
+      setProfileImageUrl(null);
+      return;
+    }
+    const readStorage = () => {
+      try {
+        const saved = localStorage.getItem(storageKey);
+        setProfileImageUrl(saved && saved.startsWith("data:image") ? saved : null);
+      } catch {
+        setProfileImageUrl(null);
+      }
+    };
+    readStorage();
+    window.addEventListener(PROFILE_IMAGE_EVENT, readStorage);
+    return () => window.removeEventListener(PROFILE_IMAGE_EVENT, readStorage);
+  }, [storageKey]);
 
   // FUNÇÃO PARA GERAR LETRAS INICIAIS DO NOME DE USUÁRIO
   function getUserInitials(name: string) {
@@ -94,6 +127,7 @@ function Header() {
                   isBordered
                   className="w-8 h-8 md:w-8 md:h-8 text-xs flex-shrink-0 active:scale-100"
                   color="default"
+                  src={profileImageUrl ?? undefined}
                 >
                   {getUserInitials(user.user.nome ?? "")}
                 </Avatar>

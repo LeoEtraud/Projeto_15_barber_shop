@@ -148,6 +148,17 @@ html:not(.dark) .user-profile-form [data-slot="input-wrapper"]:focus-within {
   border-color: var(--input-focus-border) !important;
 }
 
+/* Perfil do cliente (light): nome do usuário abaixo da foto em preto */
+html:not(.dark) .profile-content-card .profile-user-name {
+  color: #18181b !important;
+}
+
+/* Perfil do cliente (light): títulos e descrições dos campos em preto para boa leitura */
+html:not(.dark) .user-profile-form [data-slot="label"],
+html:not(.dark) .user-profile-form [data-slot="description"] {
+  color: #18181b !important;
+}
+
 /* Modais de cadastro (gestor) no light: cor de fundo do cabeçalho nos campos */
 html:not(.dark) .gestor-modal-form-body {
   --input-bg: var(--header-bg);
