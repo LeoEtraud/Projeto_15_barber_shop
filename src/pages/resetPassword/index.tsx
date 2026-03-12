@@ -223,19 +223,32 @@ export function ResetPassword() {
     value: "^[0-9]*$",
   };
 
+  const accentColor = "#4f46e5";
+  const accentGlow = "rgba(79, 70, 229, 0.4)";
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl">
+    <div
+      className="flex items-center justify-center min-h-screen min-h-[100dvh]"
+      style={{ backgroundColor: "#1B4965" }}
+    >
+      <section
+        className="relative rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 max-w-md w-[calc(100%-2rem)] mx-4 bg-white shadow-2xl"
+        style={{
+          border: "3px solid",
+          borderColor: accentColor,
+          boxShadow: `0 0 0 1px ${accentColor}, 0 0 40px -5px ${accentGlow}, 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 80px -20px ${accentGlow}`,
+        }}
+      >
         <Helmet title="Recup. Acesso" />
-        
+
         {/* Header com Título */}
         {!isSuccess && (
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="text-center">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-zinc-900 mb-2">
                 {!isCode ? "Recuperar senha" : "Redefinir senha"}
               </h1>
-              <p className="text-gray-400 text-sm md:text-base">
+              <p className="text-zinc-600 text-sm md:text-base">
                 {!isCode
                   ? "Informe seu e-mail para receber o código de recuperação"
                   : "Digite o código recebido e defina uma nova senha"}
@@ -247,17 +260,18 @@ export function ResetPassword() {
         {/* Etapa 1: Formulário de e-mail */}
         {!isCode && !isSuccess && (
           <form
-            className="flex flex-col w-80 gap-4"
+            className="auth-form flex flex-col w-80 gap-4"
             onSubmit={handleSubmitStep1(onSubmitStep1)}
           >
             <Input
               isRequired
-              className="w-full p-3 rounded-lg text-black focus:outline-none"
+              classNames={{ inputWrapper: "!min-h-10" }}
+              className="w-full py-2.5 px-3 rounded-lg focus:outline-none"
               description="Informe o e-mail cadastrado na sua conta"
               errorMessage="Por favor, insira um e-mail válido."
               id="email"
               label="E-mail"
-              size="sm"
+              size="md"
               type="text"
               {...registerStep1("email")}
             />
@@ -276,18 +290,17 @@ export function ResetPassword() {
             </Button>
 
             <div className="flex items-center my-4">
-              <Divider className="flex-1 bg-gray-800" />
-              <span className="mx-4 text-gray-600 text-sm">Ou</span>
-              <Divider className="flex-1 bg-gray-800" />
+              <Divider className="flex-1 bg-zinc-200" />
+              <span className="mx-4 text-zinc-500 text-sm">Ou</span>
+              <Divider className="flex-1 bg-zinc-200" />
             </div>
 
             <div className="flex items-center justify-center">
-              <p className="text-gray-400 text-sm mr-2">
-                Lembrou sua senha?
-              </p>
+              <p className="text-zinc-600 text-sm mr-2">Lembrou sua senha?</p>
               <Link
-                className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
+                className="font-semibold text-sm transition-opacity hover:opacity-90"
                 href="/"
+                style={{ color: accentColor }}
               >
                 Fazer login
               </Link>
@@ -298,16 +311,16 @@ export function ResetPassword() {
         {/*ETAPA 2: FORMULÁRIO PARA CÓDIGO E REDEFINIÇÃO DE SENHA*/}
         {isCode && !isSuccess && (
           <form
-            className="flex flex-col w-80 gap-4"
+            className="auth-form flex flex-col w-80 gap-4"
             onSubmit={handleSubmitStep2(onSubmitStep2)}
           >
-            <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
               <p
                 aria-live="polite"
-                className="text-sm text-blue-200 text-center leading-relaxed"
+                className="text-sm text-indigo-800 text-center leading-relaxed"
               >
                 Código enviado para{" "}
-                <span className="text-blue-100 font-semibold break-all">
+                <span className="font-semibold break-all">
                   {submittedEmail ? maskEmail(submittedEmail) : "seu e-mail"}
                 </span>
                 . Verifique sua caixa de entrada e também a pasta de spam.
@@ -346,7 +359,8 @@ export function ResetPassword() {
             <div className="w-full flex flex-col gap-4">
               <Input
                 isRequired
-                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                classNames={{ inputWrapper: "!min-h-10" }}
+                className="w-full py-2.5 px-3 rounded-lg focus:outline-none"
                 description="Mínimo de 6 caracteres"
                 endContent={
                   novaSenhaValue && (
@@ -366,14 +380,15 @@ export function ResetPassword() {
                 }
                 id="nova_senha"
                 label="Nova Senha"
-                size="sm"
+                size="md"
                 type={isVisible ? "text" : "password"}
                 {...registerStep2("nova_senha")}
               />
 
               <Input
                 isRequired
-                className="w-full p-3 rounded-lg text-black focus:outline-none"
+                classNames={{ inputWrapper: "!min-h-10" }}
+                className="w-full py-2.5 px-3 rounded-lg focus:outline-none"
                 description="Digite a mesma senha para confirmar"
                 endContent={
                   confirmeNovaSenhaValue && (
@@ -393,7 +408,7 @@ export function ResetPassword() {
                 }
                 id="confirme_nova_senha"
                 label="Confirmar nova senha"
-                size="sm"
+                size="md"
                 type={isVisibleConfirm ? "text" : "password"}
                 validate={(value) => {
                   if (value.length < 6) {
@@ -428,15 +443,16 @@ export function ResetPassword() {
             </Button>
 
             <div className="flex items-center my-4">
-              <Divider className="flex-1 bg-gray-800" />
-              <span className="mx-4 text-gray-600 text-sm">Ou</span>
-              <Divider className="flex-1 bg-gray-800" />
+              <Divider className="flex-1 bg-zinc-200" />
+              <span className="mx-4 text-zinc-500 text-sm">Ou</span>
+              <Divider className="flex-1 bg-zinc-200" />
             </div>
 
             <div className="flex items-center justify-center">
               <Link
-                className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
+                className="font-semibold text-sm transition-opacity hover:opacity-90"
                 href="/recovery"
+                style={{ color: accentColor }}
                 onPress={(e) => {
                   // @ts-ignore caso a tipagem do evento não exponha preventDefault
                   e?.preventDefault?.();
@@ -467,10 +483,10 @@ export function ResetPassword() {
         {isSuccess && (
           <div className="text-center flex flex-col items-center justify-center gap-6">
             <div>
-              <h2 className="text-3xl font-bold text-white mb-2">
+              <h2 className="text-3xl font-bold text-zinc-900 mb-2">
                 Senha redefinida com sucesso!
               </h2>
-              <p className="text-gray-400 text-sm">
+              <p className="text-zinc-600 text-sm">
                 Você já pode fazer login com sua nova senha
               </p>
             </div>

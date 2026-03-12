@@ -95,19 +95,32 @@ export function CreateAccount() {
     }
   }
 
+  const accentColor = "#4f46e5";
+  const accentGlow = "rgba(79, 70, 229, 0.4)";
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-black text-white">
-      <section className="border border-gray-800 bg-zinc-950 rounded-lg px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 shadow-2xl">
+    <div
+      className="flex items-center justify-center min-h-screen min-h-[100dvh]"
+      style={{ backgroundColor: "#1B4965" }}
+    >
+      <section
+        className="relative rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 max-w-md w-[calc(100%-2rem)] mx-4 bg-white shadow-2xl"
+        style={{
+          border: "3px solid",
+          borderColor: accentColor,
+          boxShadow: `0 0 0 1px ${accentColor}, 0 0 40px -5px ${accentGlow}, 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 80px -20px ${accentGlow}`,
+        }}
+      >
         <Helmet title="Cadastro" />
         <ToastProvider placement={"top-right"} toastOffset={60} />
 
         {/* Header com Título */}
         <div className="flex flex-col items-center gap-2 w-full">
           <div className="text-center">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-zinc-900 mb-2">
               Criar conta
             </h1>
-            <p className="text-gray-400 text-sm md:text-base">
+            <p className="text-zinc-600 text-sm md:text-base">
               Preencha os dados abaixo para se cadastrar
             </p>
           </div>
@@ -115,7 +128,7 @@ export function CreateAccount() {
 
         <form
           autoComplete="on"
-          className="flex flex-col w-80 gap-2"
+          className="auth-form flex flex-col w-80 gap-2"
           onSubmit={handleSubmit(CreateUser)}
         >
           {/* NOME */}
@@ -126,19 +139,15 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="name"
-                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  borderColor: "var(--input-border)",
-                  color: "var(--input-text)",
-                }}
+                classNames={{ inputWrapper: "!min-h-10" }}
+                className="w-full py-2.5 px-3 rounded-lg focus:outline-none transition-colors duration-300"
                 description="Informe seu nome completo"
                 errorMessage={fieldState.error?.message}
                 id="nome"
                 isInvalid={!!fieldState.error}
                 label="Nome completo"
                 maxLength={60}
-                size="sm"
+                size="md"
                 type="text"
                 {...field}
                 validate={(value) => {
@@ -158,19 +167,15 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="bday"
-                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  borderColor: "var(--input-border)",
-                  color: "var(--input-text)",
-                }}
+                classNames={{ inputWrapper: "!min-h-10" }}
+                className="w-full py-2.5 px-3 rounded-lg focus:outline-none transition-colors duration-300"
                 description="Selecione sua data de nascimento"
                 errorMessage={fieldState.error?.message}
                 id="data_nascimento"
                 isInvalid={!!fieldState.error}
                 label="Data de Nascimento"
                 max={new Date().toISOString().slice(0, 10)}
-                size="sm"
+                size="md"
                 type="date"
                 {...field}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -191,19 +196,15 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="email"
-                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  borderColor: "var(--input-border)",
-                  color: "var(--input-text)",
-                }}
+                classNames={{ inputWrapper: "!min-h-10" }}
+                className="w-full py-2.5 px-3 rounded-lg focus:outline-none transition-colors duration-300"
                 description="Informe um e-mail válido para login"
                 errorMessage={fieldState.error?.message || "Insira um e-mail válido."}
                 id="email"
                 isInvalid={!!fieldState.error}
                 label="E-mail"
                 maxLength={60}
-                size="sm"
+                size="md"
                 type="email"
                 {...field}
               />
@@ -224,12 +225,8 @@ export function CreateAccount() {
                 <Input
                   isRequired
                   autoComplete="tel"
-                  className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  borderColor: "var(--input-border)",
-                  color: "var(--input-text)",
-                }}
+                  classNames={{ inputWrapper: "!min-h-10" }}
+                  className="w-full py-2.5 px-3 rounded-lg focus:outline-none transition-colors duration-300"
                   description="Informe seu número com DDD (ex: (98) 99999-9999)"
                   errorMessage={showError ? message : undefined}
                   id="telefone"
@@ -239,7 +236,7 @@ export function CreateAccount() {
                   }
                   label="Telefone"
                   maxLength={15}
-                  size="sm"
+                  size="md"
                   type="tel"
                   {...field}
                   value={formatPhone(field.value || "")}
@@ -259,12 +256,8 @@ export function CreateAccount() {
               <Input
                 isRequired
                 autoComplete="new-password"
-                className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                style={{
-                  backgroundColor: "var(--input-bg)",
-                  borderColor: "var(--input-border)",
-                  color: "var(--input-text)",
-                }}
+                classNames={{ inputWrapper: "!min-h-10" }}
+                className="w-full py-2.5 px-3 rounded-lg focus:outline-none transition-colors duration-300"
                 description="Mínimo de 6 caracteres"
                 endContent={
                   field.value && (
@@ -286,7 +279,7 @@ export function CreateAccount() {
                 id="senha"
                 isInvalid={!!fieldState.error}
                 label="Senha"
-                size="sm"
+                size="md"
                 type={isVisible ? "text" : "password"}
                 validate={(value) => {
                   if (value.length < 6) {
@@ -313,18 +306,17 @@ export function CreateAccount() {
 
           {/* LINK DE PÁGINAS */}
           <div className="flex items-center my-4">
-            <Divider className="flex-1 bg-gray-800" />
-            <span className="mx-4 text-gray-600 text-sm">Ou</span>
-            <Divider className="flex-1 bg-gray-800" />
+            <Divider className="flex-1 bg-zinc-200" />
+            <span className="mx-4 text-zinc-500 text-sm">Ou</span>
+            <Divider className="flex-1 bg-zinc-200" />
           </div>
           <div className="flex items-center justify-center">
-            <p className="text-gray-400 text-sm mr-2">
-              Já tem uma conta?
-            </p>
+            <p className="text-zinc-600 text-sm mr-2">Já tem uma conta?</p>
             <Link
-              className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
+              className="font-semibold text-sm transition-opacity hover:opacity-90"
               href="/"
               onPress={show}
+              style={{ color: accentColor }}
             >
               Fazer login
             </Link>

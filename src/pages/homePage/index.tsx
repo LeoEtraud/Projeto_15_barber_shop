@@ -37,7 +37,7 @@ export function HomePage() {
   );
 
   return (
-    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
+    <section className="client-area min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       {/* Header fixo */}
       <Header />
 

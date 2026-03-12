@@ -165,7 +165,7 @@ export function ChoiceServicePage() {
   }
 
   return (
-    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
+    <section className="client-area min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
 
       <div className="p-4 md:px-8">

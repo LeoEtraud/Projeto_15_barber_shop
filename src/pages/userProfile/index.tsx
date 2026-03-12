@@ -277,7 +277,7 @@ export function UserProfilePage() {
   }, [user?.user.nome]);
 
   return (
-    <section className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
+    <section className="client-area min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)", color: "var(--text-primary)" }}>
       {/* COMPONENTE CABEÇALHO */}
       <Header />
 
@@ -341,7 +341,7 @@ export function UserProfilePage() {
               </div>
 
               <form
-                className="flex flex-col gap-6 w-full"
+                className="user-profile-form flex flex-col gap-6 w-full"
                 onSubmit={handleSubmit_user(onSubmitFormProfile)}
               >
                 <input id="id" name="id" type="hidden" />
@@ -521,7 +521,7 @@ export function UserProfilePage() {
 
               {/* FORMULÁRIO DE ATUALIZAÇÃO DE SENHA */}
               <form
-                className="flex flex-col gap-6 w-full"
+                className="user-profile-form flex flex-col gap-6 w-full"
                 onSubmit={handleSubmit(handlePasswordSubmit)}
               >
                 <input id="id" name="id" type="hidden" />

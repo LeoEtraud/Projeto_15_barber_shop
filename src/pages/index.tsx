@@ -114,18 +114,23 @@ export function Login() {
     }
   }
 
+  const accentColor = "#4f46e5";
+  const accentGlow = "rgba(79, 70, 229, 0.4)";
+
   return (
     <motion.div
-      className="flex items-center justify-center min-h-screen text-white bg-[#6666ff]"
+      className="flex items-center justify-center min-h-screen min-h-[100dvh]"
+      style={{ backgroundColor: "#1B4965" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
     >
       <motion.section
-        className="border border-gray-800 bg-zinc-950 rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 max-w-md lg:max-w-lg w-[calc(100%-2rem)] mx-4"
+        className="relative rounded-2xl md:rounded-3xl px-6 sm:px-8 md:px-12 lg:px-16 xl:px-20 py-8 flex flex-col items-center justify-center gap-8 max-w-md lg:max-w-lg w-[calc(100%-2rem)] mx-4 bg-white shadow-2xl"
         style={{
-          boxShadow:
-            "0 25px 50px -12px rgba(102, 102, 255, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+          border: "3px solid",
+          borderColor: accentColor,
+          boxShadow: `0 0 0 1px ${accentColor}, 0 0 40px -5px ${accentGlow}, 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 80px -20px ${accentGlow}`,
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -145,17 +150,19 @@ export function Login() {
             variants={item}
           >
             <motion.div
+              className="overflow-hidden rounded-2xl"
               whileHover={{ scale: 1.03 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
               <Image
-              alt="Logo Balata Barbearia"
-              className="drop-shadow-lg object-contain"
-              height={200}
-              radius="full"
-              src="/logo_balata.jpeg"
-              width={300}
-            />
+                alt="Logo Balata Barbearia"
+                className="drop-shadow-lg object-contain block w-full rounded-2xl"
+                height={160}
+                radius="none"
+                removeWrapper
+                src="/logo_balata.jpeg"
+                width={280}
+              />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -189,11 +196,11 @@ export function Login() {
                     autoComplete="username"
                     classNames={{
                       input:
-                        "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)] !text-lg",
+                        "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)]",
                       inputWrapper:
-                        "!bg-[var(--input-bg)] !border-[var(--input-border)] !min-h-12",
+                        "!bg-[var(--input-bg)] !border-[var(--input-border)] !min-h-10",
                     }}
-                    className="w-full p-4 rounded-lg focus:outline-none transition-colors duration-300"
+                    className="w-full py-2.5 px-3 rounded-lg focus:outline-none transition-colors duration-300"
                     description={
                       hasLettersOrAt
                         ? "Informe seu e-mail cadastrado"
@@ -205,7 +212,7 @@ export function Login() {
                     isInvalid={!!fieldState.error}
                     label="E-mail ou Telefone"
                     maxLength={60}
-                    size="lg"
+                    size="md"
                     type="text"
                     {...field}
                     value={displayValue}
@@ -254,11 +261,11 @@ export function Login() {
                   autoComplete="current-password"
                   classNames={{
                     input:
-                      "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)] !text-lg",
+                      "!text-[var(--input-text)] placeholder:!text-[var(--input-placeholder)]",
                     inputWrapper:
-                      "!bg-[var(--input-bg)] !border-[var(--input-border)] !min-h-12",
+                      "!bg-[var(--input-bg)] !border-[var(--input-border)] !min-h-10",
                   }}
-                  className="w-full p-4 rounded-lg focus:outline-none"
+                  className="w-full py-2.5 px-3 rounded-lg focus:outline-none"
                   description="Digite sua senha de acesso"
                   endContent={
                     field.value && (
@@ -291,7 +298,7 @@ export function Login() {
                   id="senha"
                   isInvalid={!!fieldState.error}
                   label="Senha"
-                  size="lg"
+                  size="md"
                   type={isVisible ? "text" : "password"}
                   {...field}
                 />
@@ -312,10 +319,11 @@ export function Login() {
             variants={item}
           >
             <Link
-              className="text-gray-400 hover:text-yellow-400 transition-colors text-sm"
+              className="text-zinc-600 hover:opacity-90 transition-colors text-sm font-medium"
               href="../recovery"
               size="sm"
               onPress={show}
+              style={{ color: accentColor }}
             >
               Esqueceu sua senha?
             </Link>
@@ -345,20 +353,21 @@ export function Login() {
             className="flex items-center my-4"
             variants={item}
           >
-            <Divider className="flex-1 bg-gray-800" />
-            <span className="mx-4 text-gray-600 text-sm">Ou</span>
-            <Divider className="flex-1 bg-gray-800" />
+            <Divider className="flex-1 bg-zinc-200" />
+            <span className="mx-4 text-zinc-500 text-sm font-medium">Ou</span>
+            <Divider className="flex-1 bg-zinc-200" />
           </motion.div>
 
           <motion.div
             className="flex items-center justify-center"
             variants={item}
           >
-            <p className="text-gray-400 text-sm mr-2">Não tem uma conta?</p>
+            <p className="text-zinc-600 text-sm mr-2">Não tem uma conta?</p>
             <Link
-              className="text-yellow-400 hover:text-yellow-300 transition-colors font-semibold text-sm"
+              className="font-semibold text-sm transition-opacity hover:opacity-90"
               href="../register"
               onPress={show}
+              style={{ color: accentColor }}
             >
               Criar conta
             </Link>

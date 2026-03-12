@@ -109,6 +109,45 @@
   --slot-occupied-border: rgba(248, 113, 113, 0.6);
 }
 
+/* Páginas do cliente no modo light: fundo #1B4965 e texto claro */
+html:not(.dark) .client-area {
+  --bg-primary: #1B4965;
+  --text-primary: #f5f5f5;
+  --text-secondary: #d4d4d4;
+  --text-tertiary: #a3a3a3;
+  --bg-secondary: #2a5f7a;
+  --border-primary: rgba(255, 255, 255, 0.12);
+  --back-arrow-color: #000000;
+}
+
+/* Cabeçalho e rodapé nas páginas do cliente (light): texto preto */
+html:not(.dark) .client-area header,
+html:not(.dark) .client-area header *,
+html:not(.dark) .client-area footer,
+html:not(.dark) .client-area footer * {
+  color: #18181b !important;
+}
+
+/* Cards da página inicial do cliente (light): texto preto */
+html:not(.dark) .client-area .metric-card,
+html:not(.dark) .client-area .metric-card * {
+  color: #18181b !important;
+}
+
+/* Perfil do cliente (light): títulos dos campos visíveis sobre fundo azul */
+html:not(.dark) .client-area [data-slot="label"] {
+  color: #ffffff !important;
+}
+
+/* Perfil do cliente: bordas dos campos visíveis (inputs brancos no card azul) */
+html:not(.dark) .user-profile-form [data-slot="input-wrapper"] {
+  border-width: 1px !important;
+  border-color: #94a3b8 !important;
+}
+html:not(.dark) .user-profile-form [data-slot="input-wrapper"]:focus-within {
+  border-color: var(--input-focus-border) !important;
+}
+
 /* Modais de cadastro (gestor) no light: cor de fundo do cabeçalho nos campos */
 html:not(.dark) .gestor-modal-form-body {
   --input-bg: var(--header-bg);
@@ -123,24 +162,85 @@ html:not(.dark) .banner-subtitle {
   color: #ffffff !important;
 }
 
-/* Login: texto dos campos sempre visível (tema light e dark) */
+/* Login e auth: texto dos campos sempre visível (tema light e dark) */
 .login-form input[type="text"],
 .login-form input[type="password"],
-.login-form input[type="email"] {
+.login-form input[type="email"],
+.login-form input[type="tel"],
+.login-form input[type="date"],
+.auth-form input[type="text"],
+.auth-form input[type="password"],
+.auth-form input[type="email"],
+.auth-form input[type="tel"],
+.auth-form input[type="date"] {
   color: var(--input-text) !important;
 }
-.login-form input::placeholder {
+.login-form input::placeholder,
+.auth-form input::placeholder {
   color: var(--input-placeholder) !important;
 }
 
-/* Autopreenchimento: texto sempre visível (evita texto cinza/apagado) */
+/* Login e páginas de auth (recuperar senha, criar conta): fundo e borda visível nos campos */
+.login-form [data-slot="input-wrapper"],
+.auth-form [data-slot="input-wrapper"] {
+  border-width: 1px !important;
+  border-color: #a1a1aa !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease !important;
+}
+.login-form [data-slot="input-wrapper"]:focus-within,
+.auth-form [data-slot="input-wrapper"]:focus-within {
+  border-color: var(--input-focus-border) !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2), 0 2px 6px -2px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Auth fora do dark: fundo dos campos em cinza claro que combina com o card branco */
+html:not(.dark) .login-form [data-slot="input-wrapper"],
+html:not(.dark) .auth-form [data-slot="input-wrapper"] {
+  background-color: #f1f5f9 !important;
+}
+/* Auth no dark: manter fundo escuro */
+.dark .login-form [data-slot="input-wrapper"],
+.dark .auth-form [data-slot="input-wrapper"] {
+  background-color: var(--input-bg) !important;
+}
+/* Labels do login/auth visíveis no modo light (card branco) */
+html:not(.dark) .login-form [data-slot="label"],
+html:not(.dark) .auth-form [data-slot="label"] {
+  color: #18181b !important;
+}
+
+/* Autopreenchimento no login/auth: fundo que combina no light, texto visível */
 .login-form input:-webkit-autofill,
 .login-form input:-webkit-autofill:hover,
 .login-form input:-webkit-autofill:focus,
-.login-form input:-webkit-autofill:active {
+.login-form input:-webkit-autofill:active,
+.auth-form input:-webkit-autofill,
+.auth-form input:-webkit-autofill:hover,
+.auth-form input:-webkit-autofill:focus,
+.auth-form input:-webkit-autofill:active {
   -webkit-text-fill-color: var(--input-text) !important;
-  box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
   transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+}
+html:not(.dark) .login-form input:-webkit-autofill,
+html:not(.dark) .login-form input:-webkit-autofill:hover,
+html:not(.dark) .login-form input:-webkit-autofill:focus,
+html:not(.dark) .login-form input:-webkit-autofill:active,
+html:not(.dark) .auth-form input:-webkit-autofill,
+html:not(.dark) .auth-form input:-webkit-autofill:hover,
+html:not(.dark) .auth-form input:-webkit-autofill:focus,
+html:not(.dark) .auth-form input:-webkit-autofill:active {
+  box-shadow: 0 0 0 1000px #f1f5f9 inset !important;
+}
+.dark .login-form input:-webkit-autofill,
+.dark .login-form input:-webkit-autofill:hover,
+.dark .login-form input:-webkit-autofill:focus,
+.dark .login-form input:-webkit-autofill:active,
+.dark .auth-form input:-webkit-autofill,
+.dark .auth-form input:-webkit-autofill:hover,
+.dark .auth-form input:-webkit-autofill:focus,
+.dark .auth-form input:-webkit-autofill:active {
+  box-shadow: 0 0 0 1000px var(--input-bg) inset !important;
 }
 
 /* Geral: inputs com autofill em toda a aplicação */

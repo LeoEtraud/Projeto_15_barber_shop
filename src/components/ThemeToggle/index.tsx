@@ -10,11 +10,11 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-all duration-300 ease-in-out focus:outline-none ${
-        isDark ? "" : "border-2"
+        isDark ? "" : "border"
       }`}
       style={{
-        backgroundColor: isDark ? "var(--bg-tertiary)" : "var(--bg-secondary)",
-        borderColor: isDark ? "transparent" : "var(--border-primary)",
+        backgroundColor: isDark ? "var(--bg-tertiary)" : "var(--header-bg)",
+        borderColor: isDark ? "transparent" : "#18181b",
       }}
       aria-label={`Alternar para tema ${isDark ? "claro" : "escuro"}`}
     >

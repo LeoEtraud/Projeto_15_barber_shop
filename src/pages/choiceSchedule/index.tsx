@@ -607,7 +607,7 @@ export function ChoiceSchedulePage() {
   }, [barber?.id]);
 
   return (
-    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
+    <section className="client-area min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       {/* COMPONENTE CABEÇALH0 */}
       <Header />
 

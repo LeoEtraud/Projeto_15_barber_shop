@@ -243,7 +243,7 @@ export function ConfirmAppointmentPage() {
   // ===========================
   if (isCompleted) {
     return (
-      <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
+      <section className="client-area min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
         <Header />
         <div className="px-4 py-8 md:px-8">
           <Helmet title="Agendamento Concluído" />
@@ -351,7 +351,7 @@ export function ConfirmAppointmentPage() {
   // TELA PRINCIPAL
   // ===========================
   return (
-    <section className="min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
+    <section className="client-area min-h-screen transition-colors duration-300" style={{ backgroundColor: "var(--bg-primary)" }}>
       <Header />
 
       <div className="p-4 pb-10 md:px-8">
