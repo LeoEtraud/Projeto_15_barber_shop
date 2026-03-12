@@ -354,7 +354,7 @@ export function UserProfilePage() {
           {/* Header do Perfil */}
           <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 pb-6 border-b transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
             <div className="relative group">
-              <div className="flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none ring-2 ring-offset-2 ring-offset-[var(--bg-card)]" style={{ ringColor: "var(--border-primary)" }}>
+              <div className="flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none ring-2 ring-offset-2 ring-offset-[var(--bg-card)] ring-[var(--border-primary)]">
                 {profileImageUrl ? (
                   <img
                     alt="Foto de perfil"
