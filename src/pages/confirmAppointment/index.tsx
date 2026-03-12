@@ -476,7 +476,7 @@ export function ConfirmAppointmentPage() {
           {/* ================================ */}
           {(pixQrCode || pixCode) && (
             <div className="rounded-lg p-6 mb-6 transition-colors duration-300" style={{ backgroundColor: "var(--bg-card)", borderColor: "var(--border-primary)" }}>
-              <h3 className="font-medium mb-4 text-center transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+              <h3 className="qr-title font-medium mb-4 text-center transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
                 {pixQrCode
                   ? "Escaneie o QR Code para pagar"
                   : pixCode
@@ -509,7 +509,7 @@ export function ConfirmAppointmentPage() {
                 {/* CHAVE PIX */}
                 {pixCode && (
                   <div className="w-full space-y-3">
-                    <p className="block text-sm mb-2 text-center transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                    <p className="qr-subtitle block text-sm mb-2 text-center transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
                       Código PIX (copie e cole no app do banco)
                     </p>
 
@@ -535,14 +535,14 @@ export function ConfirmAppointmentPage() {
 
                 <div className="text-center space-y-2">
                   <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-                    Valor:{" "}
+                    <span className="qr-label">Valor: </span>
                     <span className="text-green-400 font-bold">
                       {formatPrice(totalPrice)}
                     </span>
                   </p>
 
                   <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
-                    Status:{" "}
+                    <span className="qr-label">Status: </span>
                     <span
                       className={`font-medium ${
                         pixStatus === "approved"

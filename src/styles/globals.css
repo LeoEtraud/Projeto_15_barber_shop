@@ -128,6 +128,17 @@ html:not(.dark) .client-area footer * {
   color: #18181b !important;
 }
 
+/* Página de confirmação / pagamento (cliente, light): título do QR Code em preto para boa leitura */
+html:not(.dark) .client-area .qr-title {
+  color: #18181b !important;
+}
+
+/* Página de confirmação / pagamento (cliente, light): textos auxiliares do QR Code em preto */
+html:not(.dark) .client-area .qr-subtitle,
+html:not(.dark) .client-area .qr-label {
+  color: #18181b !important;
+}
+
 /* Cards da página inicial do cliente (light): texto preto */
 html:not(.dark) .client-area .metric-card,
 html:not(.dark) .client-area .metric-card * {
