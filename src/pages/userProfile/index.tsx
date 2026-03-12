@@ -15,6 +15,7 @@ import { Header } from "@/components/Header";
 import { useUser } from "@/contexts/UserProvider/useUser";
 import { IUser, PasswordForm } from "@/contexts/UserProvider/types";
 import { useAuth } from "@/contexts/AuthProvider";
+import { UserRole } from "@/types/roles";
 
 // FUNÇÃO PARA DEFINIR AS LETRAS INICIAIS DO USUÁRIO
 function getInitials(fullName: string) {
@@ -26,6 +27,23 @@ function getInitials(fullName: string) {
   const last = parts[parts.length - 1].slice(0, 1).toUpperCase();
 
   return `${first}${last}`;
+}
+
+function getRoleLabel(role?: UserRole | string): string {
+  if (!role) return "";
+
+  const normalized = String(role).toUpperCase();
+
+  switch (normalized) {
+    case UserRole.GESTOR:
+      return "Gestor";
+    case UserRole.PROFISSIONAL:
+      return "Profissional";
+    case UserRole.CLIENTE:
+      return "Cliente";
+    default:
+      return normalized.charAt(0) + normalized.slice(1).toLowerCase();
+  }
 }
 
 export function UserProfilePage() {
@@ -348,55 +366,85 @@ export function UserProfilePage() {
               e.currentTarget.style.color = "var(--text-secondary)";
             }}
           >
-            <XCircleIcon className="w-7 h-7" />
+            <XCircleIcon className="w-7 h-7 text-black dark:text-[var(--text-secondary)]" />
           </button>
 
           {/* Header do Perfil */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-6 pb-6 border-b transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
-            <div className="relative group">
-              <div className="flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl font-bold shadow-lg select-none ring-2 ring-offset-2 ring-offset-[var(--bg-card)] ring-[var(--border-primary)]">
-                {profileImageUrl ? (
-                  <img
-                    alt="Foto de perfil"
-                    className="w-full h-full object-cover"
-                    src={profileImageUrl}
+          <div className="pb-6 border-b transition-colors duration-300" style={{ borderColor: "var(--border-primary)" }}>
+            <div className="w-full bg-gray-100 dark:bg-zinc-800 rounded-2xl px-6 py-4 shadow-lg border border-gray-400 dark:border-[var(--border-primary)] transition-colors duration-300 flex flex-col sm:flex-row items-center sm:items-center gap-6">
+              <div className="relative group flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 text-white text-4xl md:text-5xl font-bold shadow-lg select-none ring-2 ring-offset-2 ring-offset-[var(--bg-card)] ring-[var(--border-primary)] transition duration-200 group-hover:brightness-90">
+                  {profileImageUrl ? (
+                    <img
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover"
+                      src={profileImageUrl}
+                    />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+                <label className="absolute inset-0 flex items-center justify-center rounded-full bg-transparent opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <span className="text-xs font-medium text-center px-1 text-black dark:text-white">
+                    {profileImageUrl ? "Alterar foto" : "Adicionar foto"}
+                  </span>
+                  <input
+                    accept="image/*"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    type="file"
+                    onChange={handleProfileImageChange}
                   />
-                ) : (
-                  <span>{initials}</span>
+                </label>
+                {profileImageUrl && (
+                  <button
+                    aria-label="Remover foto de perfil"
+                    className="absolute -bottom-1 -right-1 rounded-full bg-red-500 text-white p-1 shadow hover:bg-red-600 transition-colors"
+                    title="Remover foto"
+                    type="button"
+                    onClick={handleRemoveProfileImage}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                {!profileImageUrl && (
+                  <p className="text-xs md:text-sm text-black dark:text-[var(--text-secondary)] mt-1 text-center">
+                    Adicionar imagem
+                  </p>
                 )}
               </div>
-              <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                <span className="text-white text-xs font-medium text-center px-1">Alterar</span>
-                <input
-                  accept="image/*"
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  type="file"
-                  onChange={handleProfileImageChange}
-                />
-              </label>
-              {profileImageUrl && (
-                <button
-                  aria-label="Remover foto de perfil"
-                  className="absolute -bottom-1 -right-1 rounded-full bg-red-500 text-white p-1 shadow hover:bg-red-600 transition-colors"
-                  title="Remover foto"
-                  type="button"
-                  onClick={handleRemoveProfileImage}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            <div className="flex flex-col items-center sm:items-start gap-2 flex-1">
-              <h1 className="profile-user-name text-3xl font-bold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
-                {currentUser?.nome || "Meu Perfil"}
-              </h1>
+              <div className="flex flex-col items-center sm:items-start gap-2 flex-1">
+                <div className="inline-flex flex-col items-center sm:items-start">
+                  <h1
+                    className="profile-user-name text-3xl font-bold transition-colors duration-300"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {currentUser?.nome || "Meu Perfil"}
+                  </h1>
+                  <div className="mt-1 h-1 w-full rounded-full bg-[var(--accent-primary)]" />
+                  {getRoleLabel(
+                    (currentUser as IUser | undefined)?.role ??
+                      (user?.user as { role?: UserRole | string } | undefined)
+                        ?.role
+                  ) && (
+                    <p
+                      className="text-sm md:text-base mt-2 font-medium transition-colors duration-300 text-black dark:text-[var(--text-secondary)]"
+                    >
+                      {getRoleLabel(
+                        (currentUser as IUser | undefined)?.role ??
+                          (user?.user as { role?: UserRole | string } | undefined)
+                            ?.role
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
           {/*   FORMULÁRIO DE ATUALIZAÇÃO DE DADOS  */}
-          <Card className="border shadow-lg transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
+          <Card className="border border-gray-400 dark:border-[var(--border-primary)] shadow-lg bg-gray-100 dark:bg-zinc-800 transition-colors duration-300">
             <CardBody className="gap-6 p-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-blue-600/20 flex items-center justify-center">
@@ -414,7 +462,7 @@ export function UserProfilePage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                <h2 className="text-xl font-semibold transition-colors duration-300 text-black dark:text-[var(--text-primary)]">
                   Informações Pessoais
                 </h2>
               </div>
@@ -433,8 +481,10 @@ export function UserProfilePage() {
                         isRequired
                         autoComplete="name"
                         className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        classNames={{
+                          inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                        }}
                         style={{
-                          backgroundColor: "var(--input-bg)",
                           borderColor: "var(--input-border)",
                           color: "var(--input-text)",
                         }}
@@ -456,8 +506,10 @@ export function UserProfilePage() {
                         isRequired
                         autoComplete="tel"
                         className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        classNames={{
+                          inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                        }}
                         style={{
-                          backgroundColor: "var(--input-bg)",
                           borderColor: "var(--input-border)",
                           color: "var(--input-text)",
                         }}
@@ -485,11 +537,13 @@ export function UserProfilePage() {
                           isRequired
                           autoComplete="email"
                           className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                        style={{
-                          backgroundColor: "var(--input-bg)",
-                          borderColor: "var(--input-border)",
-                          color: "var(--input-text)",
-                        }}
+                          classNames={{
+                            inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                          }}
+                          style={{
+                            borderColor: "var(--input-border)",
+                            color: "var(--input-text)",
+                          }}
                           errorMessage={errors_user.email?.message}
                           id="email"
                           isInvalid={!!errors_user.email}
@@ -511,11 +565,13 @@ export function UserProfilePage() {
                           isRequired
                           autoComplete="bday"
                           className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                        style={{
-                          backgroundColor: "var(--input-bg)",
-                          borderColor: "var(--input-border)",
-                          color: "var(--input-text)",
-                        }}
+                          classNames={{
+                            inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                          }}
+                          style={{
+                            borderColor: "var(--input-border)",
+                            color: "var(--input-text)",
+                          }}
                           errorMessage={errors_user.data_nascimento?.message}
                           id="data_nascimento"
                           isInvalid={!!errors_user.data_nascimento}
@@ -557,7 +613,7 @@ export function UserProfilePage() {
           </Card>
 
           {/*   FORMULÁRIO DE ATUALIZAÇÃO DE SENHA  */}
-          <Card className="border shadow-lg transition-colors duration-300" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-primary)" }}>
+          <Card className="border border-gray-400 dark:border-[var(--border-primary)] shadow-lg bg-gray-100 dark:bg-zinc-800 transition-colors duration-300">
             <CardBody className="gap-6 p-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-yellow-600/20 flex items-center justify-center">
@@ -575,7 +631,7 @@ export function UserProfilePage() {
                     />
                   </svg>
                 </div>
-                <h2 className="text-xl font-semibold transition-colors duration-300" style={{ color: "var(--text-primary)" }}>
+                <h2 className="text-xl font-semibold transition-colors duration-300 text-black dark:text-[var(--text-primary)]">
                   Segurança da Conta
                 </h2>
               </div>
@@ -592,7 +648,7 @@ export function UserProfilePage() {
                     fillRule="evenodd"
                   />
                 </svg>
-                <p className="text-sm transition-colors duration-300" style={{ color: "var(--text-secondary)" }}>
+                <p className="text-sm transition-colors duration-300 text-black dark:text-[var(--text-secondary)]">
                   Por segurança, você precisará fazer login novamente após
                   alterar sua senha.
                 </p>
@@ -613,11 +669,13 @@ export function UserProfilePage() {
                         <Input
                           isRequired
                           className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
-                        style={{
-                          backgroundColor: "var(--input-bg)",
-                          borderColor: "var(--input-border)",
-                          color: "var(--input-text)",
-                        }}
+                          classNames={{
+                            inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                          }}
+                          style={{
+                            borderColor: "var(--input-border)",
+                            color: "var(--input-text)",
+                          }}
                           errorMessage={errors.senha_atual?.message}
                           id="senha_atual"
                           isInvalid={!!errors.senha_atual}
@@ -637,12 +695,14 @@ export function UserProfilePage() {
                                   alt="Ocultar senha"
                                   src={eye_slash}
                                   width={30}
+                                  className="dark:invert"
                                 />
                               ) : (
                                 <Image
                                   alt="Mostrar senha"
                                   src={eye}
                                   width={30}
+                                  className="dark:invert"
                                 />
                               )}
                             </button>
@@ -659,8 +719,10 @@ export function UserProfilePage() {
                       <Input
                         isRequired
                         className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        classNames={{
+                          inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                        }}
                         style={{
-                          backgroundColor: "var(--input-bg)",
                           borderColor: "var(--input-border)",
                           color: "var(--input-text)",
                         }}
@@ -683,9 +745,15 @@ export function UserProfilePage() {
                                 alt="Ocultar senha"
                                 src={eye_slash}
                                 width={30}
+                                className="dark:invert"
                               />
                             ) : (
-                              <Image alt="Mostrar senha" src={eye} width={30} />
+                              <Image
+                                alt="Mostrar senha"
+                                src={eye}
+                                width={30}
+                                className="dark:invert"
+                              />
                             )}
                           </button>
                         }
@@ -700,8 +768,10 @@ export function UserProfilePage() {
                       <Input
                         isRequired
                         className="w-full p-3 rounded-lg focus:outline-none transition-colors duration-300"
+                        classNames={{
+                          inputWrapper: "bg-gray-50 dark:bg-zinc-600",
+                        }}
                         style={{
-                          backgroundColor: "var(--input-bg)",
                           borderColor: "var(--input-border)",
                           color: "var(--input-text)",
                         }}
@@ -724,9 +794,15 @@ export function UserProfilePage() {
                                 alt="Ocultar senha"
                                 src={eye_slash}
                                 width={30}
+                                className="dark:invert"
                               />
                             ) : (
-                              <Image alt="Mostrar senha" src={eye} width={30} />
+                              <Image
+                                alt="Mostrar senha"
+                                src={eye}
+                                width={30}
+                                className="dark:invert"
+                              />
                             )}
                           </button>
                         }

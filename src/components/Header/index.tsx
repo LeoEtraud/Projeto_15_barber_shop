@@ -125,7 +125,7 @@ function Header() {
                 </div>
                 <Avatar
                   isBordered
-                  className="w-8 h-8 md:w-8 md:h-8 text-xs flex-shrink-0 active:scale-100"
+                  className="w-10 h-10 md:w-11 md:h-11 text-sm flex-shrink-0 active:scale-100"
                   color="default"
                   src={profileImageUrl ?? undefined}
                 >
