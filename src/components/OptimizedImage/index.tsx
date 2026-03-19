@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 
 interface OptimizedImageProps {
   src: string;
@@ -22,7 +22,7 @@ interface OptimizedImageProps {
  * - Fallback em caso de erro
  * - Prevenção de layout shift
  */
-export function OptimizedImage({
+function OptimizedImageComponent({
   src,
   alt,
   className = "",
@@ -43,11 +43,11 @@ export function OptimizedImage({
   // Função para otimizar URL da imagem
   // Por enquanto, não adiciona parâmetros de compressão pois a API pode não suportar
   // As otimizações são feitas via lazy loading, placeholder e dimensões fixas
-  const optimizeImageUrl = (url: string): string => {
+  const optimizeImageUrl = useCallback((url: string): string => {
     // Retorna a URL original sem modificações
     // Se no futuro a API suportar parâmetros de compressão, pode adicionar aqui
     return url;
-  };
+  }, []);
 
   useEffect(() => {
     setImageSrc(src);
@@ -58,33 +58,39 @@ export function OptimizedImage({
   // Se houver onError customizado, usa o src diretamente da prop para não interferir
   const finalSrc = onError ? src : optimizeImageUrl(imageSrc);
 
-  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setIsLoading(false);
-    // Chama o callback externo se fornecido
-    if (onLoad) {
-      onLoad(e);
-    }
-  };
-
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setIsLoading(false);
-    
-    // Chama o handler de erro customizado primeiro (pode tentar caminhos alternativos)
-    if (onError) {
-      onError(e);
-      // Não marca como erro ainda, deixa o onError tentar resolver
-      // Se o onError mudar o src, o useEffect vai detectar e resetar o estado
-    } else {
-      // Se não houver handler customizado, tenta o fallback diretamente
-      if (imageSrc !== fallback && fallback) {
-        setImageSrc(fallback);
-        setHasError(false);
-        setIsLoading(true);
-      } else {
-        setHasError(true);
+      // Chama o callback externo se fornecido
+      if (onLoad) {
+        onLoad(e);
       }
-    }
-  };
+    },
+    [onLoad]
+  );
+
+  const handleError = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      setIsLoading(false);
+
+      // Chama o handler de erro customizado primeiro (pode tentar caminhos alternativos)
+      if (onError) {
+        onError(e);
+        // Não marca como erro ainda, deixa o onError tentar resolver
+        // Se o onError mudar o src, o useEffect vai detectar e resetar o estado
+      } else {
+        // Se não houver handler customizado, tenta o fallback diretamente
+        if (imageSrc !== fallback && fallback) {
+          setImageSrc(fallback);
+          setHasError(false);
+          setIsLoading(true);
+        } else {
+          setHasError(true);
+        }
+      }
+    },
+    [onError, imageSrc, fallback]
+  );
 
   // Determina fetchpriority baseado na prop priority
   const fetchPriority = priority === "high" ? "high" : priority === "low" ? "low" : undefined;
@@ -142,4 +148,6 @@ export function OptimizedImage({
     </div>
   );
 }
+
+export const OptimizedImage = memo(OptimizedImageComponent);
 

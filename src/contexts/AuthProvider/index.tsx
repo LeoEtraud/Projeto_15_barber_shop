@@ -1,4 +1,4 @@
-import { createContext, useState, useCallback } from "react";
+import { createContext, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { addToast } from "@heroui/react";
@@ -12,7 +12,6 @@ export const AuthContext = createContext<IContext>({} as IContext);
 
 export const AuthProvider = ({ children }: IAuthProvider) => {
   const navigate = useNavigate();
-
   useLoading();
 
   const [user, setUser] = useState<IPayLoad | null>(
@@ -25,7 +24,7 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
     typeof window !== "undefined" ? Cookies.get("barberToken") || null : null
   );
 
-  function setUserCookies(user: IPayLoad | null) {
+  const setUserCookies = useCallback((user: IPayLoad | null) => {
     Cookies.set("barberId", JSON.stringify(user), {
       expires: (30 / 1440) * 24, //12horas
     });
@@ -34,9 +33,9 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
         expires: (30 / 1440) * 24, //12horas
       });
     }
-  }
+  }, []);
 
-  function getUserCookies() {
+  const getUserCookies = useCallback(() => {
     const json = Cookies.get("barberId");
 
     if (!json) {
@@ -46,30 +45,30 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
     const user = JSON.parse(json);
 
     return user ?? null;
-  }
+  }, []);
 
-  async function authenticate(data: IPayLoad) {
-    try {
+  const authenticate = useCallback(
+    async (data: IPayLoad) => {
       setUserCookies(data);
       setUser(data);
       setToken(data.token);
-      
+
       // Redireciona baseado no role do usuário
       const userRole = data.user?.role as UserRole | undefined;
       let redirectPath = "/home";
-      
+
       if (userRole === UserRole.GESTOR) {
         redirectPath = "/gestor/dashboard";
       } else if (userRole === UserRole.PROFISSIONAL) {
         redirectPath = "/profissional/dashboard";
       }
-      
+
       setTimeout(() => {
         navigate(redirectPath);
       }, 300);
-    } finally {
-    }
-  }
+    },
+    [navigate, setUserCookies]
+  );
 
   // Função memoizada com verificações condicionais
   const checkAuth = useCallback(async () => {
@@ -94,7 +93,7 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
   }, []);
 
   // FUNÇÃO PARA DESLOGAR DO SISTEMA
-  function logout() {
+  const logout = useCallback(() => {
     // substituir qualquer toast anterior
     addToast({
       title: "Logout",
@@ -110,18 +109,21 @@ export const AuthProvider = ({ children }: IAuthProvider) => {
     Cookies.remove("barberToken", { path: "/" });
 
     navigate("/");
-  }
+  }, [navigate]);
+
+  const contextValue = useMemo(
+    () => ({
+      authenticate,
+      user,
+      token,
+      checkAuth,
+      logout,
+    }),
+    [authenticate, user, token, checkAuth, logout]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        authenticate,
-        user,
-        token,
-        checkAuth,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

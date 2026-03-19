@@ -203,15 +203,15 @@ setState(state);
 
 ## ✅ Checklist de Performance React 2025
 
-* [x] Entendo o que dispara re-renders e os controlo
-* [x] Uso `React.memo()`, `useCallback` e `useMemo`
-* [x] Implementei code splitting com `React.lazy`
-* [x] Otimizei Context API
-* [x] Uso recursos concurrent (`useTransition`, `useDeferredValue`)
-* [x] Virtualizo listas longas
-* [x] Evito funções anônimas/objetos inline em props
-* [x] Monitoro performance com Web Vitals e Profiler
-* [x] Uso Server Components no Next.js
-* [x] Implementei lazy loading de imagens e componentes
+* [] Entendo o que dispara re-renders e os controlo
+* [] Uso `React.memo()`, `useCallback` e `useMemo`
+* [] Implementei code splitting com `React.lazy`
+* [] Otimizei Context API
+* [] Uso recursos concurrent (`useTransition`, `useDeferredValue`)
+* [] Virtualizo listas longas
+* [] Evito funções anônimas/objetos inline em props
+* [] Monitoro performance com Web Vitals e Profiler
+* [] Uso Server Components no Next.js
+* [] Implementei lazy loading de imagens e componentes
 
 > ⚠️ **Dica final:** Evite otimização prematura — meça primeiro, identifique gargalos com o **React DevTools Profiler** e otimize com propósito.

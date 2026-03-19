@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useCallback, useMemo, useState } from "react";
 import { addToast } from "@heroui/react";
 
 import { IContext, IUser, IUserProvider, UpdatePasswordPayload } from "./types";
@@ -16,12 +16,12 @@ export const UserProvider = ({ children }: IUserProvider) => {
   const [isLoadingUser, setIsLoadingUser] = useState(false);
 
   // Função para limpar os dados do usuário
-  const clearUserData = () => {
+  const clearUserData = useCallback(() => {
     setUserdata(null);
-  };
+  }, []);
 
   // FUNÇÃO PARA BUSCAR TODOS OS DADOS DO USUÁRIO
-  async function searchUser(id: string) {
+  const searchUser = useCallback(async (id: string) => {
     try {
       setIsLoadingUser(true);
 
@@ -65,10 +65,10 @@ export const UserProvider = ({ children }: IUserProvider) => {
     } finally {
       setIsLoadingUser(false);
     }
-  }
+  }, []);
 
   // FUNÇÃO PARA ALTERAR OS DADOS DO USUÁRIO
-  async function onSubmitFormProfile(data: IUser) {
+  const onSubmitFormProfile = useCallback(async (data: IUser) => {
     try {
       // Converte a data de YYYY-MM-DD para DD/MM/AAAA para enviar à API
       const dataNascimentoConvertida = data.data_nascimento
@@ -109,10 +109,10 @@ export const UserProvider = ({ children }: IUserProvider) => {
         timeout: 5000,
       });
     }
-  }
+  }, []);
 
   // FUNÇÃO PARA ALTERAR A SENHA DO USUÁRIO
-  async function onChangePassword(data: UpdatePasswordPayload) {
+  const onChangePassword = useCallback(async (data: UpdatePasswordPayload) => {
     try {
       await updateUserPassword({
         id: data.id,
@@ -145,19 +145,29 @@ export const UserProvider = ({ children }: IUserProvider) => {
         timeout: 5000,
       });
     }
-  }
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      searchUser,
+      onChangePassword,
+      userData,
+      onSubmitFormProfile,
+      isLoadingUser,
+      clearUserData,
+    }),
+    [
+      searchUser,
+      onChangePassword,
+      userData,
+      onSubmitFormProfile,
+      isLoadingUser,
+      clearUserData,
+    ]
+  );
 
   return (
-    <UserContext.Provider
-      value={{
-        searchUser,
-        onChangePassword,
-        userData,
-        onSubmitFormProfile,
-        isLoadingUser,
-        clearUserData,
-      }}
-    >
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );

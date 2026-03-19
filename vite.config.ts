@@ -50,4 +50,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  build: {
+    target: "es2020",
+    cssCodeSplit: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 800,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-ui": ["@heroui/react", "@heroui/system", "framer-motion"],
+          "vendor-utils": ["axios", "yup", "react-hook-form"],
+        },
+      },
+    },
+  },
 });

@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useCallback, useMemo, useState } from "react";
 import { addToast } from "@heroui/react";
 
 import {
@@ -148,7 +148,7 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
   >([]);
 
   // FUNÇÃO PARA LISTAR TODOS OS BARBEIROS ATIVOS
-  async function fetchBarbers() {
+  const fetchBarbers = useCallback(async () => {
     try {
       return await withLoading(
         (async () => {
@@ -165,11 +165,11 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
         timeout: 3000,
       });
     }
-  }
+  }, [withLoading]);
 
   // FUNÇÃO PARA LISTAR TODOS OS PROFISSIONAIS
 
-  async function fetchProfessionals() {
+  const fetchProfessionals = useCallback(async () => {
     try {
       return await withLoading(
         (async () => {
@@ -203,10 +203,10 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
         timeout: 3000,
       });
     }
-  }
+  }, [withLoading]);
 
   // FUNÇÃO PARA LISTAR TODOS OS SERVIÇOS
-  async function fetchServices() {
+  const fetchServices = useCallback(async () => {
     try {
       return await withLoading(
         (async () => {
@@ -223,10 +223,10 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
         timeout: 3000,
       });
     }
-  }
+  }, [withLoading]);
 
   // FUNÇÃO PARA BUSCAR AS DATAS E HORÁRIOS DOS AGENDAMENTOS CONFIRMADOS
-  async function fetchSchedules(barbeiroId: string) {
+  const fetchSchedules = useCallback(async (barbeiroId: string) => {
     try {
       if (!barbeiroId) {
         throw new Error("ID do barbeiro é obrigatório");
@@ -248,10 +248,10 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
         timeout: 3000,
       });
     }
-  }
+  }, [withLoading]);
 
   // FUNÇÃO PARA BUSCAR OS AGENDAMENTOS DO CLIENTE
-  async function fetchAppointments(id: string) {
+  const fetchAppointments = useCallback(async (id: string) => {
     try {
       const response = await withLoading(GetAppointments(id));
 
@@ -306,10 +306,11 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       });
       throw error;
     }
-  }
+  }, [withLoading]);
 
   // FUNÇÃO PARA BUSCAR OS AGENDAMENTOS DO PROFISSIONAL
-  async function fetchAppointmentsByProfessional(profissionalId: string) {
+  const fetchAppointmentsByProfessional = useCallback(
+    async (profissionalId: string) => {
     try {
       const response = await withLoading(
         GetAppointmentsByProfessional(profissionalId)
@@ -359,25 +360,43 @@ export const ScheduleProvider = ({ children }: IScheduleProvider) => {
       });
       throw error;
     }
-  }
+    },
+    [withLoading]
+  );
+
+  const contextValue = useMemo(
+    () => ({
+      barbers,
+      fetchBarbers,
+      professionals,
+      fetchProfessionals,
+      services,
+      fetchServices,
+      schedules,
+      fetchSchedules,
+      appointments,
+      fetchAppointments,
+      professionalAppointments,
+      fetchAppointmentsByProfessional,
+    }),
+    [
+      barbers,
+      fetchBarbers,
+      professionals,
+      fetchProfessionals,
+      services,
+      fetchServices,
+      schedules,
+      fetchSchedules,
+      appointments,
+      fetchAppointments,
+      professionalAppointments,
+      fetchAppointmentsByProfessional,
+    ]
+  );
 
   return (
-    <ScheduleContext.Provider
-      value={{
-        barbers,
-        fetchBarbers,
-        professionals,
-        fetchProfessionals,
-        services,
-        fetchServices,
-        schedules,
-        fetchSchedules,
-        appointments,
-        fetchAppointments,
-        professionalAppointments,
-        fetchAppointmentsByProfessional,
-      }}
-    >
+    <ScheduleContext.Provider value={contextValue}>
       {children}
     </ScheduleContext.Provider>
   );
