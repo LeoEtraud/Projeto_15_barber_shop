@@ -27,6 +27,7 @@ import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { useTheme } from "@/contexts/ThemeProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { getNomeSobrenome } from "@/utils/format-nome";
 import {
   GetHorariosFuncionamento,
@@ -1126,35 +1127,26 @@ export function GestorHorariosPage() {
                                                   className="flex items-center gap-1.5 bg-gray-800 rounded-lg px-2 py-1.5 border border-gray-700/50 hover:border-blue-500/50 transition-colors"
                                                   style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-tertiary)", borderColor: isDark ? "rgba(55, 65, 81, 0.5)" : "var(--border-primary)" }}
                                                 >
-                                                  {avatarUrl ? (
-                                                    <img
-                                                      alt={profissional.nome}
-                                                      className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
-                                                      src={avatarUrl}
-                                                      onError={(e) => {
-                                                        const target = e.currentTarget;
-                                                        const fallback = target.nextElementSibling as HTMLElement;
-                                                        if (fallback) {
-                                                          target.style.display = "none";
-                                                          fallback.classList.remove("hidden");
-                                                        }
-                                                      }}
-                                                    />
-                                                  ) : null}
-                                                  {(() => {
-                                                    if (avatarUrl) return null;
-                                                    
-                                                    return (
-                                                      <img
-                                                        alt={profissional.nome}
-                                                        className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
-                                                        src={getDefaultBarberImage(profissional.nome)}
-                                                        onError={(e) => {
-                                                          e.currentTarget.style.display = "none";
-                                                        }}
-                                                      />
-                                                    );
-                                                  })()}
+                                                  <OptimizedImage
+                                                    alt={profissional.nome}
+                                                    src={
+                                                      avatarUrl
+                                                        ? avatarUrl
+                                                        : getDefaultBarberImage(
+                                                            profissional.nome
+                                                          )
+                                                    }
+                                                    fallback={getDefaultBarberImage(
+                                                      profissional.nome
+                                                    )}
+                                                    width={28}
+                                                    height={28}
+                                                    loading="lazy"
+                                                    priority="low"
+                                                    sizes="28px"
+                                                    className="w-full h-full rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
+                                                    containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                                                  />
                                                   <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                                                     {getNomeSobrenome(profissional.nome)}
                                                   </span>
@@ -1315,36 +1307,26 @@ export function GestorHorariosPage() {
                                       style={{ backgroundColor: isDark ? "#1f2937" : "var(--bg-tertiary)", borderColor: isDark ? "rgba(55, 65, 81, 0.5)" : "var(--border-primary)" }}
                                     >
                                       {/* Avatar do Barbeiro */}
-                                      {avatarUrl ? (
-                                        <img
-                                          alt={profissional.nome}
-                                          className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
-                                          src={avatarUrl}
-                                          onError={(e) => {
-                                            e.currentTarget.style.display =
-                                              "none";
-                                            const fallback =
-                                              e.currentTarget.nextElementSibling;
-                                            if (fallback) {
-                                              fallback.classList.remove("hidden");
-                                            }
-                                          }}
-                                        />
-                                      ) : null}
-                                      {(() => {
-                                        if (avatarUrl) return null;
-                                        
-                                        return (
-                                          <img
-                                            alt={profissional.nome}
-                                            className="w-7 h-7 rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
-                                            src={getDefaultBarberImage(profissional.nome)}
-                                            onError={(e) => {
-                                              e.currentTarget.style.display = "none";
-                                            }}
-                                          />
-                                        );
-                                      })()}
+                                      <OptimizedImage
+                                        alt={profissional.nome}
+                                        src={
+                                          avatarUrl
+                                            ? avatarUrl
+                                            : getDefaultBarberImage(
+                                                profissional.nome
+                                              )
+                                        }
+                                        fallback={getDefaultBarberImage(
+                                          profissional.nome
+                                        )}
+                                        width={28}
+                                        height={28}
+                                        loading="lazy"
+                                        priority="low"
+                                        sizes="28px"
+                                        className="w-full h-full rounded-full object-cover border-2 border-gray-600 flex-shrink-0"
+                                        containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                                      />
                                       <span className="text-xs font-medium truncate max-w-[100px] transition-colors duration-300" style={{ color: isDark ? "var(--text-primary)" : "#1a1a1a" }}>
                                         {getNomeSobrenome(profissional.nome)}
                                 </span>

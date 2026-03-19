@@ -31,6 +31,7 @@ import {
   UpdateService,
   DeleteService,
 } from "@/contexts/ScheduleProvider/util";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { formatPrice } from "@/utils/format-price";
 import { IServices } from "@/contexts/ScheduleProvider/types";
 import { getServiceImageWithFallback } from "@/utils/defaultImages";
@@ -583,24 +584,17 @@ export function GestorServicosPage() {
                         <div className="flex items-start gap-3 mb-3">
                           {/* Imagem do Serviço */}
                           {serviceImageSrc ? (
-                            <img
+                            <OptimizedImage
                               alt={service.nome}
-                              className="w-16 h-16 rounded-lg object-cover border-2 flex-shrink-0 transition-colors duration-300"
-                              style={{ borderColor: "var(--border-primary)" }}
                               src={serviceImageSrc}
-                              onError={(e) => {
-                                // Se a imagem falhar ao carregar, esconde a imagem
-                                const target = e.currentTarget;
-                                if (target.dataset.fallbackApplied === "true") return;
-                                target.dataset.fallbackApplied = "true";
-                                // Se houver imagem padrão, tenta usar ela
-                                if (defaultImage) {
-                                  target.src = defaultImage;
-                                } else {
-                                  // Se não houver imagem padrão, esconde a imagem
-                                  target.style.display = "none";
-                                }
-                              }}
+                              width={64}
+                              height={64}
+                              sizes="64px"
+                              loading="lazy"
+                              priority="low"
+                              fallback={defaultImage ?? "/barber-3.png"}
+                              className="w-full h-full rounded-lg object-cover border-2 flex-shrink-0 transition-colors duration-300 border-[var(--border-primary)]"
+                              containerClassName="rounded-lg overflow-hidden flex-shrink-0"
                             />
                           ) : (
                             <div className="w-16 h-16 rounded-lg border-2 border-dashed flex items-center justify-center flex-shrink-0 transition-colors duration-300" style={{ borderColor: "var(--border-secondary)", backgroundColor: "var(--bg-tertiary)" }}>

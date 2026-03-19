@@ -4,8 +4,8 @@ import { ArrowLeftIcon, ArrowRightIcon } from "@heroicons/react/24/solid";
 import { useEffect } from "react";
 
 import { Header } from "@/components/Header";
+import { AvatarImage } from "@/components/AvatarImage";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
-import { getDefaultBarberImage } from "@/utils/defaultImages";
 
 // Função para obter selo de avaliação baseado na nota
 function getRatingBadge(rating: number): string {
@@ -115,50 +115,16 @@ export function ChoiceBarberPage() {
                   }
                 }}
               >
-                {(() => {
-                  const avatarUrl =
-                    barber.avatar && barber.avatar.trim() !== ""
-                      ? barber.avatar.startsWith("data:image")
-                        ? barber.avatar
-                        : `${import.meta.env.VITE_API}/barbeiros/avatar/${encodeURIComponent(
-                            barber.avatar,
-                          )}`
-                      : null;
-
-                  return avatarUrl ? (
-                    <img
-                      alt={`Barbeiro ${barber.nome}`}
-                      className="h-16 w-14 rounded-md object-cover"
-                      src={avatarUrl}
-                      onError={(e) => {
-                        // Se a imagem falhar, mostra o ícone de usuário
-                        const target = e.currentTarget;
-
-                        target.style.display = "none";
-                        const fallback =
-                          target.nextElementSibling as HTMLElement;
-
-                        if (fallback) {
-                          fallback.classList.remove("hidden");
-                        }
-                      }}
-                    />
-                  ) : null;
-                })()}
-                {(() => {
-                  if (barber.avatar && barber.avatar.trim() !== "") return null;
-
-                  return (
-                    <img
-                      alt={`Barbeiro ${barber.nome}`}
-                      className="h-16 w-14 rounded-md object-cover"
-                      src={getDefaultBarberImage(barber.nome)}
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
-                  );
-                })()}
+                <AvatarImage
+                  avatar={barber.avatar}
+                  name={barber.nome}
+                  width={56}
+                  height={64}
+                  loading="lazy"
+                  priority="low"
+                  className="rounded-md object-cover"
+                  containerClassName="rounded-md overflow-hidden flex-shrink-0"
+                />
                 <div className="flex-1">
                   <div className="font-medium transition-colors duration-300" style={{ color: "var(--client-card-text)" }}>{barber.nome}</div>
                   {barber.nota_avaliacao >= 3 && (

@@ -4,6 +4,7 @@ interface OptimizedImageProps {
   src: string;
   alt: string;
   className?: string;
+  containerClassName?: string;
   width?: number;
   height?: number;
   fallback?: string;
@@ -26,6 +27,7 @@ function OptimizedImageComponent({
   src,
   alt,
   className = "",
+  containerClassName = "",
   width,
   height,
   fallback = "/barber-3.png",
@@ -96,7 +98,7 @@ function OptimizedImageComponent({
   const fetchPriority = priority === "high" ? "high" : priority === "low" ? "low" : undefined;
 
   return (
-    <div className="relative" style={{ width, height }}>
+    <div className={`relative ${containerClassName}`} style={{ width, height }}>
       {/* Placeholder enquanto carrega */}
       {isLoading && !hasError && (
         <div

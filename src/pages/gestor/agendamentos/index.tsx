@@ -25,6 +25,7 @@ import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { useTheme } from "@/contexts/ThemeProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { getNomeSobrenome } from "@/utils/format-nome";
 
 // Função para formatar data para comparação
@@ -80,21 +81,6 @@ function estaDentroDoIntervalo(
   
   // Está dentro se for > início (não inclui o início) e < fim (não inclui o fim)
   return minutosAtual > minutosInicio && minutosAtual < minutosFim;
-}
-
-// Função para obter as iniciais do barbeiro
-function getInitials(nomeCompleto: string): string {
-  const parts = nomeCompleto?.trim().split(" ") || [];
-
-  if (parts.length === 0) return "";
-
-  const first = parts[0]?.charAt(0)?.toUpperCase() || "";
-  const last =
-    parts.length > 1
-      ? parts[parts.length - 1]?.charAt(0)?.toUpperCase() || ""
-      : "";
-
-  return `${first}${last}`;
 }
 
 // Função para obter URL do avatar
@@ -1047,28 +1033,24 @@ export function GestorAgendamentosPage() {
 
                         return (
                           <>
-                            {avatarUrl ? (
-                              <img
-                                alt={barbeiro?.nome || ""}
-                                className="w-6 h-6 rounded-full object-cover border border-gray-500 flex-shrink-0"
-                                src={avatarUrl}
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                  e.currentTarget.nextElementSibling?.classList.remove(
-                                    "hidden"
-                                  );
-                                }}
-                              />
-                            ) : null}
-                            <div
-                              className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold border border-gray-500 flex-shrink-0 ${
-                                avatarUrl ? "hidden" : ""
-                              }`}
-                            >
-                              {barbeiro
-                                ? getInitials(barbeiro.nome)
-                                : ""}
-                            </div>
+                            <OptimizedImage
+                              alt={barbeiro?.nome || ""}
+                              src={
+                                avatarUrl
+                                  ? avatarUrl
+                                  : getDefaultBarberImage(barbeiro?.nome)
+                              }
+                              fallback={getDefaultBarberImage(
+                                barbeiro?.nome
+                              )}
+                              width={24}
+                              height={24}
+                              loading="lazy"
+                              priority="low"
+                              sizes="24px"
+                              className="w-full h-full rounded-full object-cover border border-gray-500 flex-shrink-0"
+                              containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                            />
                             <span className="flex-1 text-left">
                               {barbeiro?.nome ? getNomeSobrenome(barbeiro.nome) : "Selecione um barbeiro"}
                             </span>
@@ -1145,26 +1127,22 @@ export function GestorAgendamentosPage() {
                               }}
                               type="button"
                             >
-                              {avatarUrl ? (
-                                <img
-                                  alt={barbeiro.nome}
-                                  className="w-6 h-6 rounded-full object-cover border border-gray-500 flex-shrink-0"
-                                  src={avatarUrl}
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none";
-                                    e.currentTarget.nextElementSibling?.classList.remove(
-                                      "hidden"
-                                    );
-                                  }}
-                                />
-                              ) : null}
-                              <div
-                                className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold border border-gray-500 flex-shrink-0 ${
-                                  avatarUrl ? "hidden" : ""
-                                }`}
-                              >
-                                {getInitials(barbeiro.nome)}
-                              </div>
+                              <OptimizedImage
+                                alt={barbeiro.nome}
+                                src={
+                                  avatarUrl
+                                    ? avatarUrl
+                                    : getDefaultBarberImage(barbeiro.nome)
+                                }
+                                fallback={getDefaultBarberImage(barbeiro.nome)}
+                                width={24}
+                                height={24}
+                                loading="lazy"
+                                priority="low"
+                                sizes="24px"
+                                className="w-full h-full rounded-full object-cover border border-gray-500 flex-shrink-0"
+                                containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                              />
                               <span className="flex-1">{getNomeSobrenome(barbeiro.nome)}</span>
                               {barbeiroSelecionado === barbeiro.id && (
                                 <svg
@@ -1663,33 +1641,22 @@ export function GestorAgendamentosPage() {
 
                           return (
                             <>
-                              {avatarUrl ? (
-                                <img
-                                  alt={barbeiro?.nome || ""}
-                                  className="w-6 h-6 rounded-full object-cover border border-gray-500 flex-shrink-0"
-                                  src={avatarUrl}
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none";
-                                    e.currentTarget.nextElementSibling?.classList.remove(
-                                      "hidden"
-                                    );
-                                  }}
-                                />
-                              ) : null}
-                              {(() => {
-                                if (avatarUrl) return null;
-                                
-                                return (
-                                  <img
-                                    alt={barbeiro?.nome || ""}
-                                    className="w-6 h-6 rounded-full object-cover border border-gray-500 flex-shrink-0"
-                                    src={getDefaultBarberImage(barbeiro?.nome)}
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = "none";
-                                    }}
-                                  />
-                                );
-                              })()}
+                              <OptimizedImage
+                                alt={barbeiro?.nome || ""}
+                                src={
+                                  avatarUrl
+                                    ? avatarUrl
+                                    : getDefaultBarberImage(barbeiro?.nome)
+                                }
+                                fallback={getDefaultBarberImage(barbeiro?.nome)}
+                                width={24}
+                                height={24}
+                                loading="lazy"
+                                priority="low"
+                                sizes="24px"
+                                className="w-full h-full rounded-full object-cover border border-gray-500 flex-shrink-0"
+                                containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                              />
                               <span className="flex-1">
                                 {barbeiro?.nome ? getNomeSobrenome(barbeiro.nome) : "Selecione um barbeiro"}
                               </span>
@@ -1766,26 +1733,22 @@ export function GestorAgendamentosPage() {
                                 }}
                                 type="button"
                               >
-                                {avatarUrl ? (
-                                  <img
-                                    alt={barbeiro.nome}
-                                    className="w-6 h-6 rounded-full object-cover border border-gray-500 flex-shrink-0"
-                                    src={avatarUrl}
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = "none";
-                                      e.currentTarget.nextElementSibling?.classList.remove(
-                                        "hidden"
-                                      );
-                                    }}
-                                  />
-                                ) : null}
-                                <div
-                                  className={`w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-[10px] font-bold border border-gray-500 flex-shrink-0 ${
-                                    avatarUrl ? "hidden" : ""
-                                  }`}
-                                >
-                                  {getInitials(barbeiro.nome)}
-                                </div>
+                                <OptimizedImage
+                                  alt={barbeiro.nome}
+                                  src={
+                                    avatarUrl
+                                      ? avatarUrl
+                                      : getDefaultBarberImage(barbeiro.nome)
+                                  }
+                                  fallback={getDefaultBarberImage(barbeiro.nome)}
+                                  width={24}
+                                  height={24}
+                                  loading="lazy"
+                                  priority="low"
+                                  sizes="24px"
+                                  className="w-full h-full rounded-full object-cover border border-gray-500 flex-shrink-0"
+                                  containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                                />
                                 <span className="flex-1">{getNomeSobrenome(barbeiro.nome)}</span>
                                 {novoBarbeiro === barbeiro.id && (
                                   <svg

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthProvider/useAuth";
 import { useSchedule } from "@/contexts/ScheduleProvider/useSchedule";
 import { useLoading } from "@/contexts/LoadingProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 // Função para obter URL do avatar
 function getAvatarUrl(avatar: string | undefined): string | null {
@@ -330,31 +331,26 @@ export function GerenciarAgendamentos() {
                                 key={profissional.id}
                                 className="flex items-center gap-1.5 bg-gray-700/50 rounded-lg px-2 py-1 border border-gray-600/50"
                               >
-                                {avatarUrl ? (
-                                  <img
-                                    alt={profissional.nome}
-                                    className="w-5 h-5 rounded-full object-cover border border-gray-600 flex-shrink-0"
-                                    src={avatarUrl}
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = "none";
-                                      e.currentTarget.nextElementSibling?.classList.remove("hidden");
-                                    }}
-                                  />
-                                ) : null}
-                                {(() => {
-                                  if (avatarUrl) return null;
-                                  
-                                  return (
-                                    <img
-                                      alt={profissional.nome}
-                                      className="w-5 h-5 rounded-full object-cover border border-gray-600 flex-shrink-0"
-                                      src={getDefaultBarberImage(profissional.nome)}
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = "none";
-                                      }}
-                                    />
-                                  );
-                                })()}
+                                <OptimizedImage
+                                  alt={profissional.nome}
+                                  src={
+                                    avatarUrl
+                                      ? avatarUrl
+                                      : getDefaultBarberImage(
+                                          profissional.nome
+                                        )
+                                  }
+                                  fallback={getDefaultBarberImage(
+                                    profissional.nome
+                                  )}
+                                  width={20}
+                                  height={20}
+                                  loading="lazy"
+                                  priority="low"
+                                  sizes="20px"
+                                  className="w-full h-full rounded-full object-cover border border-gray-600 flex-shrink-0"
+                                  containerClassName="rounded-full overflow-hidden flex-shrink-0"
+                                />
                                 <span className="text-white text-[10px] font-medium truncate max-w-[60px]">
                                   {profissional.nome}
                                 </span>
