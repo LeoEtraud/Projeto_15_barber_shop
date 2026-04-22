@@ -120,7 +120,7 @@ export function Login() {
   return (
     <motion.div
       className="flex items-center justify-center min-h-screen min-h-[100dvh]"
-      style={{ backgroundColor: "#1B4965" }}
+      style={{ backgroundColor: "#012844" }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35 }}
