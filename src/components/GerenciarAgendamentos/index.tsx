@@ -7,7 +7,7 @@ import { useLoading } from "@/contexts/LoadingProvider";
 import { getDefaultBarberImage } from "@/utils/defaultImages";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
-// Função para obter URL do avatar
+// Função para obter URL do avatar (alinhado a AvatarImage e rotas estáticas do backend)
 function getAvatarUrl(avatar: string | undefined): string | null {
   if (!avatar) return null;
 
@@ -15,7 +15,10 @@ function getAvatarUrl(avatar: string | undefined): string | null {
     return avatar;
   }
 
-  return `${import.meta.env.VITE_API_URL}/files/${avatar}`;
+  const apiUrl = import.meta.env.VITE_API || "";
+  if (!apiUrl) return null;
+
+  return `${apiUrl}/barbeiros/avatar/${encodeURIComponent(avatar)}`;
 }
 
 export function GerenciarAgendamentos() {

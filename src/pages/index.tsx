@@ -160,7 +160,7 @@ export function Login() {
                 height={160}
                 radius="none"
                 removeWrapper
-                src="/logo_balata.jpeg"
+                src="/logo_balata.png"
                 width={280}
               />
             </motion.div>
